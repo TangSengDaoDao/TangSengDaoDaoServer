@@ -13,10 +13,10 @@
 </p>
 <div align=center>
 
-<!-- [![Go](https://github.com/TangSengDaoDao/TangSengDaoDaoUltimateServer/workflows/Go/badge.svg?branch=main)](https://github.com/TangSengDaoDao/TangSengDaoDaoUltimateServer/actions) -->
-![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/TangSengDaoDao/TangSengDaoDaoUltimateServer)
-[![Go Report Card](https://goreportcard.com/badge/github.com/TangSengDaoDao/TangSengDaoDaoUltimateServer)](https://goreportcard.com/report/github.com/TangSengDaoDao/TangSengDaoDaoUltimateServer)
-[![Release](https://img.shields.io/github/v/release/TangSengDaoDao/TangSengDaoDaoUltimateServer.svg?style=flat-square)](https://github.com/TangSengDaoDao/TangSengDaoDaoUltimateServer)
+<!-- [![Go](https://github.com/TangSengDaoDao/TangSengDaoDaoServer/workflows/Go/badge.svg?branch=main)](https://github.com/TangSengDaoDao/TangSengDaoDaoServer/actions) -->
+![GitHub go.mod Go version (subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/TangSengDaoDao/TangSengDaoDaoServer)
+[![Go Report Card](https://goreportcard.com/badge/github.com/TangSengDaoDao/TangSengDaoDaoServer)](https://goreportcard.com/report/github.com/TangSengDaoDao/TangSengDaoDaoServer)
+[![Release](https://img.shields.io/github/v/release/TangSengDaoDao/TangSengDaoDaoServer.svg?style=flat-square)](https://github.com/TangSengDaoDao/TangSengDaoDaoServer)
 ![License: Apache 2.0](https://img.shields.io/github/license/WuKongIM/WuKongIM) 
 </div>
 
@@ -91,7 +91,7 @@
     - [x] 设备管理
 
 
-没有满足的特效？看看企业版。
+没有满足的特性？看看企业版。
 
 演示地址
 ------------
@@ -99,3 +99,13 @@
 | Android扫描体验 | iOS扫描体验(商店版本 apple store 搜“唐僧叨叨”) |
 |:---:|:---:|
 |![](docs/download/android.png)|![](docs/download/iOS.png)|
+
+
+MAC版: [点击下载](docs/download/android.png)
+
+Windows版: [点击下载](docs/download/android.png)
+
+Ubuntun版: [点击下载](docs/download/android.png)
+
+Web端: [点击体验](https://web.botgate.cn)
+

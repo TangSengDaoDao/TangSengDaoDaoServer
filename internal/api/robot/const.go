@@ -44,8 +44,8 @@ var systemRobotMap = []*systemRobotMenu{
 	},
 	{
 		CMD:          "/Android包下载",
-		Remark:       "如何下载悟空聊天IM Android包",
-		ReplyContent: "您好，悟空聊天IM Android应用下载地址 https://www.pgyer.com/Rwas",
+		Remark:       "如何下载唐僧叨叨 Android包",
+		ReplyContent: "您好，唐僧叨叨 Android应用下载地址 https://www.pgyer.com/tsdd",
 		Type:         string(None),
 	},
 	{
