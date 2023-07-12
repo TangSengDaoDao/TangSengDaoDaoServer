@@ -96,6 +96,6 @@
 演示地址
 ------------
 
-| Android扫描体验 | iOS扫描体验 |
+| Android扫描体验 | iOS扫描体验(商店版本 apple store 搜“唐僧叨叨”) |
 |:---:|:---:|
 |![](docs/download/android.png)|![](docs/download/iOS.png)|
