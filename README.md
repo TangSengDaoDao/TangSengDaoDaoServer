@@ -69,6 +69,7 @@
     - [x] Gif消息
     - [x] 合并转发消息
     - [x] 正在输入消息
+    - [x] 自定义消息
     - [x] 撤回消息
     - [x] 群系统消息
     - [x] 群@消息
@@ -76,6 +77,15 @@
     - [x] 消息转发
     - [x] 消息收藏
     - [x] 消息删除
+- [x] 群功能
+    - [x] 添加群成员/移除群成员
+    - [x] 群名称
+    - [x] 群二维码
+    - [x] 群公告
+    - [x] 保存到通讯录
+    - [x] 我在本群昵称
+    - [x] 群投诉    
+    - [x] 清空群聊天记录    
 - [x] 通讯录
     - [x] 新的朋友
     - [x] 保存的群
@@ -101,11 +111,11 @@
 |![](docs/download/android.png)|![](docs/download/iOS.png)|
 
 
-MAC版: [点击下载](docs/download/android.png)
+MAC版: [点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)
 
-Windows版: [点击下载](docs/download/android.png)
+Windows版: [点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)
 
-Ubuntun版: [点击下载](docs/download/android.png)
+Ubuntun版: [点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)
 
 Web端: [点击体验](https://web.botgate.cn)
 
