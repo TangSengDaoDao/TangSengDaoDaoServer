@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,maximum-scale=1.0,minimum=1.0,user-scalable=no">
+    <meta name="format-detection" content="telephone=no, email=no">
+    <link rel="stylesheet" type="text/css" href="css/report.css" />
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="js/IMJSBridge.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/jquery.i18n.min.js"></script>
+    <title>投诉</title>
+</head>
+
+<body>
+    <div class="reportBox">
+        <div class="reportBody">
+            <div class="categoryBox">
+                <div class="item">
+                    <h1 i18n="report.title">请选择投诉该账号的原因:</h1>
+                    <ul>
+                    </ul>
+                </div>
+                <div class="reportNotice" i18n="report.notice">
+                    投诉须知
+                </div>
+            </div>
+            <div class="reportFormBox">
+                <div class="reportForm">
+                    <div class="item">
+                        <ul>
+                            <li>
+                                <div class="title" i18n="report.image.evidence">图片证据(选填)</div>
+                                <div class="imgs">
+                                    <div class="imgItem">
+                                        <img class="add" src='./images/img_add.png' style="width: 100%;height: 100%;">
+                                        <input type="file" class="upload"
+                                            accept="image/gif,image/jpeg,image/jpg,image/png,image/svg"></input>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="reportRemark">
+                                <textarea i18n="report.content.placeholder" class="reportContent"
+                                    placeholder="投诉内容(选填)"></textarea>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="reportSubmit" i18n="report.submit">提交</div>
+            </div>
+        </div>
+        <div class="reportFooter">
+            <div class="back">
+                <!-- <img src="./images/bottom_arrow_left.svg" style="width:32px;color: red;" /> -->
+                <svg t="1609322904660" class="backIcon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="4579">
+                    <path
+                        d="M396.504 551.539l384.753 379.451c21.336 21.017 21.592 55.384 0.639 76.784v0c-21.017 21.4-55.64 21.657-76.976 0.639l-463.581-457.129c-21.592-21.272-21.592-56.087 0-77.423l464.603-458.215c21.017-20.697 54.682-20.889 75.89-0.383l0.319 0.319c22.039 21.273 22.23 56.279 0.383 77.807l-386.094 380.792c-21.528 21.208-21.528 56.087 0.064 77.359z"
+                        p-id="4580"></path>
+                </svg>
+            </div>
+            <div class="go">
+                <svg t="1609323186882" class="goIcon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="4768" width="72" height="72">
+                    <path
+                        d="M747.457 479.104c16.64-15.872 44.544-13.76 62.144 4.864 17.664 18.624 18.432 46.4 1.92 62.336l-484.16 461.248c-16.576 15.872-44.415 13.696-62.08-4.864-17.664-18.56-18.56-46.4-1.855-62.272l484.032-461.312z"
+                        fill="" p-id="4769"></path>
+                    <path
+                        d="M811.839 484.992c16.384 16.064 15.232 43.968-2.816 62.272-17.92 18.24-45.76 20.032-62.208 3.968l-477.44-468.16c-16.384-16.064-15.232-43.968 2.688-62.336 17.984-18.176 45.76-20.032 62.208-3.968l477.568 468.224z"
+                        fill="" p-id="4770"></path>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+<script language="javascript">
+
+    $(function () {
+
+        im.onReady();
+
+        $(".go").on('touchend', function () {
+            if (window.history.length > 0) {
+                window.history.forward()
+            }
+        });
+
+        $(".back").on('touchend', function () {
+            window.history.back()
+        });
+
+        $.getJSON(apiURL + `report/categories?lang=${window.getLang()}`).then(function (categories) {
+            window.categories = categories;
+            if (categories && categories.length > 0) {
+                renderCategories(categories);
+            }
+
+        })
+
+        if ("onhashchange" in window) {
+
+            window.onhashchange = function (ev) {
+                if (window.location.hash && window.location.hash != '') {
+                    let categoryNos = window.location.hash.substring(1).split("-")
+                    let category = getCatgoryWithCategoryNo(categoryNos[categoryNos.length - 1], window.categories);
+                    if (category && category.children && category.children.length > 0) {
+                        renderCategories(category.children);
+                    } else {
+                        $(".reportFormBox").css('display', 'block');
+                        $(".categoryBox").css('display', 'none');
+                        return
+                        // renderCategories(window.categories);
+                    }
+                } else {
+                    renderCategories(window.categories);
+                }
+            };
+        }
+
+        function getObjectURL(file) {
+            var url = null;
+            if (window.createObjectURL != undefined) {
+                url = window.createObjectURL(file);
+            } else if (window.URL != undefined) { // mozilla(firefox)  
+                url = window.URL.createObjectURL(file);
+            } else if (window.webkitURL != undefined) { // webkit or chrome  
+                url = window.webkitURL.createObjectURL(file);
+            }
+            return url;
+        }
+
+        let imageDatas = [];
+
+        function uploadChange() {
+            var objUrl = getObjectURL(this.files[0]);//获取文件信息 
+            if (objUrl) {
+                imageDatas.push(objUrl);
+                renderImageItes();
+                uploadImage(this.files[0]);
+            }
+        }
+
+        let imgPaths = [];
+        function uploadImage(fileObj) {
+            let uid = getQueryString('uid');
+            let token = getQueryString('token');
+            $.ajax({
+                headers: {
+                    Accept: "application/json; charset=utf-8",
+                    token: token
+                },
+                url: apiURL + `file/upload?type=report&path=/${uid}/${uuid()}`,
+                type: "get",
+                success: function (result) {
+                    var form = new FormData();
+                    form.append("file", fileObj);
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("post", result.url, true);
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4) {
+                            if (xhr.status == 200) {
+                                var obj = JSON.parse(xhr.responseText);
+                                console.log(obj);
+                                imgPaths.push(obj.path);
+                            }
+                        }
+                    }
+                    xhr.send(form);
+                }
+            })
+
+        }
+
+        $('.imgItem .upload').on('change', function () {
+            uploadChange.bind(this)();
+        })
+
+
+        function renderImageItes() {
+            $('.imgs').html('');
+            if (imageDatas && imageDatas.length > 0) {
+                for (const imageData of imageDatas) {
+                    let item = $(`<div class="imgItem">
+                                        <img style="width: 100%;height: 100%;" src="${imageData}" />
+                                </div>`)
+                    $('.imgs').append(item);
+                }
+            }
+            if (imageDatas && imageDatas.length >= 9) {
+                return
+            }
+            let uploadInput = $(`
+                         <div class="imgItem">
+                            <img class="add" src='./images/img_add.png' style="width: 100%;height: 100%;">
+                            <input type="file" class="upload"
+                                            accept="image/gif,image/jpeg,image/jpg,image/png,image/svg"></input>
+                        </div>
+                `)
+            uploadInput.children('.upload').on('change', function () {
+                uploadChange.bind(this)();
+            });
+            $('.imgs').append(uploadInput);
+
+        }
+
+        $('.reportNotice').on('click', async function () {
+            window.location.href = 'report_notice.html' + window.location.search;
+        })
+        $('.reportSubmit').on('click', async function () { // 提交
+            let reportContent = $('.reportContent').val();
+            let token = getQueryString('token');
+            let channel = await im.getChannel();
+            let categoryNos = window.location.hash.substring(1).split("-")
+            let categoryNo = categoryNos[categoryNos.length - 1];
+            $.ajax({
+                headers: {
+                    Accept: "application/json; charset=utf-8",
+                    token: token
+                },
+                url: apiURL + `reports`,
+                type: "post",
+                contentType: "application/json",
+                dataType: 'json',
+                data: JSON.stringify({ "category_no": categoryNo, "channel_id": channel.channelID, "channel_type": channel.channelType, "remark": reportContent || '', "imgs": imgPaths || [] }),
+                success: function (result) {
+                    window.location.href = 'report_success.html' + window.location.search;
+                },
+                error: function () {
+                    alert('提交失败！');
+                }
+            })
+        })
+
+        function clearDetailContent() {
+            imageDatas = []
+            renderImageItes()
+            $('.reportRemark textarea').val('');
+
+        }
+
+        function renderCategories(children) {
+            $('.categoryBox .item ul').html('');
+            clearDetailContent()
+            $(".reportFormBox").css('display', 'none');
+            $(".categoryBox").css('display', 'block');
+            for (const category of children) {
+                let item = $(`<li no='${category.category_no}'>
+                                        <div class='content'>
+                                            <label>${category.category_name}</label>
+                                            <img src='./images/arrow_right.png' style="width:32px;height:32px"/>
+                                        </div>
+                                    </li>`);
+                item.on('touchend', function (e) {
+                    if (category.parent_category_no == '') {
+                        window.location.href = `${window.location.pathname + window.location.search}#${category.category_no}`;
+                    } else {
+                        let categoryNos = new Array();
+                        getAllParentCategoryNo(category, categoryNos);
+                        if (category.children && category.children.length > 0) {
+                            window.location.href = `${window.location.pathname + window.location.search}#${categoryNos.join("-")}`;
+                        } else {
+                            categoryNos.push(category.category_no);
+                            window.location.href = `${window.location.pathname + window.location.search}#${categoryNos.join("-")}`;
+                        }
+                    }
+                })
+                $('.categoryBox .item ul').append(item);
+            }
+        }
+    })
+
+
+
+    function getAllParentCategoryNo(category, parentCategoryNos) {
+        if (category.parent_category_no == '') {
+            return
+        }
+        let parent = getCatgoryWithCategoryNo(category.parent_category_no, window.categories);
+        if (parent) {
+            parentCategoryNos.push(parent.category_no);
+            getAllParentCategoryNo(parent, parentCategoryNos);
+        }
+
+    }
+
+    function getCatgoryWithCategoryNo(categoryNo, categoryList) {
+        for (const category of categoryList) {
+            if (category.category_no == categoryNo) {
+                return category;
+            }
+            if (category.children && category.children.length > 0) {
+                let ct = getCatgoryWithCategoryNo(categoryNo, category.children);
+                if (ct) {
+                    return ct
+                }
+            }
+        }
+    }
+
+    //异步加载css,js文件
+    var Head = document.getElementsByTagName('head')[0], style = document.createElement('style');
+    function linkScript(parm, fn) {
+        var linkScript;
+        if (/\.css[^\.]*$/.test(parm)) {
+            linkScript = document.createElement("link");
+            linkScript.type = "text/" + ("css");
+            linkScript.rel = "stylesheet";
+            linkScript.href = parm;
+        } else {
+            linkScript = document.createElement("script");
+            linkScript.type = "text/" + ("javascript");
+            linkScript.src = parm;
+        }
+        Head.insertBefore(linkScript, Head.lastChild)
+        linkScript.onload = linkScript.onerror = function () {
+            if (fn) fn()
+        }
+    }
+
+    let mode = getQueryString("mode")
+    if (mode == 'dark') {
+        linkScript("css/report.dark.css");
+    }
+
+    window.getLang = function () {
+        var defaultLang = "cn";
+        let lang = window.navigator.userLanguage || window.navigator.language;
+        let userLang = getQueryString("lang")
+        if (userLang && userLang !== "") {
+            lang = userLang
+        }
+        if (lang.indexOf("en") != -1) {
+            defaultLang = "en";
+        }
+        return defaultLang
+    }
+
+    $(document).ready(function () {
+        /*默认语言*/
+        var defaultLang = window.getLang()
+        if (defaultLang.indexOf("en") != -1) {
+            document.title = "Report";
+        }
+
+        $("[i18n]").i18n({
+            defaultLang: defaultLang,
+            filePath: "./i18n/",
+            filePrefix: "i18n_",
+            fileSuffix: "",
+            forever: true,
+            callback: function () {
+                console.log("i18n is ready.");
+            }
+        });
+        // /*切换为中文 - 按钮*/
+        // $(".chinese").click(function() {
+        //     $("[i18n]").i18n({
+        //         defaultLang: "cn",
+        //         filePath: "./i18n/"
+        //     });
+        // });
+        // /*切换为英文 - 按钮*/
+        // $(".english").click(function() {
+        //     $("[i18n]").i18n({
+        //         defaultLang: "en",
+        //         filePath: "/example/i18n/"
+        //     });
+        // });
+
+    });
+
+
+</script>

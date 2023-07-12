@@ -1,0 +1,65 @@
+
+.group-box {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.top {
+    width: 100%;
+    padding: 40px 0px;
+    background-color: white;    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px #ddd solid;
+    min-height: 120px;
+
+}
+
+.group-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+}
+
+.group-info  p {
+    padding: 0;
+    margin: 10px 0px 0px 0px;
+}
+
+.group-info .name {
+    font-size: 18px;
+}
+
+.group-info .num {
+    font-size: 14px;
+    color: gray;
+}
+
+.group-info img {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+}
+
+.bottom {
+    background-color: #eee;
+    width: 100%;
+    flex: 1;
+
+}
+
+.bottom .box {
+    display: flex;
+    margin-top: 20px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.bottom .box p {
+    color: gray;
+    font-size: 20px;
+}

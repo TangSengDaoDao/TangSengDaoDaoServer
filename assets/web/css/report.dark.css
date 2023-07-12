@@ -1,0 +1,192 @@
+
+body {
+    background-color: black;
+    height: 100%;
+    margin:0px;
+    padding: 0px;
+}
+
+.item h1 {
+    font-size: 14px;
+    margin-left: 15px;
+    color: gray;
+}
+
+.item ul {
+    list-style-type: none;
+    padding-inline-start: 0px;
+    margin-block-start: 0em;
+    margin-block-end: 0em;
+    overflow-y: scroll;
+}
+
+.item ul li {
+    min-height: 70px;
+    display: flex;
+    background-color: #1c1c1e;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.item ul li .content {
+    margin-left: 15px;
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+    color: white;
+}
+
+
+.item ul li::after {
+    position: absolute;
+    content: " ";
+    width: 100%;
+    background-color: black;;
+    height: 1px;
+    bottom: 1px;
+    margin-left: 15px;
+
+}
+
+.reportNotice {
+    width: fit-content;
+    text-align: center;
+    margin: 0 auto;
+    color: #5E6E93;
+    cursor: pointer;
+    margin-top: 40px;
+    color: white;
+}
+
+.reportFooter {
+    position: fixed;
+    display: flex;
+    justify-content: space-around;
+    background-color: #1c1c1e;
+    align-items: center;
+    height: 70px;
+    width: 100%;
+    bottom: 0px;
+}
+
+.reportFormBox {
+    display: none;
+}
+
+.reportForm .imgs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: start;
+}
+
+.reportForm .imgs .imgItem {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 10px;
+    position: relative;
+    padding: 4px;
+}
+
+.imgItem .upload {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    cursor: pointer;
+}
+
+.reportForm .item .title {
+   padding: 10px 0px 10px 0px;
+   color: white;
+}
+
+.reportForm .item ul li {
+    padding: 15px 15px;
+}
+
+.reportRemark textarea {
+    height: 100px;
+    border: none;
+    font-size: 18px;
+}
+
+.reportRemark textarea :hover {
+    border: none;
+}
+
+.reportSubmit {
+    width: 200px;
+    height: 40px;
+    background-color: #2F70F5;
+    margin: 0 auto;
+    margin-top: 60px;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 40px;
+    color: white;
+}
+
+.reportSuccessBox{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.reportNoticeTitle{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    font-size: 1.3em;
+    flex-direction: column;
+    color: white;
+    align-items: center;
+    margin-top: 30px;
+    font-weight: 900;
+}
+
+.successIcon {
+    margin-top: 50px;
+}
+
+.reportTip {
+    margin-top: 40px;
+    font-size: 26px;
+    color: white;
+}
+
+.reportDesc {
+    margin-top: 20px;
+    padding: 0 40px;
+    color: white;
+}
+
+.closeBtn {
+    width: 200px;
+    height: 40px;
+    background-color: #2F70F5;
+    margin: 0 auto;
+    margin-top: 60px;
+    border-radius: 4px;
+    text-align: center;
+    line-height: 40px;
+    color: white;
+}
+
+.backIcon {
+    fill: white;
+    width: 20px;
+    height: 20px;
+}
+
+.goIcon {
+    fill: white;
+    width: 20px;
+    height: 20px;
+}

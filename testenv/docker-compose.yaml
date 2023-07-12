@@ -1,0 +1,29 @@
+version: '3.1'
+services:
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: demo  
+      MYSQL_DATABASE: test
+    ports:
+      - 3306:3306    
+  wukongim: # wukongim底层通讯服务
+    image: wukongim/wukongim:latest
+    restart: always
+    # volumes:
+    #   - ./wukongim:/root/wukongim
+    # environment:
+    #   WK_MODE: "debug"
+    #   # WK_EXTERNAL_IP: "111.127.45.198"
+    ports:
+      - 5000:5000 # http api 端口
+    #   - 5100:5100 # tcp端口
+    #   - 5200:5200 # websocket端口
+    #   - 5300:5300 # monitor端口    

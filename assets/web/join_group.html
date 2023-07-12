@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>确认加群</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes"/><!-- 删除苹果默认的工具栏和菜单栏 -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black"/><!-- 设置苹果工具栏颜色 -->
+    <meta name="format-detection" content="telephone=no, email=no"/><!--忽略页面中的数字识别为电话，忽略email识别 -->
+    <link rel="stylesheet" type="text/css" href="css/join_group.css" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="js/IMJSBridge.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+</head>
+
+<body>
+    <div class="group-box">
+       <div class="top">
+           <div class="group-info">
+               <img class="group-avatar"  />
+               <p class="name"></p>
+               <p class="num"></p>
+           </div>
+       </div>
+       <div class="bottom">
+           <div class="box">
+               <p>确认加入群聊</p>
+               <div id="ok" class="button primary" style="width: 150px;">加入该群聊</div>
+           </div>
+       </div>
+    </div>
+</body>
+
+<script language="javascript">
+    let groupNo = getQueryString('group_no');
+    let code = getQueryString('auth_code');
+    $(function(){
+        im.onReady();
+        $.getJSON(apiURL+"groups/"+ groupNo + "/detail").then(function(resp){
+            let data = resp;
+            $(".group-avatar").attr('src',`${apiURL}groups/${groupNo}/avatar`);
+            $(".name").text(data.name);
+            $(".num").text(`（共${data.member_count}人）`);
+        })
+        $("#ok").click(function(){
+            $.getJSON(`${apiURL}groups/${groupNo}/scanjoin?auth_code=${code}`).then(function(resp){
+                im.showConversation(groupNo,2)
+            }).fail(function(e){
+                alert("错误：",JSON.stringify(e));
+            })
+            
+        });
+    })
+</script>
+
+</html>

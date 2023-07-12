@@ -1,0 +1,457 @@
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<meta name="viewport"
+		content="width=device-width,height=device-height, user-scalable=no,initial-scale=1, minimum-scale=1, maximum-scale=1,target-densitydpi=device-dpi ">
+	<title>开源即时通讯软件 涉及收集用户信息的第三方SDK说明</title>
+	<style>
+		<!--
+		/* Font Definitions */
+		@font-face {
+			font-family: Wingdings;
+			panose-1: 5 0 0 0 0 0 0 0 0 0;
+		}
+
+		@font-face {
+			font-family: 宋体;
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		@font-face {
+			font-family: "Cambria Math";
+			panose-1: 2 4 5 3 5 4 6 3 2 4;
+		}
+
+		@font-face {
+			font-family: Calibri;
+			panose-1: 2 15 5 2 2 2 4 3 2 4;
+		}
+
+		@font-face {
+			font-family: "\@宋体";
+			panose-1: 2 1 6 0 3 1 1 1 1 1;
+		}
+
+		/* Style Definitions */
+		p.MsoNormal,
+		li.MsoNormal,
+		div.MsoNormal {
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-justify: inter-ideograph;
+			font-size: 10.5pt;
+			font-family: "Calibri", "sans-serif";
+		}
+
+		p.MsoHeader,
+		li.MsoHeader,
+		div.MsoHeader {
+			mso-style-link: "页眉 Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: center;
+			layout-grid-mode: char;
+			border: none;
+			padding: 0cm;
+			font-size: 9.0pt;
+			font-family: "Calibri", "sans-serif";
+		}
+
+		p.MsoFooter,
+		li.MsoFooter,
+		div.MsoFooter {
+			mso-style-link: "页脚 Char";
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			layout-grid-mode: char;
+			font-size: 9.0pt;
+			font-family: "Calibri", "sans-serif";
+		}
+
+		a:link,
+		span.MsoHyperlink {
+			color: #0563C1;
+			text-decoration: underline;
+		}
+
+		a:visited,
+		span.MsoHyperlinkFollowed {
+			color: #954F72;
+			text-decoration: underline;
+		}
+
+		p {
+			margin-right: 0cm;
+			margin-left: 0cm;
+			font-size: 12.0pt;
+			font-family: 宋体;
+		}
+
+		p.MsoListParagraph,
+		li.MsoListParagraph,
+		div.MsoListParagraph {
+			margin: 0cm;
+			margin-bottom: .0001pt;
+			text-align: justify;
+			text-justify: inter-ideograph;
+			text-indent: 21.0pt;
+			font-size: 10.5pt;
+			font-family: "Calibri", "sans-serif";
+		}
+
+		span.Char {
+			mso-style-name: "页眉 Char";
+			mso-style-link: 页眉;
+		}
+
+		span.Char0 {
+			mso-style-name: "页脚 Char";
+			mso-style-link: 页脚;
+		}
+
+		p.emtext,
+		li.emtext,
+		div.emtext {
+			mso-style-name: em_text;
+			margin-right: 0cm;
+			margin-left: 0cm;
+			font-size: 12.0pt;
+			font-family: 宋体;
+		}
+
+		span.lang-zh {
+			mso-style-name: lang-zh;
+		}
+
+		.MsoChpDefault {
+			font-family: "Calibri", "sans-serif";
+		}
+
+		/* Page Definitions */
+		@page WordSection1 {
+			size: 595.3pt 841.9pt;
+			margin: 72.0pt 90.0pt 72.0pt 90.0pt;
+			layout-grid: 15.6pt;
+		}
+
+		div.WordSection1 {
+			page: WordSection1;
+		}
+
+		/* List Definitions */
+		ol {
+			margin-bottom: 0cm;
+		}
+
+		ul {
+			margin-bottom: 0cm;
+		}
+		-->
+	</style>
+
+</head>
+
+<body lang="ZH-CN" link="#0563C1" vlink="#954F72" style="text-justify-trim:punctuation">
+
+	<div class="WordSection1" style="layout-grid:15.6pt">
+
+		<p class="MsoNormal" align="center" style="text-align:center;background:#F7F7F9"><b><span
+					style="font-size:14.0pt;font-family:宋体;color:#404040">开源即时通讯软件<span
+						lang="EN-US">-</span>涉及收集用户信息的第三方<span lang="EN-US">SDK</span>说明</span></b></p>
+
+		<p class="MsoNormal" align="left" style="text-align:left"><span style="font-family:
+宋体;color:black">更新时间：<span lang="EN-US">2021</span>年<span lang="EN-US">7</span>月<span lang="EN-US">14</span>日</span>
+		</p>
+
+		<p class="MsoNormal" align="left" style="text-align:left"><span style="font-family:
+宋体;color:black">生效时间：<span lang="EN-US">2021</span>年<span lang="EN-US">7</span>月<span lang="EN-US">14</span>日</span>
+		</p>
+
+		<p class="MsoNormal" align="left" style="text-align:left;text-indent:21.0pt"><span
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">为保障开源即时通讯软件的稳定运行或实现相关功能，我们可能会接入由第三方提供的软件开发包（<span
+					lang="EN-US">SDK</span>）。我们会对合作方获取个人信息的<span
+					lang="EN-US">SDK</span>进行严格的安全监测，以保护您的个人信息安全。我们将对接入的相关第三方<span
+					lang="EN-US">SDK</span>在以下目录中列明。您可以通过相关链接查看第三方的数据使用和保护规则。请注意，第三方<span
+					lang="EN-US">SDK</span>可能由于版本升级、策略调整等原因导致其个人信息处理类型发生变化，请以其公示的官方说明为准。</span></p>
+
+		<p class="MsoNormal" align="left" style="text-align:left;text-indent:21.0pt"><span lang="EN-US"
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">&nbsp;</span></p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><b><span lang="EN-US"
+					style="font-size:10.0pt;font-family:宋体;color:black">一、</span></b><span class="lang-zh"><b><span
+						style="font-size:10.0pt;font-family:宋体;color:black">小米<span
+							lang="EN-US">PUSH</span></span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">用于在小米设备上推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、设备位置信息、应用使用信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://dev.mi.com/console/doc/detail?pId=1822" target="_blank"><span style="font-size:10.0pt;font-family:宋体;color:#1493D6;
+background:#FCFCFC">https://dev.mi.com/console/doc/detail?pId=1822</span></a></span></p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><span lang="EN-US"
+					style="font-size:10.0pt;font-family:宋体">二、<span style="font:7.0pt &quot;Times New Roman&quot;">
+					</span></span></span><span class="lang-zh"><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">华为<span lang="EN-US">PUSH</span></span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">用于在华为设备上推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">应用标识信息、消息下发记录等</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://developer.huawei.com/consumer/cn/doc/development/HMSCore-Guides/privacy-statement-0000001050042021"
+					target="_blank"><span
+						style="font-size:10.0pt;font-family:宋体;color:#1493D6;
+background:#FCFCFC">https://developer.huawei.com/consumer/cn/doc/development/HMSCore-Guides/privacy-statement-0000001050042021</span></a></span>
+		</p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><span lang="EN-US"
+					style="font-size:10.0pt;font-family:宋体">三、<span style="font:7.0pt &quot;Times New Roman&quot;">
+					</span></span></span><span class="lang-zh"><b><span lang="EN-US" style="font-size:
+10.0pt;font-family:宋体;color:black">VIVO PUSH</span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">用于在<span
+					lang="EN-US">VIVO</span>设备上推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、网络状态信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://dev.vivo.com.cn/documentCenter/doc/366"><span
+						style="font-size:10.0pt;font-family:宋体;background:#FCFCFC">https://dev.vivo.com.cn/documentCenter/doc/366</span></a></span>
+		</p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体">四、</span></b></span><span class="lang-zh"><b><span
+						lang="EN-US" style="font-size:10.0pt;font-family:宋体;
+color:black">OPPO PUSH</span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">用于在<span
+					lang="EN-US">OPPO</span>设备上推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、网络信息、设备状态信息、应用使用信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://open.oppomobile.com/wiki/doc#id=10445"><span
+						style="font-size:10.0pt;font-family:宋体;background:#FCFCFC">https://open.oppomobile.com/wiki/doc#id=10445</span></a></span>
+		</p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体">五、</span></b></span><span class="lang-zh"><b><span
+						style="font-size:10.0pt;font-family:宋体;color:black">魅族<span lang="EN-US">
+							PUSH</span></span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black;background:#FCFCFC">用于在魅族设备上推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、位置信息、网络状态信息、运营商信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://open.flyme.cn/open-web/views/push.html" target="_blank"><span style="font-size:10.0pt;font-family:宋体;color:#1493D6;
+background:#FCFCFC">https://open.flyme.cn/open-web/views/push.html</span></a></span></p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体">六、</span></b></span><span class="lang-zh"><b><span
+						style="font-size:10.0pt;font-family:宋体;color:black">极光<span lang="EN-US">
+							PUSH</span></span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black">用于无法设备的设备上</span><span
+				style="font-size:10.0pt;font-family:宋体;color:black">推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、位置信息、网络状态信息、运营商信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://www.jiguang.cn/license/privacy"><span
+						style="font-size:10.0pt;font-family:宋体">https://www.jiguang.cn/license/privacy</span></a></span>
+		</p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体">七、</span></b></span><span class="lang-zh"><b><span
+						lang="EN-US" style="font-size:10.0pt;font-family:宋体;
+color:black">Google FCM SDK</span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black">用于海外安卓设设备的</span><span
+				style="font-size:10.0pt;font-family:宋体;color:black">推送消息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、位置信息、网络状态信息、运营商信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://policies.google.com/privacy"><span
+						style="font-size:10.0pt;font-family:宋体">https://policies.google.com/privacy</span></a></span>
+		</p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体">八、</span></b></span><span class="lang-zh"><b><span
+						style="font-size:10.0pt;font-family:宋体;color:black">高德地图</span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black">地图及定位相关服务</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black;background:#FCFCFC">设备标识信息、位置信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接：</span></b><span lang="EN-US"><a
+					href="https://lbs.amap.com/pages/privacy/"><span
+						style="font-size:10.0pt;font-family:宋体">https://lbs.amap.com/pages/privacy/</span></a></span>
+		</p>
+
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体;color:black">九、</span></b></span><span
+				class="lang-zh"><b><span lang="EN-US" style="font-size:10.0pt;font-family:宋体;
+color:black">Bugly SDK</span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black">监控<span lang="EN-US">TPNS</span>自身<span
+					lang="EN-US">SDK</span>质量</span><span style="font-size:10.0pt;font-family:宋体;
+color:black"> </span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span lang="EN-US" style="font-size:10.0pt;
+font-family:宋体;color:black">crash</span><span style="font-size:10.0pt;
+font-family:宋体;color:black">时包含本身<span lang="EN-US">SDK</span>的堆栈信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接</span></b><span class="lang-zh"><span
+					style="font-size:10.0pt;font-family:宋体;color:black">：</span></span><span lang="EN-US"><a
+					href="https://privacy.qq.com/document/priview/fbd2c3f898df4c1c869925dd49d57827"
+					target="_blank"><span
+						style="font-size:10.0pt;font-family:宋体;color:#1493D6">https://privacy.qq.com/document/priview/fbd2c3f898df4c1c869925dd49d57827</span></a></span>
+		</p>
+		<p class="MsoListParagraph" align="left" style="margin-left:31.5pt;text-align:left;
+text-indent:-21.0pt;line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span lang="EN-US"
+						style="font-size:10.0pt;font-family:宋体;color:black">十、</span></b></span><span
+				class="lang-zh"><b><span lang="EN-US" style="font-size:10.0pt;font-family:宋体;
+color:black">X5内核（腾讯浏览服务）</span></b></span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">使用目的：</span></b><span
+				style="font-size:10.0pt;font-family:宋体;color:black">浏览网页数据，提高用户体验 </span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black;
+background:#FCFCFC">收集个人信息类型</span></b><b><span style="font-size:10.0pt;
+font-family:宋体;color:black">：</span></b><span style="font-size:10.0pt;
+font-family:宋体;color:black">网络状态，读写<span lang="EN-US">SD</span>卡，获取手机状态信息</span></p>
+
+		<p class="MsoNormal" style="margin-left:21.0pt;line-height:19.5pt;background:
+#FCFCFC"><b><span style="font-size:10.0pt;font-family:宋体;color:black">官网链接</span></b><span class="lang-zh"><span
+					style="font-size:10.0pt;font-family:宋体;color:black">：</span></span><span lang="EN-US"><a
+					href="https://x5.tencent.com/tbs/guide/develop.html#5" target="_blank"><span
+						style="font-size:10.0pt;font-family:宋体;color:#1493D6">https://x5.tencent.com/tbs/guide/develop.html#5</span></a></span>
+		</p>
+		<p class="MsoNormal" style="line-height:19.5pt;background:#FCFCFC"><span lang="EN-US"
+				style="font-size:10.0pt;font-family:宋体;color:black">&nbsp;</span></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:10.5pt;text-align:left;
+line-height:15.0pt;background:#FCFCFC"><span class="lang-zh"><b><span
+						style="font-size:10.0pt;font-family:宋体;color:black">如何联系我们</span></b></span></p>
+
+		<p class="MsoNormal" align="left" style="text-align:left;text-indent:21.0pt"><span
+				style="font-size:10.0pt;font-family:宋体;color:#404040">如果您对开源即时通讯的涉及收集用户信息的第三方<span
+					lang="EN-US">SDK</span>说明有任何疑问、意见、可以通过<span lang="EN-US">"</span>我的<span
+					lang="EN-US">-</span>通用设置<span lang="EN-US">-</span>意见反馈<span
+					lang="EN-US">"</span>反馈意见与我们取得联系，我们的邮寄联系方式如下：<span lang="EN-US">&nbsp;</span></span></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><b><span
+					style="font-size:10.0pt;font-family:宋体;color:#404040">上海信必达网络科技有限公司</span></b></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><span
+				style="font-size:10.0pt;font-family:宋体;color:#404040">联系部门：开源即时通讯运营部</span></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><span
+				style="font-size:10.0pt;font-family:宋体;color:#404040">地址：AAAAAAAA</p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><span
+				style="font-size:10.0pt;font-family:宋体;color:#404040">电子邮箱：<span lang="EN-US">BBBBBBBB@qq.com
+				</span></span></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><span
+				style="font-size:10.0pt;font-family:宋体;color:#404040">一般情况下，我们将收到您相关信息并核实您身份后十五个工作日内回复。如果您对我们的回复不满意，特别是您认为我们的个人信息处理行为损害了您的合法权益，您还可以通过向CCCCCCCC有管辖权的法院提起诉讼来寻求解决方案。<span
+					lang="EN-US">&nbsp;&nbsp;</span></span></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><span
+				style="font-size:10.0pt;font-family:宋体;color:#404040">开源即时通讯版权所有，保留一切解释权利。</span><span lang="EN-US"
+				style="font-size:14.0pt;font-family:宋体;color:#404040">&nbsp;</span></p>
+
+		<p class="MsoNormal" align="left" style="margin-left:21.0pt;text-align:left"><span lang="EN-US"
+				style="font-size:14.0pt;font-family:宋体;color:#404040">&nbsp;</span></p>
+
+		<p class="MsoNormal" align="center" style="text-align:center;background:#F7F7F9"><b><span
+					style="font-size:14.0pt;font-family:宋体;color:#404040">XXXX XXXX</span></b></p>
+
+	</div>
+
+
+
+
+</body>
+
+</html>

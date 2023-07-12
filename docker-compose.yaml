@@ -1,0 +1,92 @@
+version: '3.7'
+
+services:
+  redis:  # redis
+    image: redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - ./redisdata:/data
+  mysql:  # mysql数据库
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: wukong # 数据库的密码
+      MYSQL_DATABASE: im
+    volumes:
+      - ./mysqldata:/var/lib/mysql
+  minio: # minio文件管理服务
+    image: minio/minio:RELEASE.2020-11-13T20-10-18Z # use a remote image
+    expose:
+      - "9000"
+    command: "server /data --console-address ':9001'"
+    environment:
+      MINIO_ROOT_USER: "2zp25t3ZbFzKmDGK"
+      MINIO_ROOT_PASSWORD: "l0D97QHu1rmOojyWQBtkHdjOCongRyWiwY8FSsBXmIM"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - ./miniodata:/data  
+  wukongim: # wukongim底层通讯服务
+    image: wukongim/wukongim:latest
+    restart: always
+    volumes:
+      - ./wukongim:/root/wukongim
+    environment:
+      WK_MODE: "release"
+      WK_CONVERSATION_ON: "true" # 服务器维护最近的会话列表记录。
+      WK_TOKENAUTHON: "true" # 是否开启token验证
+      # WK_EXTERNAL_IP: "111.127.45.198"
+    ports:
+      - 5000:5000 # http api 端口
+      - 5100:5100 # tcp端口
+      - 5200:5200 # websocket端口
+      - 5300:5300 # monitor端口      
+  wukongchatserver:  # wukongchat的业务服务
+    image: wukongim/wukongchatserver:latest
+    restart: always
+    command: "api"
+    healthcheck:
+      test: "wget -q -Y off -O /dev/null http://localhost:8080/v1/ping > /dev/null 2>&1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    depends_on:
+       - redis
+       - mysql
+       - wukongim
+    environment:
+      - IMURL=http://wukongim:5000
+      - RedisAddr=redis:6379
+      # - SMSCode=123456 # 短信验证码，调试用，为了安全生产不要打开
+      # - UploadURL=http://xxx.xx.xxx.xx:9000 # minio的文件上传基地址
+      # - FileDownloadURL=http://xxx.xx.xxx.xx:9000 # minio的文件下载基地址
+      - MinioAccessKeyID=1zp15t3ZzFzKoDGK   # 上面设置的minio的accessKeyID
+      - MinioSecretAccessKey=p0D97Qou1rmOojyWQbtkHdjOCWngRyliwY8FSsBXmIU # 上面设置的minio的secretAccessKey
+      - MySQLAddr=root:wukong@tcp(mysql)/im?charset=utf8mb4&parseTime=true&loc=Local # 记得修改上面设置的数据库的密码
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./serverdata/push:/home/assets/push
+  # redis-commander:  # redis web管理工具 调试用，为了安全生产不要打开
+  #   image: rediscommander/redis-commander:latest
+  #   restart: always
+  #   environment:
+  #     - REDIS_HOSTS=local:redis:6379
+  #   ports:
+  #     - "8088:8081"
+  # adminer:  # mysql web管理工具 调试用，为了安全生产不要打开
+  #   container_name: adminer
+  #   image: adminer
+  #   ports:
+  #     - 8036:8080    
