@@ -337,6 +337,11 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 		return nil
 	}
 
+	if !w.containSupportType(common.ContentType(msgResp.ContentType)) {
+		w.Debug("不推送：不支持的消息类型！", zap.Int("contentType", msgResp.ContentType))
+		return nil
+	}
+
 	var err error
 	var users []*user.Resp
 	userSettings := make([]*user.SettingResp, 0)
@@ -378,21 +383,34 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 		} else {
 			w.Info("开始音视频推送...")
 		}
+		var toUser *user.Resp
+		if len(users) > 0 {
+			for _, user := range users {
+				if user.UID == toUID {
+					toUser = user
+					break
+				}
+			}
+		}
+		if toUser == nil {
+			w.Error("没有找到toUser", zap.String("toUID", toUID))
+			continue
+		}
 
 		w.ctx.PushPool.Work <- &pool.Job{
 			Data: map[string]interface{}{
-				"toUID": toUID,
-				"msg":   msgResp,
+				"toUser": toUser,
+				"msg":    msgResp,
 			},
 			JobFunc: func(id int64, data interface{}) {
 				dataMap := data.(map[string]interface{})
-				toUID := dataMap["toUID"].(string)
+				toUser := dataMap["toUser"].(*user.Resp)
 				msgResp := dataMap["msg"].(msgOfflineNotify)
-				result, err := w.push(toUID, msgResp)
+				result, err := w.push(toUser, msgResp)
 				if err != nil {
-					w.Debug("推送失败！", zap.String("uid", toUID), zap.String("deviceType", result.deviceType), zap.String("deviceToken", result.deviceToken), zap.Error(err))
+					w.Debug("推送失败！", zap.String("uid", toUser.UID), zap.String("deviceType", result.deviceType), zap.String("deviceToken", result.deviceToken), zap.Error(err))
 				} else {
-					w.Debug("推送成功！", zap.String("uid", toUID), zap.String("deviceType", result.deviceType), zap.String("deviceToken", result.deviceToken))
+					w.Debug("推送成功！", zap.String("uid", toUser.UID), zap.String("deviceType", result.deviceType), zap.String("deviceToken", result.deviceToken))
 				}
 			},
 		}
@@ -438,8 +456,9 @@ func (w *Webhook) allowPush(users []*user.Resp, userSettings []*user.SettingResp
 	return isPush
 }
 
-func (w *Webhook) push(toUID string, msgResp msgOfflineNotify) (pushResp, error) {
+func (w *Webhook) push(toUser *user.Resp, msgResp msgOfflineNotify) (pushResp, error) {
 
+	toUID := toUser.UID
 	var deviceMap map[string]string
 	deviceMap, err := w.ctx.GetRedisConn().Hgetall(fmt.Sprintf("%s%s", common.UserDeviceTokenPrefix, toUID))
 	if err != nil {
@@ -468,7 +487,7 @@ func (w *Webhook) push(toUID string, msgResp msgOfflineNotify) (pushResp, error)
 			deviceToken: deviceToken,
 		}, errors.New("不支持的推送设备！")
 	}
-	payload, err := pusher.GetPayload(msgResp, w.ctx, toUID)
+	payload, err := pusher.GetPayload(msgResp, w.ctx, toUser)
 	if err != nil {
 		return pushResp{
 			deviceType:  deviceType,

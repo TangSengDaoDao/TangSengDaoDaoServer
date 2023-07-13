@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/config"
 )
@@ -71,6 +72,6 @@ func (b *BaseRTCPayload) GetRTCPayload() RTCPayload {
 
 // Push Push
 type Push interface {
-	GetPayload(msg msgOfflineNotify, ctx *config.Context, toUID string) (Payload, error)
+	GetPayload(msg msgOfflineNotify, ctx *config.Context, toUser *user.Resp) (Payload, error)
 	Push(deviceToken string, payload Payload) error
 }

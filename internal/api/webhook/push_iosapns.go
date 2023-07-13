@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/util"
@@ -60,8 +61,8 @@ func (p *IOSPush) createClient() (*apns2.Client, error) {
 }
 
 // GetPayload 获取推送负载
-func (p *IOSPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUID string) (Payload, error) {
-	pushInfo, err := ParsePushInfo(msg, ctx, toUID)
+func (p *IOSPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUser *user.Resp) (Payload, error) {
+	pushInfo, err := ParsePushInfo(msg, ctx, toUser)
 	if err != nil {
 		return nil, err
 	}

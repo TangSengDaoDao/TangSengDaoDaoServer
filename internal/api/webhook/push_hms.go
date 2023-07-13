@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/network"
@@ -50,8 +51,8 @@ func NewHMSPush(appID string, appSecret string, packageName string) *HMSPush {
 }
 
 // GetPayload 获取推送负载
-func (h *HMSPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUID string) (Payload, error) {
-	payloadInfo, err := ParsePushInfo(msg, ctx, toUID)
+func (h *HMSPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUser *user.Resp) (Payload, error) {
+	payloadInfo, err := ParsePushInfo(msg, ctx, toUser)
 	if err != nil {
 		log.Warn("推送失败！", zap.Error(err))
 		return nil, err

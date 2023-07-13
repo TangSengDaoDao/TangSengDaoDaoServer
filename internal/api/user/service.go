@@ -703,6 +703,7 @@ type Resp struct {
 	Email          string
 	IsUploadAvatar int
 	NewMsgNotice   int
+	MsgShowDetail  int
 }
 
 func newResp(m *Model) *Resp {
@@ -714,6 +715,7 @@ func newResp(m *Model) *Resp {
 		Email:          m.Email,
 		IsUploadAvatar: m.IsUploadAvatar,
 		NewMsgNotice:   m.NewMsgNotice,
+		MsgShowDetail:  m.MsgShowDetail,
 	}
 }
 

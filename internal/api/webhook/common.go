@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/log"
@@ -57,8 +58,8 @@ func (p *PayloadInfo) toPayload() Payload {
 }
 
 // ParsePushInfo 解析推送信息 获得title,content,badge
-func ParsePushInfo(msgResp msgOfflineNotify, ctx *config.Context, toUID string) (*PayloadInfo, error) {
-
+func ParsePushInfo(msgResp msgOfflineNotify, ctx *config.Context, toUser *user.Resp) (*PayloadInfo, error) {
+	toUID := toUser.UID
 	fromName, err := getFromName(msgResp, ctx)
 	if err != nil {
 		return nil, err
@@ -74,7 +75,7 @@ func ParsePushInfo(msgResp msgOfflineNotify, ctx *config.Context, toUID string) 
 		Badge: badge,
 	}
 
-	content, err := getMessageAlert(msgResp, ctx)
+	content, err := getMessageAlert(msgResp, toUser, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,9 +106,9 @@ func getFromName(msgResp msgOfflineNotify, ctx *config.Context) (string, error) 
 	return fromName, nil
 }
 
-func getMessageAlert(msg msgOfflineNotify, ctx *config.Context) (string, error) {
+func getMessageAlert(msg msgOfflineNotify, toUser *user.Resp, ctx *config.Context) (string, error) {
 	setting := config.SettingFromUint8(msg.Setting)
-	if msg.PayloadMap == nil || setting.Signal || !ctx.GetConfig().Push.ContentDetailOn {
+	if msg.PayloadMap == nil || setting.Signal || !ctx.GetConfig().Push.ContentDetailOn || toUser.MsgShowDetail == 1 {
 		return "您有一条新的消息", nil
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/network"
@@ -46,8 +47,8 @@ func NewMIPayload(payloadInfo *PayloadInfo, notifyID string) *MIPayload {
 }
 
 // GetPayload 获取推送负载
-func (m *MIPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUID string) (Payload, error) {
-	payloadInfo, err := ParsePushInfo(msg, ctx, toUID)
+func (m *MIPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUser *user.Resp) (Payload, error) {
+	payloadInfo, err := ParsePushInfo(msg, ctx, toUser)
 	if err != nil {
 		return nil, err
 	}
