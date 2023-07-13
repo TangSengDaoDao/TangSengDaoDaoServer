@@ -129,6 +129,18 @@ iOS端源码：     https://github.com/TangSengDaoDao/TangSengDaoDaoiOS
 
 https://docs.tangsengdaodao.com
 
+Star
+------------
+
+我们团队一直致力于即时通讯的研发，需要您的鼓励，如果您觉得本项目对您有帮助，欢迎点个star，您的支持是我们最大的动力。
+
+加入群聊
+------------
+
+微信：加群请备注“唐僧叨叨”
+
+<img src="docs/wechat.png" width="200px" height="200px">
+
 许可证
 ------------
 
