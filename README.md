@@ -116,3 +116,22 @@
 |:---:|:---:|:---:|:---:|
 |[点击体验](https://web.botgate.cn)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)|
 
+客户端源码
+------------
+
+Web/PC端源码： https://github.com/TangSengDaoDao/TangSengDaoDaoWeb
+
+Android端源码： https://github.com/TangSengDaoDao/TangSengDaoDaoAndroid
+
+iOS端源码：     https://github.com/TangSengDaoDao/TangSengDaoDaoiOS
+
+
+技术文档
+------------
+
+https://docs.tangsengdaodao.com
+
+许可证
+------------
+
+唐僧叨叨 使用 Apache 2.0 许可证。有关详情，请参阅 LICENSE 文件。
