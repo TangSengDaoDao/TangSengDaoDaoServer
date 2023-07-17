@@ -27,20 +27,25 @@ func NewMySQL(addr string, sqlDir string, migration bool) *dbr.Session {
 	session := conn.NewSession(nil)
 
 	if migration {
-		Migration(sqlDir, session)
+		err = Migration(sqlDir, session)
+		if err != nil {
+			fmt.Println("Migration error", addr, err)
+			panic(err)
+		}
 	}
 
 	return session
 }
 
-func Migration(sqlDir string, session *dbr.Session) {
+func Migration(sqlDir string, session *dbr.Session) error {
 	migrations := &FileDirMigrationSource{
 		Dir: sqlDir,
 	}
 	_, err := migrate.Exec(session.DB, "mysql", migrations, migrate.Up)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 type byID []*migrate.Migration

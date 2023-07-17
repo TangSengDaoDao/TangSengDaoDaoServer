@@ -1,0 +1,74 @@
+version: '3.1'
+services:
+  wukongim:  # 悟空IM通讯服务
+    image: registry.cn-shanghai.aliyuncs.com/wukongim/wukongim:latest
+    restart: always
+    volumes:
+      - ./configs/wk.yaml:/root/wukongim/configs/wk.yaml
+      - ./logs/wk:/root/wukongim/logs
+  tangsengdaodaoserver:  # 唐僧叨叨的业务服务
+    image: registry.cn-shanghai.aliyuncs.com/wukongim/tangsengdaodaoserver:latest
+    restart: always
+    command: "api"
+    healthcheck:
+      test: "wget -q -Y off -O /dev/null http://localhost:8090/v1/ping > /dev/null 2>&1"
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    depends_on:
+       - redis
+       - mysql
+       - wukongim
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./configs/tsdd.yaml:/home/configs/tsdd.yaml
+      - ./logs/tsdd:/home/logs
+  tangsengdaodaoweb:  # 唐僧叨叨的web服务
+    image: registry.cn-shanghai.aliyuncs.com/wukongim/tangsengdaodaoweb:latest
+    restart: always
+    environment:
+      - API_URL
+    ports:
+      - "82:80" 
+  minio: # minio文件管理服务
+    image: minio/minio:latest # use a remote image
+    expose:
+      - "9000"
+      - "9001"
+    command: "server /data --console-address ':9001'"
+    environment:
+      - MINIO_ROOT_USER
+      - MINIO_ROOT_PASSWORD
+      - MINIO_SERVER_URL
+      - MINIO_BROWSER_REDIRECT_URL
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - ./miniodata:/data    
+  mysql:  # mysql数据库
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+    volumes:
+      - ./mysqldata:/var/lib/mysql                    
+  redis:  # redis
+    image: redis
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  adminer:  # mysql web管理工具 调试用，为了安全生产不要打开
+   image: adminer:latest
+   ports:
+     - 8306:8080     

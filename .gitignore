@@ -25,3 +25,5 @@
 .DS_Store
 
 .VSCodeCounter/
+
+logs/

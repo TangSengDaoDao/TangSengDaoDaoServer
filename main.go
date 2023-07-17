@@ -26,7 +26,9 @@ var TreeState string  // git tree state
 func loadConfigFromFile(cfgFile string) *viper.Viper {
 	vp := viper.New()
 	vp.SetConfigFile(cfgFile)
-	if err := vp.ReadInConfig(); err == nil {
+	if err := vp.ReadInConfig(); err != nil {
+		fmt.Println("load config is error", err, cfgFile)
+	} else {
 		fmt.Println("Using config file:", vp.ConfigFileUsed())
 	}
 	return vp
@@ -34,7 +36,7 @@ func loadConfigFromFile(cfgFile string) *viper.Viper {
 
 func main() {
 
-	vp := loadConfigFromFile("configs/config.yaml")
+	vp := loadConfigFromFile("configs/tsdd.yaml")
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -49,6 +51,7 @@ func main() {
 	logOpts := log.NewOptions()
 	logOpts.Level = cfg.Logger.Level
 	logOpts.LineNum = cfg.Logger.LineNum
+	logOpts.LogDir = cfg.Logger.Dir
 	log.Configure(logOpts)
 
 	var serverType string
