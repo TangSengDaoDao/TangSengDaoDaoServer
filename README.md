@@ -32,12 +32,12 @@
 
 ||||
 |:---:|:---:|:--:|
-|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/conversationlist.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/messages.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/robot.webp)|
+|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
 
 
 |快速回复|群内操作|        其他功能         |
 |:---:|:---:|:-------------------:|
-|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/weblogin.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/apm.webp)| ![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/others.webp) |
+|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
 
 ![](docs/screenshot/pc2.png)
 
