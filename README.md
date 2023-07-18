@@ -35,7 +35,7 @@
 |![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
 
 
-|快速回复|群内操作|        其他功能         |
+|||          |
 |:---:|:---:|:-------------------:|
 |![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
 
