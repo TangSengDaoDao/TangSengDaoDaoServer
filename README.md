@@ -137,7 +137,7 @@ iOS端源码：     https://github.com/TangSengDaoDao/TangSengDaoDaoiOS
 技术文档
 ------------
 
-https://docs.tangsengdaodao.com
+https://tangsengdaodao.com
 
 Star
 ------------
