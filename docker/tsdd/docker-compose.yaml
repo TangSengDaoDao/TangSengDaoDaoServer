@@ -3,8 +3,12 @@ services:
   wukongim:  # 悟空IM通讯服务
     image: registry.cn-shanghai.aliyuncs.com/wukongim/wukongim:latest
     restart: always
+    ports:
+      - "5100:5100"
+      - "5200:5200"
+      - "5300:5300"
     volumes:
-      - ./configs/wk.yaml:/root/wukongim/configs/wk.yaml
+      - ./configs/wk.yaml:/root/wukongim/wk.yaml
       - ./logs/wk:/root/wukongim/logs
   tangsengdaodaoserver:  # 唐僧叨叨的业务服务
     image: registry.cn-shanghai.aliyuncs.com/wukongim/tangsengdaodaoserver:latest
@@ -37,6 +41,9 @@ services:
       - "9000"
       - "9001"
     command: "server /data --console-address ':9001'"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     environment:
       - MINIO_ROOT_USER
       - MINIO_ROOT_PASSWORD

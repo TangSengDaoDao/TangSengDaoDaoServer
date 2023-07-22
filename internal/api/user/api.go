@@ -187,6 +187,7 @@ func (u *User) updateSystemUserToken() {
 		UID:         u.ctx.GetConfig().Account.SystemUID,
 		DeviceFlag:  config.APP,
 		DeviceLevel: config.DeviceLevelMaster,
+		Token:       util.GenerUUID(),
 	})
 	if err != nil {
 		u.Error("更新IM的token失败！", zap.Error(err))
@@ -196,6 +197,7 @@ func (u *User) updateSystemUserToken() {
 		UID:         u.ctx.GetConfig().Account.FileHelperUID,
 		DeviceFlag:  config.APP,
 		DeviceLevel: config.DeviceLevelMaster,
+		Token:       util.GenerUUID(),
 	})
 	if err != nil {
 		u.Error("更新IM的token失败！", zap.Error(err))
@@ -206,6 +208,7 @@ func (u *User) updateSystemUserToken() {
 		UID:         u.ctx.GetConfig().Account.AdminUID,
 		DeviceFlag:  config.APP,
 		DeviceLevel: config.DeviceLevelMaster,
+		Token:       util.GenerUUID(),
 	})
 	if err != nil {
 		u.Error("更新IM的token失败！", zap.Error(err))
@@ -264,6 +267,7 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 	}
 	ph := ""
 	fileName := fmt.Sprintf("%s.png", uid)
+	downloadUrl := ""
 	if userInfo.IsUploadAvatar == 1 {
 		avatarID := crc32.ChecksumIEEE([]byte(uid)) % uint32(u.ctx.GetConfig().Avatar.Partition)
 		ph = fmt.Sprintf("/avatar/%d/%s.png", avatarID, uid)
@@ -271,15 +275,20 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 		//访问默认头像
 		avatarID := crc32.ChecksumIEEE([]byte(uid)) % uint32(u.ctx.GetConfig().Avatar.DefaultCount)
 		ph = fmt.Sprintf("/avatar/default/test (%d).jpg", avatarID)
+		if strings.TrimSpace(u.ctx.GetConfig().Avatar.DefaultBaseURL) != "" {
+			downloadUrl = strings.ReplaceAll(u.ctx.GetConfig().Avatar.DefaultBaseURL, "{avatar}", fmt.Sprintf("%d", avatarID))
+		}
 	}
-	downloadUrl, err := u.fileService.DownloadURL(ph, fileName)
-	if err != nil {
-		u.Error("获取文件下载地址失败", zap.Error(err))
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	if downloadUrl == "" {
+		downloadUrl, err = u.fileService.DownloadURL(ph, fileName)
+		if err != nil {
+			u.Error("获取文件下载地址失败", zap.Error(err))
+			c.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	c.Redirect(http.StatusFound, fmt.Sprintf("%s#%s", downloadUrl, v))
+	}
+	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("%s#%s", downloadUrl, v))
 
 }
 

@@ -110,8 +110,9 @@ mode: "debug" #   运行模式 debug or release
 #  systemGroupName: "意见反馈群" # 系统群组名称
 #  adminUID: "admin" # 管理员uid
 
-##################### 头像 ####################
+##################### 头像 #####################
 #avatar:
+#  defaultBaseURL: "" # 默认头像cdn地址
 #  default: "assets/assets/avatar.png" # 默认头像
 #  defaultCount: 900 # 默认头像数量
 #  partition: 100 # 头像分区数量

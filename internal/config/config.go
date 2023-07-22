@@ -145,9 +145,11 @@ type Config struct {
 	}
 	// ---------- 头像 ----------
 	Avatar struct {
-		Default      string // 默认头像
-		DefaultCount int    // 默认头像数量
-		Partition    int    // 头像分区数量
+		Default        string // 默认头像
+		DefaultCount   int    // 默认头像数量
+		Partition      int    // 头像分区数量
+		DefaultBaseURL string // 默认头像的基地址
+
 	}
 	// ---------- 短编号 ----------
 	ShortNo struct {
@@ -258,8 +260,8 @@ func New() *Config {
 			APIBaseURL  string
 			WebLoginURL string
 		}{
-			BaseURL:     "http://127.0.0.1:8090",
-			WebLoginURL: "http://localhost:3000/login",
+			BaseURL:     "",
+			WebLoginURL: "",
 		},
 
 		// ---------- db配置 ----------
@@ -332,13 +334,16 @@ func New() *Config {
 
 		// ---------- avatar ----------
 		Avatar: struct {
-			Default      string
-			DefaultCount int
-			Partition    int
+			Default        string
+			DefaultCount   int
+			Partition      int
+			DefaultBaseURL string // 默认头像的基地址
+
 		}{
-			Default:      "assets/assets/avatar.png",
-			DefaultCount: 900,
-			Partition:    100,
+			Default:        "assets/assets/avatar.png",
+			DefaultCount:   900,
+			Partition:      100,
+			DefaultBaseURL: "",
 		},
 
 		// ---------- 短号配置 ----------
@@ -463,6 +468,14 @@ func (c *Config) ConfigureWithViper(vp *viper.Viper) {
 	}
 	c.External.WebLoginURL = c.getString("external.webLoginURL", c.External.WebLoginURL)
 	c.External.BaseURL = c.getString("external.baseURL", c.External.BaseURL)
+
+	if strings.TrimSpace(c.External.WebLoginURL) == "" {
+		c.External.WebLoginURL = fmt.Sprintf("http://%s:82", c.External.IP)
+	}
+
+	if strings.TrimSpace(c.External.BaseURL) == "" {
+		c.External.BaseURL = fmt.Sprintf("http://%s:8090", c.External.IP)
+	}
 	if strings.TrimSpace(c.External.H5BaseURL) == "" {
 		c.External.H5BaseURL = fmt.Sprintf("%s/web", c.External.BaseURL)
 	}
@@ -507,6 +520,12 @@ func (c *Config) ConfigureWithViper(vp *viper.Viper) {
 	c.OSS.AccessKeySecret = c.getString("oss.accessKeySecret", c.OSS.AccessKeySecret)
 	// minio
 	c.Minio.URL = c.getString("minio.url", c.Minio.URL)
+
+	if c.FileService == FileServiceMinio {
+		if strings.TrimSpace(c.Minio.URL) == "" {
+			c.Minio.URL = fmt.Sprintf("http://%s:9000", c.External.IP)
+		}
+	}
 	c.Minio.AccessKeyID = c.getString("minio.accessKeyID", c.Minio.AccessKeyID)
 	c.Minio.SecretAccessKey = c.getString("minio.secretAccessKey", c.Minio.SecretAccessKey)
 	// seaweedfs
@@ -536,6 +555,7 @@ func (c *Config) ConfigureWithViper(vp *viper.Viper) {
 	c.Avatar.Default = c.getString("avatar.default", c.Avatar.Default)
 	c.Avatar.DefaultCount = c.getInt("avatar.defaultCount", c.Avatar.DefaultCount)
 	c.Avatar.Partition = c.getInt("avatar.partition", c.Avatar.Partition)
+	c.Avatar.DefaultBaseURL = c.getString("avatar.defaultBaseURL", c.Avatar.DefaultBaseURL)
 
 	//#################### 短号配置 ####################
 	c.ShortNo.NumOn = c.getBool("shortNo.numOn", c.ShortNo.NumOn)
