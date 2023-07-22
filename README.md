@@ -58,7 +58,9 @@ tsdd install --ip xx.xx.xx.xx
 tsdd start
 ```
 
-演示截图
+更多部署方式参考文档：https://tangsengdaodao.com/dev/backend/deploy-compose.html
+
+动画演示
 ------------
 
 ||||
@@ -180,7 +182,7 @@ Star
 
 微信：加群请备注“唐僧叨叨”
 
-<img src="docs/wechat.png" width="200px" height="200px">
+<img src="docs/tsddwx.png" width="200px" height="200px">
 
 许可证
 ------------
