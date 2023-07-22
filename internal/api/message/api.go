@@ -3,9 +3,7 @@ package message
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -97,8 +95,6 @@ func (m *Message) Route(r *wkhttp.WKHttp) {
 		message.POST("/reminder/sync", m.reminderSync)            // 同步提醒
 		message.POST("/reminder/done", m.reminderDone)            // 提醒已处理完成
 		message.GET("/prohibit_words/sync", m.synccProhibitWords) // 同步违禁词
-		message.POST("/backup", m.backup)                         // 消息备份
-		message.GET("/recovery", m.recovery)                      // 消息回复
 	}
 	messages := r.Group("/v1/messages", m.ctx.AuthMiddleware(r))
 	{
@@ -106,11 +102,6 @@ func (m *Message) Route(r *wkhttp.WKHttp) {
 		// messages.PUT("/:message_id/voicereaded", m.voiceReaded)
 		messages.GET("/:message_id/receipt", m.messageReceiptList) // 消息回执列表
 	}
-	messageNoAuth := r.Group("/v1/message")
-	{
-		messageNoAuth.GET("/erase", m.erase) // 消息擦除（需要超级权限）
-	}
-
 	// 回应
 	reactions := r.Group("/v1/reactions", m.ctx.AuthMiddleware(r))
 	{
@@ -130,76 +121,6 @@ func (m *Message) Route(r *wkhttp.WKHttp) {
 		replyTotal.POST("/sync", m.syncReplyTotal) // 同步回复统计数据
 	}
 	m.ctx.AddMessagesListener(m.listenerMessages) // 监听消息
-}
-
-// 聊天消息回复
-func (m *Message) recovery(c *wkhttp.Context) {
-	loginUID := c.GetLoginUID()
-	fileName := fmt.Sprintf("./msgbackup/%s.json", loginUID)
-	bytes, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		c.ResponseError(errors.New("未备份消息信息！"))
-		return
-	}
-	c.Data(http.StatusOK, "application/json", bytes)
-}
-
-// 判断文件是否存在
-func (m *Message) exists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
-}
-
-// 备份聊天记录
-func (m *Message) backup(c *wkhttp.Context) {
-	loginUID := c.GetLoginUID()
-	if c.Request.MultipartForm == nil {
-		err := c.Request.ParseMultipartForm(1024 * 1024 * 20) // 20M
-		if err != nil {
-			m.Error("数据格式不正确！", zap.Error(err))
-			c.ResponseError(errors.New("数据格式不正确！"))
-			return
-		}
-	}
-	file, _, err := c.Request.FormFile("file")
-	if err != nil {
-		m.Error("读取文件失败！", zap.Error(err))
-		c.ResponseError(errors.New("读取文件失败！"))
-		return
-	}
-	fileName := fmt.Sprintf("./msgbackup/%s.json", loginUID)
-	if !m.exists("./msgbackup") {
-		err = os.Mkdir("./msgbackup", os.ModePerm)
-		if err != nil {
-			m.Error("创建文件夹错误！", zap.Error(err))
-			c.ResponseError(errors.New("创建文件夹错误！"))
-			return
-		}
-	}
-	if !m.exists(fileName) {
-		_, err = os.Create(fileName)
-		if err != nil {
-			m.Error("创建文件失败！", zap.Error(err))
-			c.ResponseError(errors.New("创建文件失败！"))
-			return
-		}
-
-	}
-	fileBytes, _ := ioutil.ReadAll(file)
-	err = ioutil.WriteFile(fileName, fileBytes, 0666)
-	defer file.Close()
-	if err != nil {
-		m.Error("上传文件失败！", zap.Error(err))
-		c.ResponseError(errors.New("上传文件失败！"))
-		return
-	}
-	c.ResponseOK()
 }
 
 // 消息编辑
@@ -1452,159 +1373,6 @@ func (m *Message) syncSensitiveWords(c *wkhttp.Context) {
 		List:    resultList,
 		Version: sensitiveWordsVersion,
 	})
-}
-
-// erase 消息擦除
-func (m *Message) erase(c *wkhttp.Context) {
-	appConfig, err := m.commonService.GetAppConfig()
-	if err != nil {
-		m.Error("获取应用配置失败！", zap.Error(err))
-		c.ResponseError(errors.New("获取应用配置失败！"))
-		return
-	}
-	if appConfig.SuperTokenOn == 0 {
-		c.ResponseError(errors.New("超级权限已被关闭！"))
-		return
-	}
-	token := c.Query("token")
-	if strings.TrimSpace(token) == "" || token != appConfig.SuperToken {
-		c.ResponseError(errors.New("无权限访问！"))
-		return
-	}
-	typeStr := strings.TrimSpace(c.Query("type")) // from 只擦除发送者的消息  all擦除所有的消息
-	channelID := c.Query("channel_id")
-	channelType, _ := strconv.ParseInt(c.Query("channel_type"), 10, 64)
-	channelTypeI8 := uint8(channelType)
-	fromUID := c.Query("from_uid")
-	uid := c.Query("uid")
-	if strings.TrimSpace(typeStr) == "" {
-		typeStr = "from"
-	}
-
-	if typeStr == "from" { // 删除from发的所有消息
-		if strings.TrimSpace(fromUID) == "" {
-			c.ResponseError(errors.New("from_uid不能为空！"))
-			return
-		}
-	}
-
-	if strings.TrimSpace(uid) != "" {
-
-		friends, err := m.userService.GetFriends(uid)
-		if err != nil {
-			c.ResponseError(err)
-			return
-		}
-		groups, err := m.groupService.GetGroupsWithMemberUID(uid)
-		if err != nil {
-			c.ResponseError(err)
-			return
-		}
-		if len(friends) > 0 {
-			for _, friend := range friends {
-				err = m.eraseForType(uid, friend.UID, common.ChannelTypePerson.Uint8(), typeStr)
-				if err != nil {
-					c.ResponseError(err)
-					return
-				}
-			}
-		}
-		if len(groups) > 0 {
-			for _, gp := range groups {
-				err = m.eraseForType(uid, gp.GroupNo, common.ChannelTypeGroup.Uint8(), typeStr)
-				if err != nil {
-					c.ResponseError(err)
-					return
-				}
-			}
-		}
-		return
-
-	}
-	if strings.TrimSpace(channelID) == "" {
-		c.ResponseError(errors.New("channel_id不能为空！"))
-		return
-	}
-	err = m.eraseForType(fromUID, channelID, channelTypeI8, typeStr)
-	if err != nil {
-		c.ResponseError(err)
-		return
-	}
-
-	c.ResponseOK()
-
-}
-
-func (m *Message) eraseForType(fromUID, channelID string, channelType uint8, typeStr string) error {
-
-	fakeChannelID := channelID
-	if channelType == common.ChannelTypePerson.Uint8() {
-		fakeChannelID = common.GetFakeChannelIDWith(fromUID, channelID)
-	}
-	messageSeq, err := m.db.queryMaxMessageSeq(fakeChannelID, channelType)
-	if err != nil {
-		return err
-	}
-
-	if channelType == common.ChannelTypePerson.Uint8() {
-		tx, _ := m.ctx.DB().Begin()
-		defer func() {
-			if err := recover(); err != nil {
-				tx.RollbackUnlessCommitted()
-				panic(err)
-			}
-		}()
-		err = m.channelOffsetDB.insertOrUpdateTx(&channelOffsetModel{
-			UID:         fromUID,
-			ChannelID:   channelID,
-			ChannelType: common.ChannelTypePerson.Uint8(),
-			MessageSeq:  messageSeq,
-		}, tx)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-		err = m.channelOffsetDB.insertOrUpdateTx(&channelOffsetModel{
-			UID:         channelID,
-			ChannelID:   fromUID,
-			ChannelType: common.ChannelTypePerson.Uint8(),
-			MessageSeq:  messageSeq,
-		}, tx)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-		if err := tx.Commit(); err != nil {
-			tx.Rollback()
-			return err
-		}
-	} else {
-		err = m.channelOffsetDB.insertOrUpdate(&channelOffsetModel{
-			ChannelID:   channelID,
-			ChannelType: channelType,
-			MessageSeq:  messageSeq,
-		})
-		if err != nil {
-			return err
-		}
-	}
-	err = m.ctx.SendCMD(config.MsgCMDReq{
-		ChannelID:   channelID,
-		ChannelType: channelType,
-		FromUID:     fromUID,
-		CMD:         CMDMessageErase,
-		Param: map[string]interface{}{
-			"erase_type":   typeStr,
-			"channel_id":   channelID,
-			"channel_type": channelType,
-			"from_uid":     fromUID,
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // // 接受IM的消息
