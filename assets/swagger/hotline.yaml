@@ -1,0 +1,2484 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "hotline"
+    description: ""
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /hotline/widget/{app_id}/config:
+    get:
+      tags:
+        - "hotline"
+      summary: "widget配置"
+      description: "widget配置"
+      operationId: "widget config"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              logo:
+                type: string
+                description: "logo"
+              color:
+                type: string
+                description: "主题色"
+              chat_bg:
+                type: string
+                description: "聊天背景"
+              app_name:
+                type: string
+                description: "应用名称"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+    put:
+      tags:
+        - "hotline"
+      summary: "更新配置"
+      description: "更新配置"
+      operationId: "widget update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_name:
+                type: string
+              logo:
+                type: string
+              color:
+                type: string
+              chat_bg:
+                type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/widget:
+    get:
+      tags:
+        - "hotline"
+      summary: "widget视图"
+      description: "widget视图"
+      operationId: "widget view"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: file
+            format: file
+            description: "网页"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/widget/{app_id}/visitor:
+    post:
+      tags:
+        - "hotline"
+      summary: "获取或注册访客信息"
+      description: "获取或注册访客信息"
+      operationId: "widget visitor"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              vid:
+                type: string
+              referrer_url:
+                type: string
+                description: "上级页面url"
+              site_url:
+                type: string
+                description: "网站url"
+              site_title:
+                type: string
+                description: "网站标题"
+              timezone:
+                type: string
+                description: "访客时区"
+              local:
+                type: integer
+                description: "是否是本系统用户"
+              not_register_token:
+                type: integer
+                description: "不换成token，为true的情况只有在自己系统才有，第三方系统不存在true"
+              device:
+                type: array
+                items:
+                  properties:
+                    device:
+                      type: string
+                      description: "设备：例如: desktop,phone"
+                    os:
+                      type: string
+                      description: "设备系统 例如 Web,iOS,Android"
+                    model:
+                      type: string
+                      description: "备型号 例如 Chrome，iPhone X"
+                    version:
+                      type: string
+                      description: "系统版本：例如：13.0"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              vid:
+                type: string
+              name:
+                type: string
+              avatar:
+                type: string
+              token:
+                type: string
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/visitors/{vid}/im:
+    get:
+      tags:
+        - "hotline"
+      summary: "获取访客的IM信息"
+      description: "获取访客的IM信息"
+      operationId: "visitors info"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "vid"
+          type: string
+          description: "访客ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              vid:
+                type: string
+                description: "访客ID"
+              name:
+                type: string
+                description: "访客名称"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/agent/preactive:
+    get:
+      tags:
+        - "hotline"
+      summary: "准备激活"
+      description: "准备激活"
+      operationId: "preactive"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "code"
+          type: string
+          description: "激活码"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: file
+            format: file
+            description: "网页"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+
+  /hotline/agent/active:
+    post:
+      tags:
+        - "hotline"
+      summary: "激活"
+      description: "激活"
+      operationId: "active"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              password:
+                type: string
+              active_code:
+                type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/visitors/{vid}/avatar:
+    get:
+      tags:
+        - "hotline"
+      summary: "访客头像"
+      description: "访客头像"
+      operationId: "visitor avatar"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "vid"
+          type: string
+          description: "访客ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: file
+            format: file
+            description: "图片"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/apps/{app_id}/avatar:
+    get:
+      tags:
+        - "hotline"
+      summary: "应用头像"
+      description: "应用头像"
+      operationId: "app avatar"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: file
+            format: file
+            description: "图片"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+
+  /hotline/widget/{app_id}/info:
+    get:
+      tags:
+        - "hotline"
+      summary: "获取widget信息"
+      description: "获取widget信息"
+      operationId: "widget info"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: integer
+                  description: "id"
+                title:
+                  type: string
+                welcome:
+                  type: string
+                channel_id:
+                  type: string
+                channel_type:
+                  type: integer
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitor/topic/channel:
+    post:
+      tags:
+        - "hotline"
+      summary: "创建访客的topic频道"
+      description: "创建访客的topic频道"
+      operationId: "create topic channel"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "header"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              topic_id:
+                type: string
+                description: "话题ID"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitor/channel/{channel_id}/{channel_type}:
+    get:
+      tags:
+        - "hotline"
+      summary: "频道详情"
+      description: "频道详情"
+      operationId: "detail channel"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "channel_id"
+          type: string
+          description: "频道ID"
+          required: true
+        - in: "path"
+          name: "channel_type"
+          type: string
+          description: "频道类型"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              group_no:
+                type: string
+                description: "群编号"
+              name:
+                type: string
+                description: "群名称"
+              online:
+                type: integer
+                description: "是否在线 1.是"
+              last_offline:
+                type: integer
+                description: "最后一次离线时间"
+              extra:
+                type: object
+                properties:
+                  topic_id:
+                    type: string
+                  topic_name:
+                    type: string
+                  agent_uid:
+                    type: string
+                  agent_name:
+                    type: string
+                  category:
+                    type: string
+                  vid:
+                    type: string
+                  source:
+                    type: string
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitor/channels/{channel_id}/members:
+    get:
+      tags:
+        - "hotline"
+      summary: "同步频道成员"
+      description: "同步频道成员"
+      operationId: "sync channel members"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "channel_id"
+          type: string
+          description: "频道ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: integer
+                uid:
+                  type: string
+                  description: "成员uid"
+                group_no:
+                  type: string
+                  description: "群唯一编号"
+                name:
+                  type: string
+                  description: "群成员名称"
+                remark:
+                  type: string
+                  description: "成员备注"
+                role:
+                  type: integer
+                  description: "成员角色"
+                version:
+                  type: integer
+                  description: "版本号"
+                is_deleted:
+                  type: integer
+                  description: "是否删除"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/login:
+    post:
+      tags:
+        - "hotline"
+      summary: "客服登录"
+      description: "客服登录"
+      operationId: "agent login"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              exist:
+                type: integer
+              data:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  role:
+                    type: integer
+                  app_id:
+                    type: string
+                  name:
+                    type: string
+                  is_work:
+                    type: integer
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/onboarding:
+    post:
+      tags:
+        - "hotline"
+      summary: "提交引导页的相关数据"
+      description: "提交引导页的相关数据"
+      operationId: "onboarding"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "header"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_id:
+                type: string
+              app_name:
+                type: string
+              logo:
+                type: string
+              agent_name:
+                type: string
+                description: "客服名称"
+              brand_color:
+                type: string
+                description: "品牌颜色 例如: #f1f1f1"
+              chat_bg_url:
+                type: string
+                description: "聊天背景URL"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              app_id:
+                type: string
+              role:
+                type: string
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/coversation/clearUnread:
+    put:
+      tags:
+        - "hotline"
+      summary: "清除未读消息"
+      description: "清除未读消息"
+      operationId: "clearUnread"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道id"
+              channel_type:
+                type: integer
+                description: "频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/roles:
+    get:
+      tags:
+        - "hotline"
+      summary: "【客服】查询角色列表"
+      description: "查询角色列表"
+      operationId: "roles"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                role:
+                  type: string
+                  description: "角色"
+                remark:
+                  type: string
+                  description: "角色说明"
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agents:
+    post:
+      tags:
+        - "hotline"
+      summary: "【客服】添加客服"
+      description: "添加客服"
+      operationId: "add agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "agents"
+          description: "客服信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "用户uid"
+              name:
+                type: string
+                description: "用户名"
+              role:
+                type: string
+                description: "角色"
+              skill_no:
+                type: string
+                description: "技能组"
+              group_nos:
+                type: array
+                items:
+                  type: string
+                  description: "群数组"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "hotline"
+      summary: "【客服】客服列表分页查询"
+      description: "客服列表分页查询"
+      operationId: "list agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "role"
+          type: string
+          description: "角色代号"
+          required: true
+        - in: "query"
+          name: "skill_no"
+          type: string
+          description: "技能组编号"
+          required: true
+        - in: "query"
+          name: "group_no"
+          type: string
+          description: "组编号"
+          required: true
+        - in: "query"
+          name: "status"
+          type: integer
+          description: "客服状态 0.禁用 1.启用 空为查询所有"
+          required: true
+        - in: "query"
+          name: "name"
+          type: string
+          required: true
+        - in: "query"
+          name: "working"
+          type: integer
+          description: "是否工作中 0.否 1.是"
+          required: true
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              page_index:
+                type: integer
+              page_size:
+                type: integer
+              total:
+                type: integer
+              data:
+                type: array
+                items:
+                  properties:
+                    uid:
+                      type: string
+                      description: "客服uid"
+                    name:
+                      type: string
+                      description: "客服名称"
+                    last_active:
+                      type: integer
+                      description: "最后一次活动时间 10位时间戳（单位秒）"
+                    role:
+                      type: string
+                      description: "角色"
+                    role_name:
+                      type: string
+                      description: "角色名"
+                    is_work:
+                      type: integer
+                      description: "是否是工作状态"
+                    skill_no:
+                      type: string
+                      description: "技能组编号"
+                    group_nos:
+                      type: array
+                      items:
+                        type: string
+                        description: "群组编号集合"
+                    group_names:
+                      type: array
+                      items:
+                        type: string
+                        description: "群组名称集合"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/invite:
+    post:
+      tags:
+        - "hotline"
+      summary: "【客服】邀请客服"
+      description: "邀请客服"
+      operationId: "invite agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "agents"
+          description: "客服信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              emails:
+                type: array
+                items:
+                  type: string
+                  description: "邮箱数组"
+              role:
+                type: string
+                description: "角色"
+              skill_no:
+                type: string
+                description: "技能组"
+              group_nos:
+                type: array
+                items:
+                  type: string
+                  description: "群数组"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/solved:
+    post:
+      tags:
+        - "hotline"
+      summary: "【客服】解决"
+      description: "解决"
+      operationId: "solved agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/reopen:
+    post:
+      tags:
+        - "hotline"
+      summary: "【客服】重开"
+      description: "重开"
+      operationId: "reopen agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/my:
+    get:
+      tags:
+        - "hotline"
+      summary: "【客服】我的资料"
+      description: "我的客服资料"
+      operationId: "my agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+              name:
+                type: string
+              zone:
+                type: string
+              phone:
+                type: string
+              email:
+                type: string
+              position:
+                type: string
+                description: "职位"
+              is_upload_avatar:
+                type: integer
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:
+      tags:
+        - "hotline"
+      summary: "【客服】修改我的资料"
+      description: "修改我的客服资料"
+      operationId: "u my agents"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "info"
+          description: "客服信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "频道ID"
+              position:
+                type: integer
+                description: "职位"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/password:
+    put:
+      tags:
+        - "hotline"
+      summary: "【客服】更新密码"
+      description: "更新密码"
+      operationId: "u my pwd"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "password"
+          description: "密码信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+              new_password:
+                type: integer
+                description: "新密码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/agent/work/{status}:
+    put:
+      tags:
+        - "hotline"
+      summary: "【客服】更新工作状态"
+      description: "更新工作状态"
+      operationId: "u my status"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "status"
+          type: string
+          description: "更新工作状态"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /hotline/channel:
+    get:
+      tags:
+        - "hotline"
+      summary: "分页获取频道"
+      description: "分页获取频道"
+      operationId: "g channel list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "bus_type"
+          type: string
+          required: true
+        - in: "query"
+          name: "page_index"
+          type: integer
+          required: true
+        - in: "query"
+          name: "page_size"
+          type: integer
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              page_index:
+                type: integer
+              page_size:
+                type: integer
+              total:
+                type: integer
+              data:
+                type: array
+                items:
+                  properties:
+                    vid:
+                      type: string
+                      description: "访客唯一ID(访客频道有效)"
+                    topic_id:
+                      type: string
+                      description: "topicID(访客频道有效)"
+                    topic_name:
+                      type: string
+                      description: "topic名称(访客频道有效)"
+                    title:
+                      type: string
+                      description: "频道标题(访客频道有效)"
+                    channel_id:
+                      type: string
+                    channel_type:
+                      type: integer
+                    agent_uid:
+                      type: string
+                      description: "分配的客服(访客频道有效)"
+                    agent_name:
+                      type: string
+                      description: "分配的客服名称(访客频道有效)"
+                    category:
+                      type: string
+                      description: "会话类别 new:新建 assignMe:指派给我的 solved: 已解决的 (访客频道有效)"
+                    bind:
+                      type: string
+                      description: "绑定的频道ID"
+                    disable:
+                      type: integer
+                      description: "是否禁用 0.否 1.是"
+                    bus_type:
+                      type: integer
+                      description: "频道业务类型 0.访客频道 1.技能组 2.普通群组"
+                    member_count:
+                      type: integer
+                    session_active_limit:
+                      type: integer
+                      description: "最大会话限制"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+    post:
+      tags:
+        - "hotline"
+      summary: "创建频道"
+      description: "创建频道"
+      operationId: "c channel"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              vid:
+                type: string
+                description: "访客id"
+              topic_id:
+                type: string
+                description: "话题ID"
+              bus_type:
+                type: integer
+                description: "频道业务类型 0.访客频道 1.技能组 2.普通群组"
+              session_active_limit:
+                type: integer
+                description: "最大会话限制"
+              subscribers:
+                type: array
+                items:
+                  properties:
+                    subscriber_type:
+                      type: integer
+                      description: "0.访客 1.客服"
+                    subscriber:
+                      type: string
+                      description: "订阅者ID 0.位vid 1.为uid"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+              channel_type:
+                type: integer
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/channel/disable:
+    put:
+      tags:
+        - "hotline"
+      summary: "频道禁用或开启"
+      description: "频道禁用或开启"
+      operationId: "disable channel"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+              channel_type:
+                type: integer
+              disable:
+                type: integer
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitors:
+    get:
+      tags:
+        - "hotline"
+      summary: "【访客】列表"
+      description: "访客列表"
+      operationId: "list visitors"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "筛选关键字"
+          required: true
+        - in: "query"
+          name: "page_index"
+          type: integer
+          required: true
+        - in: "query"
+          name: "page_size"
+          type: integer
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              page_index:
+                type: integer
+              page_size:
+                type: integer
+              total:
+                type: integer
+              data:
+                type: array
+                items:
+                  $ref: "#/definitions/visitorDetai"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitors/{vid}:
+    get:
+      tags:
+        - "hotline"
+      summary: "【访客】访客数据"
+      description: "访客数据"
+      operationId: "d visitors"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "vid"
+          type: string
+          description: "访客uid"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/visitorDetai"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitors/{vid}/phone/{value}:
+    put:
+      tags:
+        - "hotline"
+      summary: "【访客】修改手机号"
+      description: "修改手机号"
+      operationId: "u visitors phone"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "vid"
+          type: string
+          description: "访客uid"
+          required: true
+        - in: "path"
+          name: "value"
+          type: string
+          description: "手机号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/visitorDetai"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/visitors/{vid}/email/{value}:
+    put:
+      tags:
+        - "hotline"
+      summary: "【访客】修改邮箱"
+      description: "修改邮箱"
+      operationId: "u visitors email"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "vid"
+          type: string
+          description: "访客uid"
+          required: true
+        - in: "path"
+          name: "value"
+          type: string
+          description: "邮箱"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/visitorDetai"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /hotline/visitors/{vid}/props/{field}/{value}:
+    put:
+      tags:
+        - "hotline"
+      summary: "【访客】修改自定义属性"
+      description: "修改自定义属性"
+      operationId: "u visitors field"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "vid"
+          type: string
+          description: "访客uid"
+          required: true
+        - in: "path"
+          name: "field"
+          type: string
+          description: "修改的字段"
+          required: true
+        - in: "path"
+          name: "value"
+          type: string
+          description: "字段对应的值"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/visitorDetai"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/vistor/realtime:
+    get:
+      tags:
+        - "hotline"
+      summary: "【访客】在线没有分配的访客"
+      description: "在线没有分配的访客"
+      operationId: "get visitors realtime"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                vid:
+                  type: string
+                  description: "访客uid"
+                name:
+                  type: string
+                avatar:
+                  type: string
+                state:
+                  type: string
+                  description: "省份"
+                city:
+                  type: string
+                  description: "城市"
+                timezone:
+                  type: string
+                  description: "时区"
+                source:
+                  type: string
+                  description: "来源"
+                history_count:
+                  type: integer
+                channel_id:
+                  type: string
+                channel_type:
+                  type: integer
+                last_online:
+                  type: integer
+                  description: "最后一次在线时间"
+                topic_name:
+                  type: string
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/session:
+    get:
+      tags:
+        - "hotline"
+      summary: "会话"
+      description: "会话"
+      operationId: "session"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category"
+          type: string
+          description: "会话分类"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                channel_id:
+                  type: string
+                channel_type:
+                  type: integer
+                unread:
+                  type: integer
+                  description: "未读数"
+                timestamp:
+                  type: integer
+                  description: "最后一次会话时间戳"
+                last_message:
+                  type: array
+                  items:
+                    properties:
+                      message_id:
+                        type: integer
+                        description: "服务端的消息ID(全局唯一)"
+                      message_seq:
+                        type: integer
+                        description: "消息序列号 （用户唯一，有序递增）"
+                      client_msg_no:
+                        type: string
+                        description: "客户端消息唯一编号"
+                      from_uid:
+                        type: string
+                        description: "消息发送者uid"
+                      to_uid:
+                        type: string
+                        description: "接受者uid"
+                      channel_id:
+                        type: string
+                      channel_type:
+                        type: integer
+                      timestamp:
+                        type: integer
+                        description: "服务器消息时间戳(10位 到秒)"
+                      payload:
+                        type: object
+                        description: "消息正文"
+                      is_deleted:
+                        type: integer
+                        description: "是否已删除 1.是"
+                      voice_status:
+                        type: integer
+                        description: "语音状态 0.未读 1.已读"
+                  description: "消息"
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/assign:
+    post:
+      tags:
+        - "hotline"
+      summary: "【路由】分配客服"
+      description: "分配客服"
+      operationId: "assign"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+              channel_type:
+                type: integer
+              uid:
+                type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /hotline/intelli:
+    get:
+      tags:
+        - "hotline"
+      summary: "【路由】获取智能分配"
+      description: "获取智能分配"
+      operationId: "intelli"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              strategy:
+                type: string
+                description: "策略"
+              user_max_idle:
+                type: integer
+                description: "成员最大空闲(单位分钟),如果成员达到最大空闲，则将其设为非活动状态'"
+              visitor_max_idle:
+                type: integer
+                description: "访客最大空闲(单位分钟),如果访客达到最大空闲，则将其设为非活动状态"
+              session_remember_enable:
+                type: integer
+                description: "是否启用会话记忆"
+              session_remember_min:
+                type: integer
+                description: "对话忘记时间(单位分钟) 如果对话在此时间内重新打开，则将其重新指派给同一成员 如果是 0 则表示不忘记"
+              session_active_limit:
+                type: integer
+                description: "每名成员的活动对话限制"
+              status:
+                type: integer
+                description: "0.禁用 1.启用"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "hotline"
+      summary: "【路由】设置智能分配"
+      description: "设置智能分配"
+      operationId: "post intelli"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              strategy:
+                type: string
+                description: "策略"
+              user_max_idle:
+                type: integer
+                description: "成员最大空闲(单位分钟),如果成员达到最大空闲，则将其设为非活动状态'"
+              visitor_max_idle:
+                type: integer
+                description: "访客最大空闲(单位分钟),如果访客达到最大空闲，则将其设为非活动状态"
+              session_remember_enable:
+                type: integer
+                description: "是否启用会话记忆"
+              session_remember_min:
+                type: integer
+                description: "对话忘记时间(单位分钟) 如果对话在此时间内重新打开，则将其重新指派给同一成员 如果是 0 则表示不忘记"
+              session_active_limit:
+                type: integer
+                description: "每名成员的活动对话限制"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/intelli/enable:
+    put:
+      tags:
+        - "hotline"
+      summary: "【路由】启用智能分配"
+      description: "启用智能分配"
+      operationId: "enable intelli"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              enable:
+                type: integer
+                description: "1.激活"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/rules:
+    post:
+      tags:
+        - "hotline"
+      summary: "【规则】添加规则"
+      description: "添加规则"
+      operationId: "post rules"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "channel"
+          description: "频道信息"
+          required: true
+          schema:
+            $ref: "#/definitions/rule"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "hotline"
+      summary: "【规则】规则列表"
+      description: "规则列表"
+      operationId: "list rules"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                rule_no:
+                  type: string
+                  description: "规则编号"
+                name:
+                  type: string
+                  description: "指派规则名称"
+                expression:
+                  type: string
+                  description: "表达式 比如 (A1&A2)||(A3|A4)&&(A5&A6)"
+                status:
+                  type: integer
+                  description: "0.不可用 1.可用"
+                agent_uid:
+                  type: string
+                  description: "分配的客服(访客频道有效)"
+                agent_name:
+                  type: string
+                  description: "分配的客服名(访客频道有效)"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/rules/{rule_no}:
+    delete:
+      tags:
+        - "hotline"
+      summary: "【规则】删除规则"
+      description: "删除规则"
+      operationId: "d rules"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "rule_no"
+          type: string
+          description: "规则编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/rules/{rule_no}/{status}:
+    put:
+      tags:
+        - "hotline"
+      summary: "【规则】改变规则状态"
+      description: "改变规则状态"
+      operationId: "update rules status"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "rule_no"
+          type: string
+          description: "规则编号"
+          required: true
+        - in: "path"
+          name: "status"
+          type: integer
+          description: "规则状态"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/topics:
+    post:
+      tags:
+        - "hotline"
+      summary: "【话题】添加话题"
+      description: "添加话题"
+      operationId: "add topic"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "topic"
+          description: "话题信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: "话题标题"
+              welcome:
+                type: string
+                description: "欢迎语"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "hotline"
+      summary: "【话题】分页查询"
+      description: "分页查询"
+      operationId: "get topics page"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数量"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                id:
+                  type: integer
+                title:
+                  type: string
+                  description: "话题标题"
+                welcome:
+                  type: string
+                  description: "欢迎语"
+                is_default:
+                  type: integer
+                  description: "是否是默认话题 1.是"
+                created_at:
+                  type: string
+                  description: "创建时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/topics/{id}:
+    delete:
+      tags:
+        - "hotline"
+      summary: "【话题】删除话题"
+      description: "删除话题"
+      operationId: "delete topic"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "话题ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:
+      tags:
+        - "hotline"
+      summary: "【话题】更新话题"
+      description: "更新话题"
+      operationId: "update topic"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "话题ID"
+          required: true
+        - in: "body"
+          name: "topic"
+          description: "话题信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: "话题标题"
+              welcome:
+                type: string
+                description: "欢迎语"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/quick_replies:
+    post:
+      tags:
+        - "hotline"
+      summary: "【快捷回复】添加"
+      description: "添加快捷回复"
+      operationId: "add quick_replies"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "topic"
+          description: "话题信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: "快捷回复标题"
+              content:
+                type: string
+                description: "快捷回复正文"
+              category_no:
+                type: string
+                description: "类别编号"
+              shortcode:
+                type: string
+                description: "短码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "hotline"
+      summary: "【快捷回复】分页列表"
+      description: "添加快捷回复"
+      operationId: "get quick_replies page"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数量"
+          required: true
+        - in: "query"
+          name: "category_no"
+          type: string
+          description: "类别编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/quickReply"
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/quick_reply/sync:
+    post:
+      tags:
+        - "hotline"
+      summary: "【快捷回复】同步"
+      description: "同步快捷回复"
+      operationId: "sync quick_replies"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/quickReply"
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/quick_replies/{id}:
+    delete:
+      tags:
+        - "hotline"
+      summary: "【快捷回复】删除"
+      description: "删除话题"
+      operationId: "delete topic"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "快捷回复ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/info_categories:
+    post:
+      tags:
+        - "hotline"
+      summary: "【信息类别】添加"
+      description: "添加信息列表"
+      operationId: "add info_categories"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "info category"
+          description: "类别信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              category_name:
+                type: string
+                description: "类别名"
+              share:
+                type: integer
+                description: "是否分享给所有人 1.是"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              category_no:
+                type: string
+                description: "类别编号"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "hotline"
+      summary: "【信息类别】所有列表"
+      description: "所有列表"
+      operationId: "list info_categories"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                category_no:
+                  type: string
+                  description: "类别编号"
+                uid:
+                  type: string
+                category_name:
+                  type: string
+                  description: "类别名称"
+                share:
+                  type: integer
+                  description: "是否分享给所有人 1.是"
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /hotline/fields:
+    get:
+      tags:
+        - "hotline"
+      summary: "其他"
+      description: "其他"
+      operationId: "list fields"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                group:
+                  type: string
+                group_name:
+                  type: string
+                category_name:
+                  type: string
+                fields:
+                  type: array
+                  items:  
+                    properties: 
+                      field: 
+                        type: string
+                        description: "属性域"
+                      name:
+                        type: string
+                        description: "域名称"
+                      type: 
+                        type: string
+                        description: "域类型 string:字符串 select:下拉选择 number:数字 datetime:日前时间（例如2021-01-12 12:23:23） date: 日期（例如：2020-11-12）"
+                      datasource:
+                        type: string
+                        description: "数据源 options:多选 从options字段获取 topic:从topic表中获取"
+                      options:
+                        type: array
+                        description: "数据选项 例如[{'value':'test',label:'测试'}]"
+                      symbols:
+                        type: array
+                        description: "符号例如: [{'label':'等于','value':''=''},{'label':'不等于','value':'<>''}]"
+
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  quickReply:
+    type: object
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+        description: "快捷回复标题"
+      content:
+        type: string
+        description: "快捷回复正文"
+      category_no:
+        type: string
+        description: "类别编号"
+      category_name:
+        type: string
+        description: "类别名"
+      shortcode:
+        type: string
+        description: "短码"
+  rule:
+    type: object
+    properties:
+      name:
+        type: string
+      agent_uid:
+        type: string
+      term_type:
+        type: integer
+        description: "0. and 1. or"
+      terms:
+        type: array
+        items:
+          $ref: "#/definitions/terms"
+        description: "term or ruleReq"
+      rules:
+        type: array
+        items:
+          $ref: "#/definitions/rule1"
+
+  rule1:
+    type: object
+    properties:
+      name:
+        type: string
+      agent_uid:
+        type: string
+      term_type:
+        type: integer
+      terms:
+        type: array
+        items:
+          $ref: "#/definitions/terms"
+        description: "term or ruleReq"
+      rules:
+        type: array
+        items:
+          type: object
+          description: "rule 数据"
+  terms:
+    type: object
+    properties:
+      tag:
+        type: string
+      real_tag:
+        type: string
+      field:
+        type: string
+      symbol:
+        type: string
+      value:
+        type: string
+  visitorDetai:
+    type: object
+    properties:
+      vid:
+        type: string
+        description: "访客uid"
+      name:
+        type: string
+        description: "访客名称"
+      phone:
+        type: string
+        description: "手机号"
+      email:
+        type: string
+        description: "邮箱"
+      ip_address:
+        type: string
+        description: "IP地址"
+      state:
+        type: string
+        description: "省份"
+      city:
+        type: string
+        description: "城市"
+      timezone:
+        type: string
+        description: "时区"
+      source:
+        type: string
+        description: "来源"
+      search_keyword:
+        type: string
+        description: "搜索关键字"
+      session_count:
+        type: integer
+        description: "会话次数"
+      online:
+        type: integer
+        description: "是否在线 1.在线 0.不在线"
+      last_online:
+        type: integer
+        description: "最后一次在线时间"
+      last_offline:
+        type: integer
+        description: "最后一次离线时间"
+      created_at:
+        type: string
+        description: "创建时间"
+      device:
+        type: object
+        properties:
+          device:
+            type: string
+            description: "设备：例如: desktop,phone"
+          os:
+            type: string
+            description: "设备系统 例如 Web,iOS,Android"
+          model:
+            type: string
+            description: "备型号 例如 Chrome iPhone X"
+          version:
+            type: string
+            description: "系统版本 例如 13.0"
+        description: "访客设备"
+      first_history:
+        $ref: "#/definitions/history"
+      last_history:
+        $ref: "#/definitions/history"
+      histories:
+        type: array
+        items:
+          $ref: "#/definitions/history"
+  history:
+    type: object
+    properties:
+      site_url:
+        type: string
+        description: "访问的站点"
+      site_title:
+        type: string
+        description: "站点标题"
+      referrer:
+        type: string
+        description: "站点referrer"
+      created_at:
+        type: string
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

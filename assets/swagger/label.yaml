@@ -1,0 +1,209 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "label"
+    description: "标签"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /label:
+    get:
+      tags:
+        - "label"
+      summary: "标签列表"
+      description: "标签列表"
+      operationId: "label list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/label"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "label"
+      summary: "添加标签"
+      description: "添加标签"
+      operationId: "label add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "标签名称"
+              member_uids:
+                type: array
+                items:
+                  type: string
+                  description: "成员uids"
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: []  
+  /label/{id}:
+    get:
+      tags:
+        - "label"
+      summary: "标签详情"
+      description: "标签详情"
+      operationId: "label detail"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "标签ID"
+          required: true 
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/label'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: []
+    put:
+      tags:
+        - "label"
+      summary: "修改标签"
+      description: "修改标签"
+      operationId: "label update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "标签ID"
+          required: true
+        - in: "body"
+          name: "data"
+          description: "修改数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "标签名称"
+              member_uids:
+                type: array
+                items:
+                  type: string
+                  description: "成员uids" 
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: []
+    delete:
+      tags:
+        - "label"
+      summary: "删除标签"
+      description: "删除标签"
+      operationId: "label delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "标签ID"
+          required: true
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: []  
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  label:
+    type: "object"
+    properties:
+      id:
+        type: integer
+        description: "标签id"
+      name:
+        type: string
+        description: "标签名称"
+      count:
+        type: integer
+        description: "标签成员数量"
+      members:
+        type: array
+        items:
+          properties:
+            uid:
+              type: string
+              description: "成员uid"
+            name:
+              type: string
+              description: "成员名称"
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

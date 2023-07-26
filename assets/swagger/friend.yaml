@@ -1,0 +1,329 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "friend"
+    description: "好友"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /friend/apply:
+    post:
+      tags:
+        - "friend"
+      summary: "申请加好友"
+      description: "申请加好友"
+      operationId: "apply friend"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "申请数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              to_uid:
+                type: string
+                description: "向谁申请好友"
+              remark:
+                type: string
+                description: "备注"
+              vercode:
+                type: string
+                description: "验证码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /friend/sure:
+    delete:
+      tags:
+        - "friend"
+      summary: "确认加好友"
+      description: "确认加好友"
+      operationId: "sure friend"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "token"
+          description: "收到申请的token"
+          required: true
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: "收到申请的token"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+
+  /friend/sync:
+    get:
+      tags:
+        - "friend"
+      summary: "同步好友"
+      description: "同步好友"
+      operationId: "sync friend"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "limit"
+          type: integer
+          description: "同步数量"
+          required: true
+        - in: "query"
+          name: "version"
+          type: integer
+          description: "同步版本号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/friend"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /friend/search:
+    get:
+      tags:
+        - "friend"
+      summary: "搜索好友"
+      description: "搜索好友"
+      operationId: "search friend"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/friend"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /friend/remark:
+    put:
+      tags:
+        - "friend"
+      summary: "修改好友备注"
+      description: "修改好友备注"
+      operationId: "remark friend"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "备注信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "好友uid"
+              remark:
+                type: string
+                description: "备注名"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /friends/{uid}:
+    delete:
+      tags:
+        - "friend"
+      summary: "删除好友"
+      description: "删除好友"
+      operationId: "delete friend"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "被删除好友uid"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  friend:
+    type: "object"
+    properties:
+      uid:
+        type: string
+        description: "用户ID"
+      name:
+        type: string
+        description: "用户名"
+      username:
+        type: string
+        description: "昵称"
+      email:
+        type: string
+        description: "邮箱（仅自己可见）"
+      zone:
+        type: string
+        description: "手机区号（仅自己可见）"
+      phone:
+        type: string
+        description: "手机号（仅自己可见）"
+      mute:
+        type: integer
+        description: "免打扰"
+      top:
+        type: integer
+        description: "置顶"
+      sex:
+        type: integer
+        description: "性别 1 男"
+      category:
+        type: string
+        description: "用户分类 ‘客服’ 等"
+      short_no:
+        type: string
+        description: "用户唯一短号"
+      chat_pwd_on:
+        type: integer
+        description: "是否开启聊天密码 1.是"
+      screenshot:
+        type: integer
+        description: "是否开启截屏通知 1.是"
+      revoke_remind:
+        type: integer
+        description: "是否开启撤回提醒 1.是"
+      receipt:
+        type: integer
+        description: "消息是否回执 1.是"
+      online:
+        type: integer
+        description: "用户是否在线 1.是"
+      last_offline:
+        type: integer
+        description: "最后一次离线时间"
+      device_flag:
+        type: integer
+        description: "在线设备标记 0.APP 1.Web 2.PC"
+      follow:
+        type: integer
+        description: "是否是好友 1.是"
+      be_deleted:
+        type: integer
+        description: "是否被删除 1.是"
+      be_blacklist:
+        type: integer
+        description: "是否被拉黑 1.是"
+      vercode:
+        type: string
+        description: "加好友所需vercode"
+      source_desc:
+        type: string
+        description: "加好友来源"
+      remark:
+        type: string
+        description: "备注"
+      is_upload_avatar:
+        type: integer
+        description: "是否已上传过头像 1.是"
+      status:
+        type: integer
+        description: "用户状态 1.正常 2.黑名单"
+      robot:
+        type: integer
+        description: "是否为机器人 1.是"
+      is_destroy:
+        type: integer
+        description: "是否已注销 1.是"
+      flame:
+        type: integer
+        description: "是否开启阅后即焚 1.是"
+      flame_second:
+        type: integer
+        description: "阅后即焚秒数"
+      version:
+        type: integer
+        description: "版本号"
+      is_deleted:
+        type: integer
+        description: "是否删除 1.是"
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

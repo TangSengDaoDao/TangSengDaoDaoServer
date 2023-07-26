@@ -1,0 +1,1593 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "user"
+    description: "用户"
+schemes:
+  - "https"
+basePath: "/v1"
+paths:
+  /user/register:
+   post:
+      tags:
+        - "user"
+      summary: "用户注册"
+      description: "用户注册"
+      operationId: "register"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "注册请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              zone:
+                type: string
+                description: "区号"
+              phone: 
+                 type: string
+                 description: "手机号" 
+              code:
+                 type: string
+                 description: "验证码"
+              flag:
+                  type: integer
+                  description: "注册设备标记 0.APP 1.PC"
+              password:
+                 type: string
+                 description: "密码"
+              device:
+                  type: object
+                  properties:
+                   device_id:
+                    type: string
+                    description: "设备ID"
+                   device_name:
+                    type: string
+                    description: "设备名称"
+                   device_model:
+                    type: string
+                    description: "设备型号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/UserLoginResp'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+  /user/sms/registercode:
+    post:
+      tags:
+        - "user"
+      summary: "获取注册验证码"
+      description: "获取注册验证码"
+      operationId: "registercode"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "获取注册验证码请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              zone:
+                type: string
+                description: "区号"
+              phone: 
+                 type: string
+                 description: "手机号" 
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      
+  /user/wxlogin:
+   post:
+      tags:
+        - "user"
+      summary: "微信登录"
+      description: "微信登录"
+      operationId: "wxlogin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "微信登录请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+                description: "微信登录授权码"
+              flag:
+                type: integer
+                description: "登录设备标识 0.APP 1.PC"
+              device:
+                  type: object
+                  properties:
+                   device_id:
+                    type: string
+                    description: "设备ID"
+                   device_name:
+                    type: string
+                    description: "设备名称"
+                   device_model:
+                    type: string
+                    description: "设备型号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/UserLoginResp'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+
+  /user/thirdlogin/authcode:
+   get:
+      tags:
+       - "user"
+      summary: "第三方授权码获取"
+      description: "获取授权码"
+      operationId: "authcode"
+      consumes:
+       - "application/json"
+      produces:
+       - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                authcode:
+                  type: string
+                  description: 认证码
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+
+  /user/thirdlogin/authstatus:
+   get:
+      tags:
+       - "user"
+      summary: "获取认证状态"
+      description: "获取认证状态"
+      operationId: "authstatus"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"  
+      parameters:
+        - in: "query"
+          name: "authcode"
+          type: string
+          description: 授权码
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                status:
+                  type: integer
+                  description: 登录状态 1.成功 2.失败
+                result:
+                  type: object
+                  $ref: '#/definitions/UserLoginResp'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+ 
+  /user/oauth/github:
+   get:
+      tags:
+        - "user"
+      summary: "github登录"
+      description: "github登录"
+      operationId: "github login"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "code"
+          type: string
+          description: "GitHub授权返回"
+        - in: "query"
+          name: "state"
+          type: string
+          description: "GitHub授权返回"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+
+  /user/oauth/gitee:
+   get:
+      tags:
+        - "user"
+      summary: "gitee登录"
+      description: "gitee登录"
+      operationId: "gitee login"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "code"
+          type: string
+          description: "Gitee授权返回"
+        - in: "query"
+          name: "state"
+          type: string
+          description: "Gitee授权返回"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+
+  /user/login:
+   post:
+      tags:
+        - "user"
+      summary: "用户登录"
+      description: "用户登录"
+      operationId: "login"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "登录请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: "用户名"
+              password: 
+                 type: string
+                 description: "手机号" 
+              device:
+                  type: object
+                  properties:
+                   device_id:
+                    type: string
+                    description: "设备ID"
+                   device_name:
+                    type: string
+                    description: "设备名称"
+                   device_model:
+                    type: string
+                    description: "设备型号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/UserLoginResp'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+  /user/login/check_phone:
+    post:
+      tags:
+        - "user"
+      summary: "登录验证设备手机号"
+      description: "登录验证设备手机号"
+      operationId: "check_phone"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: "req"
+          description: "注册请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "用户uid"
+              code:
+                type: string
+                description: "验证码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/UserLoginResp'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+  /user/sms/login_check_phone:
+    get:
+      tags:
+        - "user"
+      summary: "发送登录设备验证验证码"
+      description: "发送登录设备验证验证码"
+      operationId: "login_check_phone"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: body
+          name: "req"
+          description: "注册请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "用户uid"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'   
+
+  /user/grant_login:
+   get:
+      tags:
+        - "user"
+      summary: "授权登录"
+      description: "授权登录"
+      operationId: "grant_login"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "auth_code"
+          type: string
+          description: "授权码"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+  /user/login_authcode/{auth_code}:
+    post:
+      tags:
+        - "user"
+      summary: "通过认证码登录"
+      description: "通过认证码登录"
+      operationId: "login_authcode"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "auth_code"
+          type: string
+          description: "授权码"
+          required: true 
+      responses:
+          200:
+            description: "返回"
+            schema:
+              properties:
+                app_id:
+                  type: string
+                  description: "应用ID"
+                name:
+                  type: string
+                  description: "用户名"
+                username:
+                  type: string
+                  description: "用户昵称"
+                uid:
+                  type: string
+                  description: "用户ID"
+                token:
+                  type: string
+                  description: "凭证"
+                short_no:
+                  type: string
+                  description: "用户唯一短号"
+                avatar:
+                  type: string
+                  description: "头像地址"
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+     
+  /user/sms/forgetpwd:
+    post:
+      tags:
+        - "user"
+      summary: "获取忘记密码短信验证码"
+      description: "获取忘记密码短信验证码"
+      operationId: "forgetpwd sms"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "忘记密码获取短信请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              zone:
+                type: string
+                description: "区号"
+              phone:
+                type: string
+                description: "手机号"
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: [] 
+
+  /user/pwdforget:
+    post:
+      tags:
+        - "user"
+      summary: "忘记密码"
+      description: "忘记密码"
+      operationId: "pwdforget"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "忘记密码请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              zone:
+                type: string
+                description: "区号"
+              phone:
+                type: string
+                description: "手机号"
+              code:
+                type: string
+                description: "验证码"
+              pwd:
+                type: string
+                description: "密码"
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: [] 
+
+  /user/current:
+   put:
+      tags:
+        - "user"
+      summary: "修改登录用户信息"
+      description: "修改登录用户信息"
+      operationId: "updateinfo"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "用户信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "修改用户名称 性别 短号等"
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: [] 
+
+  /user/my/setting:
+    put:
+      tags:
+        - "user"
+      summary: "修改登录用户设置"
+      description: "修改登录用户设置"
+      operationId: "login user setting"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "key"
+          description: "登录用户设置 如开启通过手机号搜索{'search_by_phone':1}"
+          required: true
+          schema:
+            type: object
+            properties:
+              search_by_phone:
+                type: integer
+                description: "修改登录用户设置 search_by_phone(通过手机号搜索) new_msg_notice(新消息通知)等"
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: [] 
+
+  /user/blacklist/{uid}:
+    post:
+       tags:
+        - "user"
+       summary: "添加黑名单"
+       description: "添加黑名单"
+       operationId: "addBlacklist"
+       consumes:
+        - "application/json"
+       produces:
+        - "application/json"
+       parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "对方uid"
+          required: true 
+       responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+       security:
+          - token: [] 
+    delete:
+       tags:
+        - "user"
+       summary: "移除黑名单"
+       description: "移除黑名单"
+       operationId: "blacklistDelete"
+       consumes:
+        - "application/json"
+       produces:
+        - "application/json"
+       parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "对方uid"
+          required: true 
+       responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+       security:
+          - token: [] 
+  /user/blacklists:
+    get:
+      tags:
+        - "user"
+      summary: "黑名单列表"
+      description: "黑名单列表"
+      operationId: "blacklist"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "成功"
+          schema:
+            type: array
+            items:
+              properties:
+               uid:
+                type: string
+                description: "用户ID"
+               name:
+                type: string
+                description: "用户名称"
+               username:
+                type: string
+                description: '用户名称'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: []
+
+  /user/chatpwd:
+    post:
+      tags:
+        - "user"
+      summary: "设置聊天密码"
+      description: "设置聊天密码"
+      operationId: "chatpwd"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "登录及聊天密码"
+          required: true
+          schema:
+            type: object
+            properties:
+              chat_pwd:
+                type: string
+                description: "聊天密码"
+              login_pwd:
+                type: string
+                description: "聊天密码"
+      responses:
+          200:
+            description: "返回"
+            schema:
+              $ref: '#/definitions/response'
+          400:
+            description: '错误'
+            schema:
+              $ref: '#/definitions/response' 
+      security:
+          - token: []   
+  /user/lockscreenpwd:
+    post:
+       tags:
+        - "user"
+       summary: "设置锁屏密码"
+       description: "设置锁屏密码"
+       operationId: "lockscreenpwd"
+       consumes:
+          - "application/json"
+       produces:
+          - "application/json" 
+       parameters:
+        - in: "body"
+          name: "pwd"
+          description: "锁屏密码"
+          required: true
+          schema:
+            type: object
+            properties:
+              lock_screen_pwd:
+                type: string
+                description: "锁屏密码"
+       responses:
+            200:
+              description: "返回"
+              schema:
+                $ref: '#/definitions/response'
+            400:
+              description: '错误'
+              schema:
+                $ref: '#/definitions/response' 
+       security:
+            - token: [] 
+    delete:
+      tags:
+        - "user"
+      summary: "删除锁屏密码"
+      description: "删除锁屏密码"
+      operationId: "closeLockScreenPwd"
+      consumes:
+          - "application/json"
+      produces:
+          - "application/json"   
+      responses:
+            200:
+              description: "返回"
+              schema:
+                $ref: '#/definitions/response'
+            400:
+              description: '错误'
+              schema:
+                $ref: '#/definitions/response' 
+      security:
+            - token: [] 
+
+  /user/lock_after_minute:
+    put:
+      tags:
+        - "user"
+      summary: "设置多久后锁屏"
+      description: "设置多久后锁屏"
+      operationId: "lock_after_minute"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "time"
+          description: "退出后台锁屏时间"
+          required: true
+          schema:
+            type: object
+            properties:
+              lock_after_minute:
+                type: integer
+                description: "退出后台在几分钟后锁屏"
+      responses:
+            200:
+              description: "返回"
+              schema:
+                $ref: '#/definitions/response'
+            400:
+              description: '错误'
+              schema:
+                $ref: '#/definitions/response' 
+      security:
+            - token: []  
+
+  /user/qrcode:
+    get:
+      tags:
+        - "user"
+      summary: "用户二维码"
+      description: "用户二维码"
+      operationId: "qrcode"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                data:
+                  type: string
+                  description: "二维码图片地址"
+                
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+  /user/customerservices:
+    get:
+      tags:
+        - "user"
+      summary: "客服列表"
+      description: "客服列表"
+      operationId: "userGet"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "成功"
+          schema:
+            type: array
+            items:
+              properties:
+               uid:
+                type: string
+                description: "用户ID"
+               name:
+                type: string
+                description: "用户名称"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: []
+  /user/maillist:
+    post:
+      tags:
+        - "user"
+      summary: "上传用户通讯录"
+      description: "上传用户通讯录"
+      operationId: "push maillist"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "通讯录信息"
+          required: true
+          schema:
+            type: array
+            items:
+              properties:
+               name:
+                type: string
+                description: "用户名称"
+               zone:
+                type: string
+                description: '区号'
+               phone:
+                type: string
+                description: "手机号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+    get:
+      tags:
+        - "user"
+      summary: "获取用户通讯录"
+      description: "获取用户通讯录"
+      operationId: "get maillist"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "成功"
+          schema:
+            type: array
+            items:
+              properties:
+               uid:
+                type: string
+                description: "用户ID"
+               name:
+                type: string
+                description: "用户名称"
+               zone:
+                type: string
+                description: "手机区号"
+               phone:
+                type: string
+                description: "手机号"
+               vercode:
+                type: string
+                description: "加好友验证码"
+               is_friend:
+                type: integer
+                description: "是否好友关系 1.是"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: []
+
+  /user/destroy/{code}:
+    delete:
+      tags:
+        - "user"
+      summary: "注销用户"
+      description: "注销用户"
+      operationId: "destroy"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "code"
+          type: string
+          description: "短信验证码"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+  /user/sms/destroy:
+    get:
+      tags:
+        - "user"
+      summary: "获取注销账号短信"
+      description: "获取注销账号短信"
+      operationId: "destroy sms"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+
+  /users/{uid}:
+    get:
+      tags:
+        - "user"
+      summary: "获取指定uid的用户信息"
+      description: "获取指定uid的用户信息"
+      operationId: "userGet"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "用户uid"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/UserDetailResp'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+
+  /user/devices:
+    get:
+      tags:
+        - "user"
+      summary: "用户设备列表"
+      description: "用户设备列表"
+      operationId: "device list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "成功"
+          schema:
+            type: array
+            items:
+              properties:
+               device_id:
+                type: string
+                description: "设备ID"
+               device_name:
+                type: string
+                description: "设备名称"
+               device_model:
+                type: string
+                description: "设备型号"
+               last_login:
+                type: string
+                description: "设备最后一次登录时间"
+               self:
+                type: integer
+                description: "是否是本机 1.是"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: [] 
+  /user/devices/{devices_id}:
+    delete:
+      tags:
+        - "user"
+      summary: "删除某个设备"
+      description: "删除某个设备"
+      operationId: "delete device"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "devices_id"
+          type: string
+          description: "设备ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []  
+  /user/online:
+    get:
+      tags:
+        - "user"
+      summary: "用户在线列表（我的设备和我的好友）"
+      description: "用户在线列表（我的设备和我的好友）"
+      operationId: "online"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              pc:
+               type: object
+               properties:
+                online:
+                  type: integer
+                  description: "pc是否在线"
+                device_flag:
+                    type: integer
+                    description: "设备类型"
+                mute_of_app:
+                    type: integer
+                    description: "app 是否开启静音 1.是"
+              friends:
+                type: array
+                items:
+                  properties:
+                    uid:
+                      type: string
+                      description: "在线用户ID"
+                    device_flag:
+                      type: integer
+                      description: "设备标记 0.APP 1.web"
+                    last_offline:
+                      type: integer
+                      description: "最后一次离线时间"
+                    online:
+                      type: integer
+                      description: "是否在线 1.是"
+              
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []  
+    post:
+      tags:
+        - "user"
+      summary: "获取指定用户在线状态"
+      description: "获取指定用户在线状态"
+      operationId: "online with uid"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "uids"
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              description: "用户uid集合"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []        
+  /user/loginuuid:
+    get:
+      tags:
+        - "user"
+      summary: "获取登录的uuid（web登录）"
+      description: "获取登录的uuid（web登录）"
+      operationId: "loginuuid"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              uuid:
+                type: string
+                description: "uuid"
+              qrcode:
+                type: string
+                description: "二维码"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'  
+  /user/loginstatus:
+    get:
+      tags:
+        - "user"
+      summary: "退出pc登录"
+      description: "退出pc登录"
+      operationId: "quit pc"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+
+  /user/pc/quit:
+    post:
+      tags:
+        - "user"
+      summary: "退出pc登录"
+      description: "退出pc登录"
+      operationId: "quit pc"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []  
+
+  /users/{uid}/avatar:
+   post:
+      tags:
+        - "user"
+      summary: "修改用户头像"
+      description: "修改用户头像"
+      operationId: "updateAvatar"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "用户ID"
+          required: true
+        - in: "formData"
+          name: "file"
+          type: file
+          description: "文件"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []   
+   get:
+      tags:
+        - "user"
+      summary: "用户头像"
+      description: "用户头像"
+      operationId: "avatar get"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "用户ID"
+          required: true
+      responses:
+        200:
+          description: "成功"
+          schema:
+            type: file
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+  
+  /users/{uid}/setting:
+   put:
+      tags:
+        - "user"
+      summary: "修改对某个好友的设置"
+      description: "修改对某个好友的设置"
+      operationId: "updatefriendSetting"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "用户ID"
+          required: true
+        - in: "body"
+          name: "data"
+          description: "对好友设置信息 如置顶{'top':1}"
+          required: true
+          schema:
+            type: object
+            properties:
+              top:
+                type: integer
+                description: "修改对某个好友的设置 置顶 免打扰 备注等"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []  
+  /users/{uid}/im:
+    get:
+      tags:
+        - "user"
+      summary: "获取用户所在IM节点信息"
+      description: "获取用户所在IM节点信息"
+      operationId: "uid im"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "用户ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'  
+      
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+definitions:
+  UserLoginReq:
+    type: "object"
+    properties:
+      username:
+        type: "string"
+        description: "用户名"
+      password:
+        type: "string"
+        description: "密码"
+      name:
+        type: "string"
+        description: "名字"
+      flag:
+        type: integer
+        format: int
+        description: "设备标示 0.APP 1.PC"  
+      device:
+        type: object
+        properties:
+         device_id:
+          type: string
+          description: "设备ID"
+         device_name:
+          type: string
+          description: "设备名称"
+         device_model:
+          type: string
+          description: "设备型号"
+  UserLoginResp:
+    type: "object"
+    properties:
+      uid:
+        type: "string"
+        description: "用户唯一ID"
+      token:
+        type: "string"
+        description: "用户凭证"
+      im_token:
+        type: "string"
+        description: "IM用户凭证"
+      username:
+        type: "string"
+        description: "登录用户名"
+      name:
+        type: "string"
+        description: "用户名称"
+      sex:
+        type: integer
+        description: "性别"
+      category:
+        type: string
+        description: "用户分类 '客服'"
+      short_no:
+        type: string
+        description: "用户唯一短编号"
+      short_status:
+        type: integer
+        description: "是否已经设置ID"
+      zone:
+        type: string
+        description: "手机区号"
+      phone:
+        type: string
+        description: "手机号"
+      avatar:
+        type: string
+        description: "用户头像"
+      chat_pwd:
+        type: string
+        description: "聊天密码"
+      lock_screen_pwd:
+        type: string
+        description: "锁屏密码"
+      lock_after_minute:
+        type: integer
+        description: "在几分钟后锁屏 0 表示立即"
+      setting:
+        type: object
+        description: "用户设置"
+        properties:
+          search_by_phone:
+            type: integer
+            description: "是否可以通过手机号搜索0.否1.是"
+          search_by_short:
+            type: integer
+            description: "是否可以通过短编号搜索0.否1.是"
+          new_msg_notice:
+            type: integer
+            description: "新消息通知0.否1.是"
+          msg_show_detail:
+            type: integer
+            description: "显示消息通知详情0.否1.是"
+          voice_on:
+            type: integer
+            description: "声音0.否1.是"
+          shock_on:
+            type: integer
+            description: "震动0.否1.是"
+          device_lock:
+            type: integer
+            description: "是否开启设备登录验证"
+          offline_protection:
+            type: integer
+            description: "是否开启离线保护，断网屏保"
+  UserDetailResp:
+    type: "object"
+    properties:
+      uid:
+        type: string
+        description: "用户ID"
+      name:
+        type: string
+        description: "用户名"
+      username:
+        type: string
+        description: "登录用户名 如手机号登录则为 zone+phone"
+      email:
+        type: string
+        description: "邮箱（仅自己可见）"
+      zone:
+        type: string
+        description: "手机区号（仅自己可见）"
+      phone:
+        type: string
+        description: "手机号（仅自己可见）"
+      mute:
+        type: integer
+        description: "免打扰"
+      top:
+        type: integer
+        description: "置顶"
+      sex:
+        type: integer
+        description: "性别 1 男"
+      category:
+        type: string
+        description: "用户分类 ‘客服’ 等"
+      short_no:
+        type: string
+        description: "用户唯一短号"
+      chat_pwd_on:
+        type: integer
+        description: "是否开启聊天密码 1.是"
+      screenshot:
+        type: integer
+        description: "是否开启截屏通知 1.是"
+      revoke_remind:
+        type: integer
+        description: "是否开启撤回提醒 1.是"
+      receipt:
+        type: integer
+        description: "消息是否回执 1.是"
+      online:
+        type: integer
+        description: "用户是否在线 1.是"
+      last_offline:
+        type: integer
+        description: "最后一次离线时间"
+      device_flag:
+        type: integer
+        description: "在线设备标记 0.APP 1.Web 2.PC"
+      follow:
+        type: integer
+        description: "是否是好友 1.是"
+      be_deleted:
+        type: integer
+        description: "是否被删除 1.是"
+      be_blacklist:
+        type: integer
+        description: "是否被拉黑 1.是"
+      vercode:
+        type: string
+        description: "加好友所需vercode"
+      source_desc:
+        type: string
+        description: "加好友来源"
+      remark:
+        type: string
+        description: "备注"
+      is_upload_avatar:
+        type: integer
+        description: "是否已上传过头像 1.是"
+      status:
+        type: integer
+        description: "用户状态 1.正常 2.黑名单"
+      robot:
+        type: integer
+        description: "是否为机器人 1.是"
+      is_destroy:
+        type: integer
+        description: "是否已注销 1.是"
+      flame:
+        type: integer
+        description: "是否开启阅后即焚 1.是"
+      flame_second:
+        type: integer
+        description: "阅后即焚秒数"
+
+
+
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

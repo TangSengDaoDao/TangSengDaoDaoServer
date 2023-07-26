@@ -1,0 +1,1086 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "group"
+    description: "群组"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /group/create:
+    post:
+      tags:
+        - "group"
+      summary: "创建群聊"
+      description: "创建群聊"
+      operationId: "create"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "提交数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "群名称"
+              members:
+                type: array
+                items:
+                  type: string
+                  description: "成员uid"
+              member_names:
+                type: array
+                items:
+                  type: string
+                  description: "成员名称"
+
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /group/my:
+    get:
+      tags:
+        - "group"
+      summary: "登录用户保存的群列表"
+      description: "登录用户保存的群列表"
+      operationId: "my list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/group"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /group/forbidden_times:
+    get:
+      tags:
+        - "group"
+      summary: "获取禁言时常列表"
+      description: "获取禁言时常列表"
+      operationId: "forbidden_times"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                text:
+                  type: string
+                  description: "一分钟"
+                key:
+                  type: integer
+                  description: "1"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /group/invites/{invite_no}:
+    get:
+      tags:
+        - "group"
+      summary: "获取邀请详情"
+      description: "获取邀请详情"
+      operationId: "invites"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "invite_no"
+          type: string
+          description: "邀请ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              invite_no:
+                type: string
+                description: "邀请ID"
+              group_no:
+                type: string
+                description: "群唯一编号"
+              inviter:
+                type: string
+                description: "邀请者"
+              remark:
+                type: string
+                description: "邀请备注"
+              inviter_name:
+                type: string
+                description: "邀请者名称"
+              status:
+                type: integer
+                description: "状态 0.未确认 1.已确认"
+              items:
+                type: array
+                items:
+                  properties:
+                    uid:
+                      type: string
+                      description: "被邀请者uid"
+                    name:
+                      type: string
+                      description: "被邀请者名称"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /group/invite/sure:
+    post:
+      tags:
+        - "group"
+      summary: "确认邀请"
+      description: "确认邀请"
+      operationId: "sure invites"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "auth_code"
+          type: string
+          description: "授权码"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}:
+    get:
+      tags:
+        - "group"
+      summary: "群详情"
+      description: "群详情"
+      operationId: "group detail"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/group"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:
+      tags:
+        - "group"
+      summary: "修改群信息"
+      description: "修改群信息"
+      operationId: "group update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "修改群名称 notice(修改群备注) invite(是否开启进群邀请) 等"
+
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/members:
+    post:
+      tags:
+        - "group"
+      summary: "添加群成员"
+      description: "添加群成员"
+      operationId: "add members"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "uids"
+          description: "群成员uids"
+          required: true
+          schema:
+            type: object
+            properties:
+              members:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "group"
+      summary: "删除群成员"
+      description: "删除群成员"
+      operationId: "delete members"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "uids"
+          description: "群成员uids"
+          required: true
+          schema:
+            type: object
+            properties:
+              members:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "group"
+      summary: "获取群成员"
+      description: "获取群成员"
+      operationId: "get members"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
+        - in: "query"
+          name: "limit"
+          type: integer
+          description: "每页数据"
+        - in: "query"
+          name: "page"
+          type: integer
+          description: "页码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/groupMember"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/membersync:
+    get:
+      tags:
+        - "group"
+      summary: "同步群成员"
+      description: "同步群成员"
+      operationId: "sync members"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "query"
+          name: "version"
+          type: integer
+          description: "同步版本号"
+        - in: "query"
+          name: "limit"
+          type: integer
+          description: "同步数量"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/groupMember"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/setting:
+    put:
+      tags:
+        - "group"
+      summary: "修改群设置"
+      description: "修改群设置"
+      operationId: "update setting"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "key"
+          description: "修改的值 如修改备注{'remark':'xxx'}"
+          required: true
+          schema:
+            type: object
+            properties:
+              show_nick:
+                type: integer
+                description: "是否显示群内成员昵称 1.是 remark(对群备注)"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/members/{uid}:
+    put:
+      tags:
+        - "group"
+      summary: "修改群的群成员信息"
+      description: "修改群的群成员信息"
+      operationId: "update member"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              remark:
+                type: string
+                description: "修改在群内昵称"
+
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/exit:
+    post:
+      tags:
+        - "group"
+      summary: "退出群聊"
+      description: "退出群聊"
+      operationId: "exit"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/managers:
+    post:
+      tags:
+        - "group"
+      summary: "添加群管理员"
+      description: "添加群管理员"
+      operationId: "add managers"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "req"
+          description: "成员uids"
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              description: "用户uids"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "group"
+      summary: "移除群管理员"
+      description: "移除群管理员"
+      operationId: "delete managers"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "req"
+          description: "成员uids"
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              description: "用户uid 多个uid用逗号隔开"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/forbidden/{on}:
+    post:
+      tags:
+        - "group"
+      summary: "群全员禁言"
+      description: "群全员禁言"
+      operationId: "forbidden"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "on"
+          type: string
+          description: "1.开启禁言 0.关闭禁言"
+          required: true
+
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/qrcode:
+    get:
+      tags:
+        - "group"
+      summary: "群二维码"
+      description: "群二维码"
+      operationId: "qrcode"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              day:
+                type: integer
+                description: "有效天数"
+              expire:
+                type: string
+                description: "到期日期"
+              qrcode:
+                type: string
+                description: "二维码地址"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/transfer/{to_uid}:
+    post:
+      tags:
+        - "group"
+      summary: "群主转让"
+      description: "群主转让"
+      operationId: "transfer"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "to_uid"
+          type: string
+          description: "新群主uid"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/member/invite:
+    post:
+      tags:
+        - "group"
+      summary: "邀请群成员"
+      description: "邀请群成员"
+      operationId: "invite member"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "data"
+          description: "邀请信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              remark:
+                type: string
+                description: "邀请说明"
+              uids:
+                type: array
+                items:
+                  type: string
+                  description: "邀请用户uids"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/member/h5confirm:
+    get:
+      tags:
+        - "group"
+      summary: "获取确认邀请的h5页面"
+      description: "获取确认邀请的h5页面"
+      operationId: "h5confirm"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "query"
+          name: "invite_no"
+          type: string
+          description: "邀请编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                description: "网页地址"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/blacklist/{action}:
+    post:
+      tags:
+        - "group"
+      summary: "添加或移除成员黑名单"
+      description: "添加或移除成员黑名单"
+      operationId: "member blacklist action"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "action"
+          type: string
+          description: "add.添加到黑名单 remove.移除黑名单"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/forbidden_with_member:
+    post:
+      tags:
+        - "group"
+      summary: "禁言或解禁某个群成员"
+      description: "禁言或解禁某个群成员"
+      operationId: "forbidden_with_member"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "body"
+          name: "key"
+          description: "禁言|解禁信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              member_uid:
+                type: string
+                description: "成员uid"
+              action:
+                type: integer
+                description: "0.解禁1.禁言"
+              key:
+                type: integer
+                description: "禁言时间 1.一分钟 2.10分钟 3.一小时 4.一天 5.一周 6.一个月"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /groups/{group_no}/avatar:
+    post:
+      tags:
+        - "group"
+      summary: "修改群头像"
+      description: "修改群头像"
+      operationId: "update avatar"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "formData"
+          name: "file"
+          type: file
+          description: "文件"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "group"
+      summary: "获取群头像"
+      description: "获取群头像"
+      operationId: "get avatar"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+      responses:
+        200:
+          description: "成功"
+          schema:
+            type: file
+            format: file
+            description: "头像文件"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+  /groups/{group_no}/scanjoin:
+    get:
+      tags:
+        - "group"
+      summary: "扫码加入群"
+      description: "扫码加入群"
+      operationId: "scanjoin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "group_no"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "query"
+          name: "auth_code"
+          type: string
+          description: "认证码"
+          required: true
+      responses:
+        200:
+          description: "成功"
+          schema:
+            $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  group:
+    type: "object"
+    properties:
+      group_no:
+        type: string
+        description: "群编号"
+      group_type:
+        type: integer
+        description: "群类型 0.普通群 1.超大群"
+      name:
+        type: string
+        description: "群名称"
+      remark:
+        type: string
+        description: "群备注"
+      notice:
+        type: string
+        description: "群简介"
+      mute:
+        type: integer
+        description: "是否免打扰 1.是"
+      top:
+        type: integer
+        description: "是否置顶 1.是"
+      show_nick:
+        type: integer
+        description: "是否显示群内成员昵称 1.是"
+      save:
+        type: integer
+        description: "是否保存到通讯录 1.是"
+      forbidden:
+        type: integer
+        description: "是否全员禁言 1.是"
+      invite:
+        type: integer
+        description: "是否开启群聊邀请确认 1.是"
+      chat_pwd_on:
+        type: integer
+        description: "是否聊天密码 1.是"
+      screenshot:
+        type: integer
+        description: "是否截屏通知 1.是"
+      revoke_remind:
+        type: integer
+        description: "是否撤回提醒 1.是"
+      join_group_remind:
+        type: integer
+        description: "是否进群提醒 1.是"
+      forbidden_add_friend:
+        type: integer
+        description: "是否群内禁止加好友 1.是"
+      status:
+        type: integer
+        description: "群状态 1.正常"
+      receipt:
+        type: integer
+        description: "消息是否回执 1.是"
+      flame:
+        type: integer
+        description: "是否开启阅后即焚 1.是"
+      flame_second:
+        type: integer
+        description: "阅后即焚秒数"
+      allow_view_history_msg:
+        type: integer
+        description: "是否允许新成员查看历史消息 1.是"
+      member_count:
+        type: integer
+        description: "成员数量"
+      online_count:
+        type: integer
+        description: "在线成员数量"
+      quit:
+        type: integer
+        description: "是否已退出群聊"
+      role:
+        type: integer
+        description: "我在群内角色 0.普通成员 1.群主 2.管理员"
+      forbidden_expir_time:
+        type: integer
+        description: "我在此群的禁言过期时间"
+      version:
+        type: integer
+        description: "群数据版本"
+  groupMember:
+    type: "object"
+    properties:
+      uid:
+        type: string
+        description: "成员uid"
+      group_no:
+        type: string
+        description: "群唯一编号"
+      name:
+        type: string
+        description: "群成员名称"
+      remark:
+        type: string
+        description: "成员备注"
+      role:
+        type: integer
+        description: "成员角色 0.普通成员 1.群主 2.管理员"
+      version:
+        type: integer
+        description: "版本号"
+      is_deleted:
+        type: integer
+        description: "是否删除 1.是"
+      status:
+        type: integer
+        description: "成员状态1:正常，2:黑名单"
+      vercode:
+        type: string
+        description: "验证码"
+      invite_uid:
+        type: string
+        description: "邀请人"
+      robot:
+        type: integer
+        description: "是否为机器人 1.是"
+      forbidden_expir_time:
+        type: integer
+        description: "禁言时长"
+
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

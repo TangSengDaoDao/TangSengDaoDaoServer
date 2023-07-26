@@ -1,0 +1,435 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "rtc"
+    description: "rtc"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /rtc/rooms:
+    post:
+      tags:
+        - "rtc"
+      summary: "创建房间"
+      description: "创建房间"
+      operationId: "create room"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "房间信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "房间名"
+              uids:
+                type: array
+                items:
+                  type: string
+                  description: "参与者"
+              invite_on:
+                type: integer
+                description: "是否开启邀请机制 开启后只有收到邀请才能加入房间 1.是"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              room_id:
+                type: string
+                description: "房间ID"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /rtc/rooms/{id}/invoke:
+    post:
+      tags:
+        - "rtc"
+      summary: "邀请加入房间"
+      description: "邀请加入房间"
+      operationId: "invoke"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "房间ID"
+          required: true
+        - in: "body"
+          name: "data"
+          description: "房间信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              uids:
+                type: array
+                items:
+                  type: string
+                  description: "邀请用户uids"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/rooms/{id}/prejoin:
+    post:
+      tags:
+        - "rtc"
+      summary: "准备加入房间"
+      description: "准备加入房间（主要获取加入房间的之前的一些配置，比如房间token）"
+      operationId: "prejoin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "房间号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: "连接rtc token"
+              room_id:
+                type: string
+                description: "房间号"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/rooms/{id}/hangup:
+    post:
+      tags:
+        - "rtc"
+      summary: "挂断"
+      description: "挂断"
+      operationId: "hangup"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "房间号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/rooms/{id}/refuse:
+    post:
+      tags:
+        - "rtc"
+      summary: "拒绝接听"
+      description: "拒绝接听"
+      operationId: "refuse"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "房间号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/rooms/{id}/joined:
+    post:
+      tags:
+        - "rtc"
+      summary: "已加入"
+      description: "已加入(前端加入房间成功后调用此接口告知服务器)"
+      operationId: "joined"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "id"
+          type: string
+          description: "房间号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/p2p/invoke:
+    post:
+      tags:
+        - "rtc"
+      summary: "p2p 邀请通话"
+      description: "p2p 邀请通话"
+      operationId: "invoke p2p"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "邀请信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              to_uid:
+                type: string
+                description: "邀请用户"
+              call_type:
+                type: integer
+                description: "rtc 类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/p2p/accept:
+    post:
+      tags:
+        - "rtc"
+      summary: "p2p 接受通话"
+      description: "p2p 接受通话"
+      operationId: "accept p2p"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "接受信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              from_uid:
+                type: string
+                description: "发起通话的用户的uid"
+              call_type:
+                type: integer
+                description: "rtc 类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/p2p/refuse:
+    post:
+      tags:
+        - "rtc"
+      summary: "p2p 拒绝通话"
+      description: "p2p 拒绝通话"
+      operationId: "refuse p2p"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "拒绝信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "发起通话的用户的uid"
+              call_type:
+                type: integer
+                description: "rtc 类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/p2p/cancel:
+    post:
+      tags:
+        - "rtc"
+      summary: "p2p 取消通话"
+      description: "p2p 取消通话"
+      operationId: "cancel p2p"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "拒绝信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "发起通话的用户的uid"
+              call_type:
+                type: integer
+                description: "rtc 类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /rtc/p2p/hangup:
+    post:
+      tags:
+        - "rtc"
+      summary: "p2p 挂断通话"
+      description: "p2p 挂断通话"
+      operationId: "hangup p2p"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "拒绝信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "对方uid"
+              second:
+                type: integer
+                description: "通话秒数"
+              call_type:
+                type: integer
+                description: "rtc 类型"
+              is_caller:
+                type: integer
+                description: "当前挂断的人是否是呼叫者 0.否 1.是"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"
