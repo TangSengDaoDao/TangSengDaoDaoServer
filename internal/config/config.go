@@ -329,7 +329,7 @@ func New() *Config {
 			APIURL       string
 			ManagerToken string
 		}{
-			APIURL: "http://127.0.0.1:5100",
+			APIURL: "http://127.0.0.1:5001",
 		},
 
 		// ---------- avatar ----------

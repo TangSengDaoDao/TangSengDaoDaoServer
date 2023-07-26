@@ -1,0 +1,693 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "robot"
+    description: "机器人"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /robot/sync:
+    get:
+      tags:
+        - "robot"
+      summary: "同步机器人菜单"
+      description: "同步机器人菜单"
+      operationId: "sync robot"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "收藏数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              version:
+                type: integer
+                description: "同步版本号"
+              username:
+                type: string
+                description: "机器人名称"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/robot"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /robot/inline_query:
+    post:
+      tags:
+        - "robot"
+      summary: "机器人行内搜索"
+      description: "机器人行内搜索"
+      operationId: "inline_query"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "收藏数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              offset:
+                type: string
+                description: "搜索偏移位置第一次为空"
+              query:
+                type: string
+                description: "关键字"
+              username:
+                type: string
+                description: "机器人名称"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              inline_query_sid:
+                type: string
+                description: "搜索ID"
+              type:
+                type: string
+                description: "类型"
+              next_offset:
+                type: string
+                description: "下次查询所需偏移量"
+              results:
+                type: array
+                items:
+                  description: "搜索结果"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+
+  /robots/{robot_id}/{app_key}/events:
+    get:
+      tags:
+        - "robot"
+      summary: "获取事件"
+      description: "获取事件"
+      operationId: "events"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "query"
+          name: "limit"
+          type: integer
+          description: "数量"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              results:
+                type: array
+                items:
+                  $ref: "#/definitions/event"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "robot"
+      summary: "获取事件"
+      description: "获取事件"
+      operationId: "events post"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "body"
+          name: "object"
+          description: "事件数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              limit:
+                type: integer
+                description: "数量"
+              event_id:
+                type: string
+                description: "事件ID"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              results:
+                type: array
+                items:
+                  $ref: "#/definitions/event"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /robots/{robot_id}/{app_key}/events/{event_id}/ack:
+    post:
+      tags:
+        - "robot"
+      summary: "事件确认"
+      description: "事件确认"
+      operationId: "events ack"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "path"
+          name: "event_id"
+          type: string
+          description: "事件ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /robots/{robot_id}/{app_key}/answerInlineQuery:
+    post:
+      tags:
+        - "robot"
+      summary: "响应inlineQuery"
+      description: "响应inlineQuery"
+      operationId: "events inlineQuery"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "body"
+          name: "object"
+          description: "事件数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              inline_query_sid:
+                type: integer
+                description: "数量"
+              type:
+                type: string
+                description: "结果类型"
+              id:
+                type: string
+                description: "结果ID"
+              results:
+                type: array
+                items:
+                  description: "结果数据"
+              next_offset:
+                type: string
+                description: "偏移量"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /robots/{robot_id}/{app_key}/sendMessage:
+    post:
+      tags:
+        - "robot"
+      summary: "发送消息"
+      description: "发送消息"
+      operationId: "sendMessage"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "body"
+          name: "object"
+          description: "消息对象"
+          required: true
+          schema:
+            type: object
+            properties:
+              setting:
+                type: integer
+                description: "消息设置"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              stream_no:
+                type: string
+                items:
+                  description: "流消息编号"
+              payload:
+                type: object
+                description: "消息正文"
+              entities:
+                type: array
+                items:
+                  properties:
+                    length:
+                      type: integer
+                      description: "流长度"
+                    offset:
+                      type: integer
+                      description: "偏移位置"
+                    type:
+                      type: string
+                      description: "类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              header:
+                type: object
+                properties:
+                  no_persist:
+                    type: integer
+                    description: "是否不持久化"
+                  red_dot:
+                    type: integer
+                    description: "是否显示红点"
+                  sync_once:
+                    type: integer
+                    description: "此消息只被同步或被消费一次(1表示消息将走写模式) ，特别注意：sync_once=1表示写扩散 sync_once=0表示读扩散 写扩散的messageSeq和读扩散messageSeq来源不一样"
+              setting:
+                type: integer
+                description: "消息设置"
+              from_uid:
+                type: string
+                description: "模拟发送者的UID"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              stream_no:
+                type: string
+                description: "流编号"
+              subscribers:
+                type: array
+                items:
+                  type: string
+                  description: "订阅者 如果此字段有值，表示消息只发给指定的订阅者"
+              payload:
+                type: array
+                items:
+                  type: integer
+                  description: "消息内容[]byte"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /robots/{robot_id}/{app_key}/typing:
+    post:
+      tags:
+        - "robot"
+      summary: "输入中"
+      description: "输入中"
+      operationId: "typing"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "body"
+          name: "object"
+          description: "频道信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /robots/{robot_id}/{app_key}/stream/start:
+    post:
+      tags:
+        - "robot"
+      summary: "流式消息开启"
+      description: "流式消息开启"
+      operationId: "start stream"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "body"
+          name: "object"
+          description: "消息对象"
+          required: true
+          schema:
+            type: object
+            properties:
+              header:
+                type: object
+                properties:
+                  no_persist:
+                    type: integer
+                    description: "是否不持久化"
+                  red_dot:
+                    type: integer
+                    description: "是否显示红点"
+                  sync_once:
+                    type: integer
+                    description: "此消息只被同步或被消费一次(1表示消息将走写模式) ，特别注意：sync_once=1表示写扩散 sync_once=0表示读扩散 写扩散的messageSeq和读扩散messageSeq来源不一样"
+                description: "消息头"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              client_msg_no:
+                type: string
+                items:
+                  description: "客户端消息编号（相同编号，客户端只会显示一条）"
+              payload:
+                type: object
+                description: "消息正文"
+              from_uid:
+                type: string
+                description: "发送者UID"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              stream_no:
+                type: string
+                description: "流编号"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /robots/{robot_id}/{app_key}/stream/end:
+    post:
+      tags:
+        - "robot"
+      summary: "流式消息结束"
+      description: "流式消息结束"
+      operationId: "end stream"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "robot_id"
+          type: string
+          description: "即user的username"
+          required: true
+        - in: "path"
+          name: "app_key"
+          type: string
+          description: "应用key"
+          required: true
+        - in: "body"
+          name: "object"
+          description: "消息对象"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              stream_no:
+                type: string
+                items:
+                  description: "流编号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+             $ref: "#/definitions/respons"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  event:
+    type: object
+    properties:
+      event_id:
+        type: string
+        description: "事件ID"
+      message:
+        type: object
+        properties:
+          message_id:
+            type: string
+            description: "消息ID"
+          message_seq:
+            type: integer
+            description: "消息序号"
+          from_uid:
+            type: string
+            description: "发送者"
+          channel_id:
+            type: string
+            description: "频道ID"
+          channel_type:
+            type: integer
+            description: "频道类型"
+          timestamp:
+            type: integer
+            description: "服务器消息时间戳(10位 到秒)"
+          payload:
+            type: object
+            description: "消息正文"
+        description: "消息对象"
+      inline_query:
+        type: object
+        properties:
+          sid:
+            type: string
+            description: "唯一ID"
+          from_uid:
+            type: string
+            description: "发送者"
+          channel_id:
+            type: string
+            description: "频道ID"
+          channel_type:
+            type: integer
+            description: "频道类型"
+          query:
+            type: string
+            description: "查询关键字"
+          offset:
+            type: string
+            description: "偏移量"
+  robot:
+    type: object
+    properties:
+      robot_id:
+        type: string
+        description: "机器人ID"
+      username:
+        type: string
+        description: "机器人名称"
+      inline_on:
+        type: integer
+        description: "是否开启行内搜索 1.是"
+      placeholder:
+        type: string
+        description: "输入框占位符，开启行内搜索有效"
+      status:
+        type: integer
+        description: "机器人状态0:禁用1:启用"
+      version:
+        type: integer
+        description: "版本号"
+      menus:
+        type: array
+        items:
+          $ref: "#/definitions/menu"
+          description: "菜单"
+  menu:
+    type: object
+    properties:
+      cmd:
+        type: string
+        description: "命令"
+      remark:
+        type: string
+        description: "命令说明"
+      type:
+        type: string
+        description: "命名类型"
+      robot_id:
+        type: string
+        description: "机器人ID"
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

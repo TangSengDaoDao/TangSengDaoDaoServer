@@ -1,0 +1,152 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "report"
+    description: "举报"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /report/categories:
+    get:
+      tags:
+        - "report"
+      summary: "举报分类"
+      description: "举报分类"
+      operationId: "report categories"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "请求语言"
+          required: true
+          schema:
+            type: object
+            properties:
+              lang:
+                type: string
+                description: "请求语言 en"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                category_no:
+                  type: string
+                  description: "分类编号"
+                category_name:
+                  type: string
+                  description: "分类名称"
+                category_ename:
+                  type: string
+                  description: "分类英文名"
+                parent_category_no:
+                  type: string
+                  description: "上级分类编号"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /report/html:
+    get:
+      tags:
+        - "report"
+      summary: "举报页面"
+      description: "举报页面"
+      operationId: "report html"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "mode"
+          type: string
+          description: "当前主题模式 light|dark"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: file
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /reports:
+    post:
+      tags:
+        - "report"
+      summary: "举报"
+      description: "举报"
+      operationId: "report add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "举报数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道唯一 ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              category_no:
+                type: string
+                description: "举报分类"
+              imgs:
+                type: array
+                items:
+                  type: string
+                  description: "举报图片"
+              remark:
+                type: string
+                description: "举报说明"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

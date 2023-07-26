@@ -1,0 +1,282 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "common"
+    description: "通用"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /common/appversion/{os}/{version}:
+    get:
+      tags:
+        - "common"
+      summary: "获取最新版本"
+      description: "获取最新版本"
+      operationId: "check new version"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "os"
+          type: string
+          description: "平台类型android|ios"
+          required: true 
+        - in: "path"
+          name: "version"
+          type: string
+          description: "版本号"
+          required: true 
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                app_version:
+                  type: string
+                  description: "版本号"
+                os:
+                  type: string
+                  description: "平台 android|ios"
+                is_force:
+                  type: integer
+                  description: "是否强制更新 1.是"
+                update_desc:
+                  type: string
+                  description: "更新说明"
+                download_url:
+                  type: string
+                  description: "下载地址"
+                created_at:
+                  type: string
+                  description: "更新时间"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: [] 
+  /common/updater/{os}/{version}:
+    get:
+      tags:
+        - "common"
+      summary: "PC版本更新检查（兼容tauri）"
+      description: "PC版本更新检查（兼容tauri）"
+      operationId: "updater version"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "os"
+          type: string
+          description: "平台类型android|ios"
+          required: true 
+        - in: "path"
+          name: "version"
+          type: string
+          description: "版本号"
+          required: true 
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                url:
+                  type: string
+                  description: "下载地址"
+                version:
+                  type: string
+                  description: "版本号"
+                notes:
+                  type: string
+                  description: "更新说明"
+                signature:
+                  type: string
+                  description: "安装包签名"
+                pub_date:
+                  type: string
+                  description: "更新时间"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+
+  /common/chatbg:
+    get:
+      tags:
+        - "common"
+      summary: "聊天背景列表"
+      description: "聊天背景列表"
+      operationId: "chatbg"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+               cover:
+                  type: string
+                  description: "封面"
+               url:
+                  type: string
+                  description: "图片地址"
+               is_svg:
+                  type: integer
+                  description: "是否是svg图片 1.是"
+               light_colors:
+                  type: array
+                  items:
+                    type: string
+                    description: "亮色背景颜色数组"
+               dark_colors:
+                  type: array
+                  items:
+                    type: string
+                    description: "暗色背景颜色数组"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []      
+  /common/appmodule:
+    get:
+      tags:
+        - "common"
+      summary: "app模块列表"
+      description: "app模块列表"
+      operationId: "appmodule"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"   
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+               sid:
+                  type: string
+                  description: "模块ID"
+               name:
+                  type: string
+                  description: "模块名称"
+               desc:
+                  type: string
+                  description: "模块说明"
+               status:
+                  type: integer
+                  description: "模块状态 1.可选 0.不可选 2.默认选中不可编辑"
+                
+                
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+      security:
+        - token: []       
+  /common/appconfig:
+    get:
+      tags:
+        - "common"
+      summary: "应用设置"
+      description: "应用设置"
+      operationId: "appconfig"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"   
+      parameters:
+        - in: "query"
+          name: "version"
+          type: string
+          description: "版本号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                version:
+                  type: string
+                  description: "版本号"
+                web_url:
+                  type: string
+                  description: "web 地址"
+                phone_search_off:
+                  type: integer
+                  description: "手机号搜索是否开启 1.是"
+                shortno_edit_off:
+                  type: integer
+                  description: "短号是否已编辑 1.是"
+                revoke_second:
+                  type: integer
+                  description: "消息撤回限制时长"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+               
+  /common/countries:
+    get:
+      tags:
+        - "common"
+      summary: "国家及地区列表"
+      description: "国家及地区列表"
+      operationId: "countries"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"   
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+               code:
+                  type: string
+                  description: "区号"
+               name:
+                  type: string
+                  description: "国家地区名称"
+               icon:
+                  type: string
+                  description: "emoji icon"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response' 
+
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"
