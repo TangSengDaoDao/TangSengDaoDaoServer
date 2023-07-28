@@ -67,7 +67,7 @@ tsdd start
 ------------
 
 
-### 唐僧叨叨
+### 唐僧叨叨（负责业务）
 
 | 项目名 | Github地址 | Gitee地址 | 开源协议 | 说明 |
 | ---- | ---------- | --------- | ---- | ---- |
@@ -77,7 +77,7 @@ tsdd start
 |   TangSengDaoDaoWeb   |   [Github](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb)         |     [Gitee](https://gitee.com/TangSengDaoDao/TangSengDaoDaoWeb) | Apache2.0      |    唐僧叨叨的Web/PC端   |
 
 
-### 悟空IM
+### 悟空IM（负责通讯）
 
 | 项目名 | Github地址 | Gitee地址 | 开源协议 | 说明 |
 | ---- | ---------- | --------- | ---- |  ---- |
