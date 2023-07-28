@@ -62,21 +62,21 @@ tsdd start
 
 更多部署方式参考文档：https://tangsengdaodao.com/dev/backend/deploy-compose.html
 
-动画演示
+
+客户端源码
 ------------
 
-||||
-|:---:|:---:|:--:|
-|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
+Web/PC端源码： https://github.com/TangSengDaoDao/TangSengDaoDaoWeb
 
+Android端源码： https://github.com/TangSengDaoDao/TangSengDaoDaoAndroid
 
-|||          |
-|:---:|:---:|:-------------------:|
-|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
+iOS端源码：     https://github.com/TangSengDaoDao/TangSengDaoDaoiOS
 
-![](docs/screenshot/pc2.png)
+技术文档
+------------
 
-![](docs/screenshot/pc1.png)
+https://tangsengdaodao.com
+
 
 
 功能特性
@@ -148,6 +148,24 @@ tsdd start
     - [x] 设备管理
 
 
+
+动画演示
+------------
+
+||||
+|:---:|:---:|:--:|
+|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
+
+
+|||          |
+|:---:|:---:|:-------------------:|
+|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
+
+![](docs/screenshot/pc2.png)
+
+![](docs/screenshot/pc1.png)
+
+
 演示地址
 ------------
 
@@ -159,20 +177,6 @@ tsdd start
 |:---:|:---:|:---:|:---:|
 |[点击体验](https://web.botgate.cn)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)|
 
-客户端源码
-------------
-
-Web/PC端源码： https://github.com/TangSengDaoDao/TangSengDaoDaoWeb
-
-Android端源码： https://github.com/TangSengDaoDao/TangSengDaoDaoAndroid
-
-iOS端源码：     https://github.com/TangSengDaoDao/TangSengDaoDaoiOS
-
-
-技术文档
-------------
-
-https://tangsengdaodao.com
 
 Star
 ------------
