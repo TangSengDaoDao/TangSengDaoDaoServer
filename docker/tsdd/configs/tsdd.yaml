@@ -111,8 +111,8 @@ minio: # minio配置
 #  adminUID: "admin" # 管理员uid
 
 ##################### 头像 ####################
-#avatar:
-#  default: "assets/assets/avatar.png" # 默认头像
+avatar:
+  defaultBaseURL: "https://api.multiavatar.com/{avatar}.png" # 默认头像地址
 #  defaultCount: 900 # 默认头像数量
 #  partition: 100 # 头像分区数量
 
