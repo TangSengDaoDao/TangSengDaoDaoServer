@@ -285,12 +285,9 @@ paths:
               channel_type:
                 type: integer
                 description: "频道类型"
-              login_uid:
-                type: string
-                description: "登录用户uid"
               device_uuid:
                 type: string
-                description: "设备唯一编号"
+                description: "设备唯一编号，非必填"
               start_message_seq:
                 type: integer
                 description: "开始序号"
