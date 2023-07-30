@@ -491,6 +491,7 @@ func (c *Config) ConfigureWithViper(vp *viper.Viper) {
 	c.DB.SQLDir = c.getString("db.sqlDir", c.DB.SQLDir)
 	c.DB.Migration = c.getBool("db.migration", c.DB.Migration)
 	c.DB.RedisAddr = c.getString("db.redisAddr", c.DB.RedisAddr)
+	c.DB.RedisPass = c.getString("db.redisPass", c.DB.RedisPass)
 	c.DB.AsynctaskRedisAddr = c.getString("db.asynctaskRedisAddr", c.DB.AsynctaskRedisAddr)
 
 	//#################### cluster ####################
