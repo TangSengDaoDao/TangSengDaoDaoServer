@@ -97,6 +97,7 @@ type Config struct {
 		SQLDir             string // 数据库脚本路径
 		Migration          bool   // 是否合并数据库
 		RedisAddr          string // redis地址
+		RedisPass          string //redis密码
 		AsynctaskRedisAddr string // 异步任务的redis地址 不写默认为RedisAddr的地址
 	}
 	// ---------- 分布式配置 ----------
@@ -270,6 +271,7 @@ func New() *Config {
 			SQLDir             string
 			Migration          bool
 			RedisAddr          string
+			RedisPass          string
 			AsynctaskRedisAddr string
 		}{
 			MySQLAddr: "root:demo@tcp(127.0.0.1:3306)/test?charset=utf8mb4&parseTime=true",
