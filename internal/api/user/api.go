@@ -1040,6 +1040,7 @@ func (u *User) register(c *wkhttp.Context) {
 		Sex:      1,
 		Zone:     req.Zone,
 		Phone:    req.Phone,
+		Name:     req.Name,
 		Password: req.Password,
 		Flag:     int(req.Flag),
 		Device:   req.Device,
@@ -2390,6 +2391,7 @@ type registerReq struct {
 	Phone    string     `json:"phone"`
 	Code     string     `json:"code"`
 	Password string     `json:"password"`
+	Name     string     `json:"name"`
 	Flag     uint8      `json:"flag"`   // 注册设备的标记 0.APP 1.PC
 	Device   *deviceReq `json:"device"` //注册用户设备信息
 }
