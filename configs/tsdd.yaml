@@ -14,7 +14,7 @@ mode: "debug" #   运行模式 debug or release
 
 ##################### 悟空IM配置 ####################
 #wukongIM:
-#  apiURL: "" # 悟空IM的api地址 格式： http://xx.xx.xx.xx:5001
+#  apiURL: "" # 悟空IM的api地址 格式： http://xx.xx.xx.xx:5100
 #  managerToken: "" # 悟空IM的管理者token 悟空IM配置了就需要填写，没配置就不需要
 
 ##################### db ####################
@@ -110,9 +110,9 @@ mode: "debug" #   运行模式 debug or release
 #  systemGroupName: "意见反馈群" # 系统群组名称
 #  adminUID: "admin" # 管理员uid
 
-##################### 头像 #####################
+##################### 头像 ####################
 #avatar:
-#  defaultBaseURL: "" # 默认头像cdn地址
+#  defaultBaseURL: "" # 默认头像基地址
 #  default: "assets/assets/avatar.png" # 默认头像
 #  defaultCount: 900 # 默认头像数量
 #  partition: 100 # 头像分区数量
