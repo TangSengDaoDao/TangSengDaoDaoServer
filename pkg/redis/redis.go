@@ -16,11 +16,12 @@ type Conn struct {
 	client *rd.Client
 }
 
-func New(addr string) *Conn {
+func New(addr string, password string) *Conn {
 	c := &Conn{}
 	c.client = rd.NewClient(&rd.Options{
 		Addr:       addr,
 		MaxRetries: 3, // 失败重试次数
+		Password:   password,
 	})
 	return c
 }
