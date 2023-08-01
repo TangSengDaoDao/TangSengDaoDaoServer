@@ -19,10 +19,9 @@ tttttttttttttttttttttttttttttttttttttttt
 tttttttttttttttttttttttttttttttttttttttt
 111t111111111tt1111111tt1111111t11111111[0m
 [20A[9999999D[43C[0m[0m 
-[43C[0m[1m[32mTangSengDaoDao is running[0m 
-[43C[0m-------------------------[0m 
+[43C[0m[1m[32mWuKongChat is running[0m 
+[43C[0m---------------------[0m 
 [43C[0m[1m[33mMode[0m[0m:[0m #mode#[0m 
-[43C[0m[1m[33mConfig[0m[0m:[0m #configPath#[0m 
 [43C[0m[1m[33mApp name[0m[0m:[0m #appname#[0m 
 [43C[0m[1m[33mVersion[0m[0m:[0m #version#[0m 
 [43C[0m[1m[33mGit[0m[0m:[0m #git#[0m 
@@ -33,6 +32,7 @@ tttttttttttttttttttttttttttttttttttttttt
 
 [43C[30m[40m   [31m[41m   [32m[42m   [33m[43m   [34m[44m   [35m[45m   [36m[46m   [37m[47m   [m
 [43C[38;5;8m[48;5;8m   [38;5;9m[48;5;9m   [38;5;10m[48;5;10m   [38;5;11m[48;5;11m   [38;5;12m[48;5;12m   [38;5;13m[48;5;13m   [38;5;14m[48;5;14m   [38;5;15m[48;5;15m   [m
+
 
 
 

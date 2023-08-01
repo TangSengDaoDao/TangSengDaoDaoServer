@@ -7,13 +7,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/api/base/event"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/config"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServer/internal/server"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/log"
+	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/internal"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/module"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/server"
 	"github.com/gin-gonic/gin"
 	"github.com/judwhite/go-svc"
+	"github.com/robfig/cron"
 	"github.com/spf13/viper"
 )
 
@@ -26,16 +28,13 @@ var TreeState string  // git tree state
 func loadConfigFromFile(cfgFile string) *viper.Viper {
 	vp := viper.New()
 	vp.SetConfigFile(cfgFile)
-	if err := vp.ReadInConfig(); err != nil {
-		fmt.Println("load config is error", err, cfgFile)
-	} else {
+	if err := vp.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", vp.ConfigFileUsed())
 	}
 	return vp
 }
 
 func main() {
-
 	vp := loadConfigFromFile("configs/tsdd.yaml")
 
 	gin.SetMode(gin.ReleaseMode)
@@ -67,12 +66,11 @@ func main() {
 
 func runAPI(ctx *config.Context) {
 	// 创建server
-	s := server.New(ctx.GetConfig().Addr, ctx.GetConfig().SSLAddr, ctx.GetConfig().GRPCAddr)
-	ctx.Server = s
+	s := server.New(ctx)
+	ctx.SetHttpRoute(s.GetRoute())
 	// 替换web下的配置文件
 	replaceWebConfig(ctx.GetConfig())
 	// 初始化api
-	api.Init(ctx)
 	s.GetRoute().UseGin(ctx.Tracer().GinMiddle()) // 需要放在 api.Route(s.GetRoute())的前面
 	s.GetRoute().UseGin(func(c *gin.Context) {
 		ingorePaths := ingorePaths()
@@ -83,14 +81,22 @@ func runAPI(ctx *config.Context) {
 		}
 		gin.Logger()(c)
 	})
-	// 开始route
-	api.Route(s.GetRoute())
+	// 模块安装
+	err := module.Setup(ctx)
+	if err != nil {
+		panic(err)
+	}
+	//开始定时处理事件
+	cn := cron.New()
+	//定时发布事件 每59秒执行一次
+	cn.AddFunc("0/59 * * * * ?", ctx.Event.(*event.Event).EventTimerPush)
+	cn.Start()
 
 	// 打印服务器信息
 	printServerInfo(ctx)
 
 	// 运行
-	err := svc.Run(s)
+	err = svc.Run(s)
 	if err != nil {
 		panic(err)
 	}
