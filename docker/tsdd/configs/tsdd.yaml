@@ -60,6 +60,7 @@ minio: # minio配置
  secretAccessKey: "#MINIO_ROOT_PASSWORD#"  # minio secretAccessKey
 #oss:  # aliyun oss配置
 #  endpoint: "" # oss endpoint 例如 oss-cn-hangzhou.aliyuncs.com
+#  bucketName: "" # bucketName 例如： tangsengdaodao
 #  bucketURL: "" # oss bucketURL 例如 https://xxxx.oss-cn-hangzhou.aliyuncs.com
 #  accessKeyID: "" # oss accessKeyID
 #  accessKeySecret: "" # oss accessKeySecret

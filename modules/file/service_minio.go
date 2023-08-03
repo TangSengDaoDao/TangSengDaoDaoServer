@@ -62,7 +62,7 @@ func (sm *ServiceMinio) UploadFile(filePath string, contentType string, copyFile
 		Secure: useSSL,
 	})
 	if err != nil {
-		sm.Error("创建错误11：", zap.Error(err))
+		sm.Error("创建错误：", zap.Error(err))
 		return nil, err
 	}
 	bucketName := "file"
