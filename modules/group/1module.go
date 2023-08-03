@@ -19,6 +19,7 @@ var swaggerContent string
 func init() {
 	register.AddModule(func(ctx interface{}) register.Module {
 
+		fmt.Println("register......")
 		api := New(ctx.(*config.Context))
 		return register.Module{
 			Name: "group",
