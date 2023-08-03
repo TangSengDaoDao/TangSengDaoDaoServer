@@ -15,6 +15,12 @@ import (
 //go:embed sql
 var sqlFS embed.FS
 
+//go:embed swagger/api.yaml
+var swaggerContent string
+
+//go:embed swagger/friend.yaml
+var friendSwaggerContent string
+
 func init() {
 
 	// ====================== 注册用户模块 ======================
@@ -22,10 +28,12 @@ func init() {
 		x := ctx.(*config.Context)
 		api := New(x)
 		return register.Module{
+			Name: "user",
 			SetupAPI: func() register.APIRouter {
 				return api
 			},
-			SQLDir: register.NewSQLFS(sqlFS),
+			Swagger: swaggerContent,
+			SQLDir:  register.NewSQLFS(sqlFS),
 			IMDatasource: register.IMDatasource{
 				SystemUIDs: func() ([]string, error) {
 					users, err := api.userService.GetUsersWithCategory(CategoryService)
@@ -64,9 +72,11 @@ func init() {
 	register.AddModule(func(ctx interface{}) register.Module {
 		api := NewFriend(ctx.(*config.Context))
 		return register.Module{
+			Name: "friend",
 			SetupAPI: func() register.APIRouter {
 				return api
 			},
+			Swagger: friendSwaggerContent,
 			IMDatasource: register.IMDatasource{
 				HasData: func(channelID string, channelType uint8) register.IMDatasourceType {
 					if channelType == common.ChannelTypePerson.Uint8() {
@@ -97,6 +107,7 @@ func init() {
 	register.AddModule(func(ctx interface{}) register.Module {
 
 		return register.Module{
+			Name: "user_manager",
 			SetupAPI: func() register.APIRouter {
 				return NewManager(ctx.(*config.Context))
 			},

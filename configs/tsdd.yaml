@@ -38,7 +38,7 @@ mode: "debug" #   运行模式 debug or release
 #  lineNum: false # 是否打印行号
 
 ##################### 短信配置 ####################
-#smsCode: "" # 测试短信验证码， 如果不为空，则短信验证码为该值。
+smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证码为该值。
 #smsProvider: "aliyun" # 短信服务商. 例如: aliyun or unisms
 #aliyunSMS:
 #  accessKeyID: "" # 阿里云短信accessKeyID
@@ -53,7 +53,7 @@ mode: "debug" #   运行模式 debug or release
 #  signature: "" # unisms signature  
 
 ##################### 文件服务 ####################
-#fileService: "minio" # 文件服务 minio or oss or seaweed
+#fileService: "minio" # 文件服务 minio or aliyunOSS or seaweedFS
 #minio: # minio配置
 #  url: "" # minio地址 格式：http://xx.xx.xx.xx:9000
 #  accessKeyID: "" # minio accessKeyID
