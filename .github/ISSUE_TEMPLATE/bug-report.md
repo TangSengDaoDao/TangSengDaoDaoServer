@@ -1,5 +1,5 @@
 ---
-name: 提问
+name: 提出提问
 about: Describe this issue template's purpose here.
 title: ''
 labels: ''
