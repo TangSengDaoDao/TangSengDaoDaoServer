@@ -56,6 +56,9 @@ func (ch *Channel) channelGet(c *wkhttp.Context) {
 		if m.BussDataSource.ChannelGet != nil {
 			channelResp, err = m.BussDataSource.ChannelGet(channelID, channelType, loginUID)
 			if err != nil {
+				if errors.Is(err, register.ErrDatasourceNotProcess) {
+					continue
+				}
 				ch.Error("查询频道失败！", zap.Error(err))
 				c.ResponseError(err)
 				return
