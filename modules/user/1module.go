@@ -52,7 +52,7 @@ func init() {
 			BussDataSource: register.BussDataSource{
 				ChannelGet: func(channelID string, channelType uint8, loginUID string) (*model.ChannelResp, error) {
 					if channelType != common.ChannelTypePerson.Uint8() {
-						return nil, nil
+						return nil, register.ErrDatasourceNotProcess
 					}
 					userDetailResp, err := api.userService.GetUserDetail(channelID, loginUID)
 					if err != nil {
