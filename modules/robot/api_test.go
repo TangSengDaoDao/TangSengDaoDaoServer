@@ -23,7 +23,6 @@ func newTestServer() (*server.Server, *config.Context) {
 	os.Remove("test.db")
 	cfg := config.New()
 	cfg.Test = true
-	cfg.DB.SQLDir = "../../../assets/sql"
 	ctx := config.NewContext(cfg)
 	ctx.Event = event.New(ctx)
 	err := ctx.Cache().Set(cfg.Cache.TokenCachePrefix+token, uid+"@test")
