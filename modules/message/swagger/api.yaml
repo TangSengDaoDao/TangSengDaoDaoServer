@@ -7,11 +7,431 @@ host: "api.botgate.cn"
 tags:
   - name: "message"
     description: "消息"
+  - name: "messageManager"
+    description: "消息后台管理"
 schemes:
   - "https"
 basePath: "/v1"
 
 paths:
+  /manager/message/send:
+    post:
+      tags:
+        - "messageManager"
+      summary: "发送消息"
+      description: "发送消息"
+      operationId: "send message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "send message"
+          description: "发送消息数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              sender:
+                type: string
+                description: "发送者uid"
+              sender_name:
+                type: string
+                description: "发送者名称"
+              received_channel_id:
+                type: string
+                description: "接收者channelID"
+              received_channel_type:
+                type: integer
+                description: "接受类型channel类型"
+              content:
+                type: string
+                description: "消息内容"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/message/sendfriends:
+    post:
+      tags:
+        - "messageManager"
+      summary: "给某个用户代发消息"
+      description: "给某个用户代发消息"
+      operationId: "sendfriends message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "send message"
+          description: "发送消息数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "发送者uid"
+              to_uids:
+                type: array
+                items:
+                  type: string
+                description: "接收者uids"
+              content:
+                type: string
+                description: "消息内容"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/message:
+    get:
+      tags:
+        - "messageManager"
+      summary: "代发消息记录"
+      description: "代发消息记录"
+      operationId: "sendfriends message list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数量"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总量"
+              list:
+                type: array
+                items:
+                  properties:
+                    receiver:
+                      type: string
+                      description: "接受者uid"
+                    receiver_name:
+                      type: string
+                      description: "接受者名字"
+                    receiver_channel_type:
+                      type: integer
+                      description: "接受者频道类型"
+                    sender:
+                      type: string
+                      description: "发送者uid"
+                    sender_name:
+                      type: string
+                      description: "发送者名字"
+                    handler_uid:
+                      type: string
+                      description: "操作者uid"
+                    handler_name:
+                      type: string
+                      description: "操作者名字"
+                    content:
+                      type: string
+                      description: "发送内容"
+                    created_at:
+                      type: string
+                      description: "发送时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "messageManager"
+      summary: "删除代发消息记录"
+      description: "删除代发消息记录"
+      operationId: "sendfriends message delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "message"
+          description: "消息内容"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              list:
+                type: array
+                items:
+                  properties: 
+                    message_id: 
+                      type: string
+                      description: "消息ID"
+                    message_seq: 
+                      type: integer
+                      description: "消息序号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/message/sendall:
+    post:
+      tags:
+        - "messageManager"
+      summary: "给平台所有用户发送一条消息"
+      description: "给平台所有用户发送一条消息"
+      operationId: "sendall message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "message"
+          description: "消息内容"
+          required: true
+          schema:
+            type: object
+            properties:
+              content:
+                type: string
+                description: "消息内容"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/message/record:
+    get:
+      tags:
+        - "messageManager"
+      summary: "消息记录"
+      description: "消息记录"
+      operationId: "record message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "channel_id"
+          type: string
+          description: "查询频道ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总数"
+              list:
+                type: array
+                items:
+                  $ref: "#/definitions/msgRecord"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /message/message/recordpersonal:
+    get:
+      tags:
+        - "messageManager"
+      summary: "单聊聊天记录"
+      description: "单聊聊天记录"
+      operationId: "recordpersonal message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "uid"
+          type: string
+          description: "其中一个用户的uid"
+          required: true
+        - in: "path"
+          name: "touid"
+          type: string
+          description: "另一个用户的uid"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总数"
+              list:
+                type: array
+                items:
+                  $ref: "#/definitions/msgRecord"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/message/prohibit_words:
+    post:
+      tags:
+        - "messageManager"
+      summary: "添加违禁词"
+      description: "添加违禁词"
+      operationId: "prohibit_words add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "content"
+          type: string
+          description: "违禁词内容"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "messageManager"
+      summary: "违禁词列表"
+      description: "违禁词列表"
+      operationId: "prohibit_words list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数量"
+        - in: "query"
+          name: "search_key"
+          type: string
+          description: "搜索关键字"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总量"
+              list:
+                type: array
+                items:
+                  properties:
+                    id:
+                      type: integer
+                      description: "id"
+                    content:
+                      type: string
+                      description: "违禁词内容"
+                    is_deleted:
+                      type: integer
+                      description: "是否删除 1.是"
+                    version:
+                      type: integer
+                      description: "版本"
+                    created_at:
+                      type: string
+                      description: "创建时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "messageManager"
+      summary: "删除违禁词"
+      description: "删除违禁词"
+      operationId: "prohibit_words delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "is_deleted"
+          type: integer
+          description: "删除或回复违禁词 1.删除"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /message:
     delete:
       tags:
@@ -25,7 +445,7 @@ paths:
         - "application/json"
       parameters:
         - in: "body"
-          name: "array"
+          name: "delete msgs"
           description: "删除消息数组"
           required: true
           schema:
@@ -896,6 +1316,40 @@ securityDefinitions:
     description: "用户token"
 
 definitions:
+  msgRecord:
+    type: object
+    properties:
+      message_id:
+        type: string
+        description: "消息ID"
+      message_seq:
+        type: integer
+        description: "消息编号"
+      sender:
+        type: string
+        description: "发送者uid"
+      sender_name:
+        type: integer
+        description: "发送者名字"
+      payload:
+        type: object
+        description: "发送内容"
+      is_deleted:
+        type: integer
+        description: "是否删除 1.是"
+      readed_count:
+        type: integer
+        description: "已读数量"
+      revoke:
+        type: integer
+        description: "是否撤回 1.是"
+      created_at:
+        type: string
+        description: "发送时间"
+      edited_at:
+        type: integer
+        description: "编辑时间"
+
   reminder:
     type: "object"
     properties:
