@@ -34,34 +34,6 @@
 
 ![架构图](./docs/architecture.png)
 
-轻松上手
-------------
-
-安装脚本
-
-```shell
-
-curl -sSL https://gitee.com/TangSengDaoDao/TangSengDaoDaoCli/raw/main/install.sh | sudo bash
-
-```
-
-安装唐僧叨叨
-
-```shell
-tsdd install --ip xx.xx.xx.xx
-```
-
-`xx.xx.xx.xx为服务器IP地址（外网地址）`
-
-
-开始唐僧叨叨
-
-```shell
-tsdd start
-```
-
-更多部署方式参考文档：https://tangsengdaodao.com/dev/backend/deploy-compose.html
-
 
 相关源码
 ------------
