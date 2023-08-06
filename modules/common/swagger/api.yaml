@@ -7,11 +7,234 @@ host: "api.botgate.cn"
 tags:
   - name: "common"
     description: "通用"
+  - name: "commonManager"
+    description: "通用后台管理"
 schemes:
   - "https"
 basePath: "/v1"
 
 paths:
+  /manager/common/appconfig:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取app配置"
+      description: "获取app配置"
+      operationId: "manager common appconfig"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              properties:
+                revoke_second:
+                  type: integer
+                  description: "消息撤回时间限制（单位秒）"
+                welcome_message:
+                  type: string
+                  description: "登录欢迎语"
+                new_user_join_system_group:
+                  type: integer
+                  description: "注册用户是否加入系统群 1.是"
+                search_by_phone:
+                  type: integer
+                  description: "是否开启手机号搜索 1.是"
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: [] 
+    post: 
+      tags:
+        - "commonManager"
+      summary: "修改app配置"
+      description: "修改app配置"
+      operationId: "manager common appconfig update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "修改app配置信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              revoke_second:
+                type: integer
+                description: "消息撤回限制（单位秒）"
+              welcome_message:
+                type: string
+                description: "登录欢迎语"
+              new_user_join_system_group:
+                type: integer
+                description: "新用户是否加入群聊 1.是"
+              search_by_phone:
+                  type: integer
+                  description: "是否开启手机号搜索 1.是"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/common/appmodule:
+    get:
+      tags:
+        - "commonManager"
+      summary: "获取app模块"
+      description: "获取app模块"
+      operationId: "manager common get appmodule"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties:
+                sid: 
+                  type: string
+                  description: "模块唯一ID"
+                name:
+                  type: string
+                  description: "模块名称"
+                desc:
+                  type: string
+                  description: "模块说明"
+                status: 
+                  type: integer
+                  description: "模块状态 1.可选 0.不可选 2.选中不可编辑"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:  
+      tags:
+        - "commonManager"
+      summary: "修改app模块"
+      description: "修改app模块"
+      operationId: "manager common appmoudle update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "修改app模块信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              sid:
+                type: string
+                description: "模块ID"
+              name:
+                type: string
+                description: "模块名称"
+              desc:
+                  type: string
+                  description: "模块说明"
+              status: 
+                type: integer
+                description: "模块状态 1.可选 0.不可选 2.选中不可编辑"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post: 
+      tags:
+        - "commonManager"
+      summary: "添加app模块"
+      description: "添加app模块"
+      operationId: "manager common appmoudle add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "新增app模块信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              sid:
+                type: string
+                description: "模块ID"
+              name:
+                type: string
+                description: "模块名称"
+              desc:
+                  type: string
+                  description: "模块说明"
+              status: 
+                type: integer
+                description: "模块状态 1.可选 0.不可选 2.选中不可编辑"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/common/{sid}/appmodule:
+    delete:
+      tags:
+        - "commonManager"
+      summary: "删除app模块"
+      description: "删除app模块"
+      operationId: "manager common appmoudle delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "sid"
+          type: string
+          description: "模块ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /common/appversion/{os}/{version}:
     get:
       tags:
