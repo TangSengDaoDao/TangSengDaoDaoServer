@@ -1,0 +1,150 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "channel"
+    description: "频道"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /channels/{channel_id}/{channel_type}:
+    get:
+      tags:
+        - "channel"
+      summary: "获取channel资料"
+      description: "获取channel资料"
+      operationId: "channel info"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "channel_id"
+          type: string
+          description: "频道ID"
+          required: true
+        - in: "path"
+          name: "channel_type"
+          type: integer
+          description: "channel类型"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/channel"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  channel:
+    type: "object"
+    properties:
+      channel:
+        type: object
+        description: "channel 信息"
+        properties:
+          channel_id:
+            type: string
+            description: "频道ID"
+          channel_type:
+            type: integer
+            description: "频道类型"
+      parent_channel:
+        type: object
+        description: "父频道信息"
+        properties:
+          channel_id:
+            type: string
+            description: "父频道ID"
+          channel_type:
+            type: integer
+            description: "父频道类型"
+      name:
+        type: string
+        description: "channel 名称"
+      logo:
+        type: string
+        description: "头像地址"
+      remark:
+        type: string
+        description: "备注"
+      status:
+        type: integer
+        description: "频道状态 0.正常 1.正常 2.黑名单"
+      online:
+        type: integer
+        description: "是否在线 1.是 0.否"
+      last_offline:
+        type: integer
+        description: "最后一次离线"
+      receipt:
+        type: integer
+        description: "消息是否回执 1.是"
+      robot:
+        type: integer
+        description: "是否为机器人"
+      category:
+        type: string
+        description: "channel分类"
+      stick:
+        type: integer
+        description: "是否置顶 1.是"
+      mute:
+        type: integer
+        description: "是否免打扰 1.是"
+      show_nick:
+        type: integer
+        description: "是否显示昵称 1.是"
+      follow:
+        type: integer
+        description: "是否关注 1.已关注(好友) 0.未关注(非好友)"
+      be_deleted:
+        type: integer
+        description: "是否被对方删除 1.是"
+      be_blacklist:
+        type: integer
+        description: "是否被对方拉黑 1.是"
+      notice:
+        type: string
+        description: "公告"
+      save:
+        type: integer
+        description: "是否保存到通讯录"
+      forbidden:
+        type: integer
+        description: "群是否全员禁言 1.是"
+      invite:
+        type: integer
+        description: "是否开启邀请 1.是"
+      device_flag:
+        type: integer
+        description: "设备标记 1.App 0.Web 2.PC"
+      extra:
+        type: object
+        description: "扩展内容"
+
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

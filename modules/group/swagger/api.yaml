@@ -7,11 +7,285 @@ host: "api.botgate.cn"
 tags:
   - name: "group"
     description: "群组"
+  - name: "groupManager"
+    description: "群组后台管理"
 schemes:
   - "https"
 basePath: "/v1"
 
 paths:
+  /manager/group/list:
+    get:
+      tags:
+        - "groupManager"
+      summary: "群列表"
+      description: "群列表"
+      operationId: "list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
+          required: true
+        - in: "path"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "path"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总数量"
+              list:
+                type: array
+                items:
+                  $ref: "#/definitions/groupManagerResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/group/disablelist:
+    get:
+      tags:
+        - "groupManager"
+      summary: "封禁群列表"
+      description: "封禁群列表"
+      operationId: "disablelist"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "path"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总数量"
+              list:
+                type: array
+                items:
+                  $ref: "#/definitions/groupManagerResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/group/liftban/{groupNo}/{status}:
+    put:
+      tags:
+        - "groupManager"
+      summary: "封禁或解禁某个群"
+      description: "封禁或解禁某个群"
+      operationId: "liftban"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "groupNo"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "status"
+          type: integer
+          description: "1.正常 0.封禁"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/groups/{group_no}/forbidden/{on}:
+    put:
+      tags:
+        - "groupManager"
+      summary: "群全员禁言"
+      description: "群全员禁言"
+      operationId: "forbidden"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "groupNo"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "on"
+          type: integer
+          description: "1.禁言 0.解禁"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/groups/{group_no}/members:
+    get:
+      tags:
+        - "groupManager"
+      summary: "群成员"
+      description: "群成员"
+      operationId: "members"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "groupNo"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
+          required: true
+        - in: "path"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "path"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "groupManager"
+      summary: "删除群成员"
+      description: "删除群成员"
+      operationId: "members delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "members"
+          description: "成员uid"
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/groups/{group_no}/members/blacklist:
+    get:
+      tags:
+        - "groupManager"
+      summary: "群黑名单成员"
+      description: "群黑名单成员"
+      operationId: "members blacklist"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "groupNo"
+          type: string
+          description: "群编号"
+          required: true
+        - in: "path"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true
+        - in: "path"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总量"
+              list:
+                type: array
+                items:
+                  $ref: "#/definitions/memberManagerResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /group/create:
     post:
       tags:
@@ -910,9 +1184,9 @@ paths:
             format: file
             description: "头像文件"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
   /groups/{group_no}/scanjoin:
     get:
       tags:
@@ -939,11 +1213,11 @@ paths:
         200:
           description: "成功"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
 securityDefinitions:
   token:
     type: "apiKey"
@@ -952,6 +1226,51 @@ securityDefinitions:
     description: "用户token"
 
 definitions:
+  memberManagerResp:
+    type: object
+    properties:
+      name:
+        type: string
+        description: "成员名称"
+      uid:
+        type: string
+        description: "成员uid"
+      role:
+        type: integer
+        description: "角色 1.群主 2.管理员 0.普通成员"
+      created_at:
+        type: string
+        description: "入群时间"
+      remark:
+        type: string
+        description: "群内备注"
+  groupManagerResp:
+    type: object
+    properties:
+      name:
+        type: string
+        description: "群名称"
+      group_no:
+        type: string
+        description: "群编号"
+      creator:
+        type: string
+        description: "创建者uid"
+      create_name:
+        type: string
+        description: "创建者名称"
+      create_at:
+        type: string
+        description: "创建时间"
+      status:
+        type: integer
+        description: "群状态 1.正常 0.封禁"
+      member_count:
+        type: integer
+        description: "成员总数量"
+      forbidden:
+        type: integer
+        description: "是否禁言中 1.是"
   group:
     type: "object"
     properties:
