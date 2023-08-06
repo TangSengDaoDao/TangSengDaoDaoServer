@@ -36,6 +36,9 @@ func loadConfigFromFile(cfgFile string) *viper.Viper {
 
 func main() {
 	vp := loadConfigFromFile("configs/tsdd.yaml")
+	vp.SetEnvPrefix("ts")
+	vp.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	vp.AutomaticEnv()
 
 	gin.SetMode(gin.ReleaseMode)
 
