@@ -7,11 +7,81 @@ host: "api.botgate.cn"
 tags:
   - name: "report"
     description: "举报"
+  - name: "reportManager"
+    description: "举报后台管理"
 schemes:
   - "https"
 basePath: "/v1"
 
 paths:
+  /manager/report/list:
+    get:
+      tags:
+        - "reportManager"
+      summary: "举报列表"
+      description: "举报列表"
+      operationId: "report list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数量"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "查询总量"
+              list:
+                type: array
+                items:
+                  properties: 
+                    uid:
+                      type: string
+                      description: "举报者uid"
+                    name:
+                      type: string
+                      description: "举报者名称"
+                    channel_id: 
+                      type: string
+                      description: "被举报的频道ID"
+                    channel_type:
+                      type: integer
+                      description: "被举报的频道类型"
+                    channel_name:
+                      type: string
+                      description: "被举报的名称 群名称｜用户名"
+                    category_name: 
+                      type: string
+                      description: "举报所属分类"
+                    imgs:
+                      type: array
+                      items:
+                        type: string
+                        description: "举报图片"
+                    remark:
+                      type: string 
+                      description: "举报说明"
+                    create_at: 
+                      type: string
+                      description: "举报时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /report/categories:
     get:
       tags:
