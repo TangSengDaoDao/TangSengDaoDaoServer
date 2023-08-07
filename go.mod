@@ -3,11 +3,7 @@ module github.com/TangSengDaoDao/TangSengDaoDaoServer
 go 1.20
 
 require (
-<<<<<<< HEAD
-	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.4
-=======
 	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.5
->>>>>>> 75c4ff300b8b94d26ed6f2c0ee5d3ff9b48d38df
 	github.com/alibabacloud-go/darabonba-openapi v0.2.1
 	github.com/alibabacloud-go/sms-intl-20180501 v1.0.1
 	github.com/alibabacloud-go/tea v1.2.1
