@@ -121,7 +121,7 @@ func (r *Report) categoies(c *wkhttp.Context) {
 
 // 填充父类
 func (r *Report) fillParentCategory(en bool, parent *categoryResp, categories []*categoryModel) {
-	if categories == nil || len(categories) == 0 {
+	if len(categories) == 0 {
 		return
 	}
 	for _, category := range categories {
@@ -138,7 +138,7 @@ func (r *Report) fillParentCategory(en bool, parent *categoryResp, categories []
 
 // 获取根元素
 func (r *Report) findRootCategories(en bool, categories []*categoryModel) []*categoryResp {
-	if categories != nil && len(categories) > 0 {
+	if len(categories) > 0 {
 		categoryResps := []*categoryResp{}
 		for _, category := range categories {
 			if category.ParentCategoryNo == "" {

@@ -1,0 +1,160 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "file"
+    description: "文件"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /file/upload:
+    get:
+      tags:
+        - "file"
+      summary: "获取文件上传路径"
+      description: "获取文件上传路径"
+      operationId: "get upload url"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "path"
+          type: string
+          description: "文件保存路径"
+          required: true
+        - in: "query"
+          name: "type"
+          type: string
+          description: "文件类型 'momentcover(动态封面)', 'moment(动态)', 'sticker(贴图)', 'chat(聊天)', 'report(举报)', 'common(通用)', 'chatbg(聊天背景)' "
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                description: "上传路径"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "file"
+      summary: "上传文件"
+      description: "上传文件"
+      operationId: "upload file"
+      consumes:
+        - "multipart/form-data"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "formData"
+          name: "file"
+          type: file
+          description: "文件"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              path:
+                type: string
+                description: "文件预览地址"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /file/preview/{path}:
+    get:
+      tags:
+        - "file"
+      summary: "获取文件"
+      description: "获取文件"
+      operationId: "get file"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "path"
+          type: string
+          description: "文件预览地址"
+          required: true
+      responses:
+        200:
+          description: "文件"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /file/compose/{path}:
+    post:
+      tags:
+        - "file"
+      summary: "组合头像"
+      description: "组合头像"
+      operationId: "compose file"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "path"
+          type: string
+          description: "文件预览地址"
+          required: true
+        - in: "body"
+          name: "imgs"
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              description: "图片数量不能大于9！"
+      responses:
+        200:
+          description: "文件预览地址"
+          schema:
+            type: object
+            properties:
+              path:
+                type: string
+                description: "文件预览地址"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

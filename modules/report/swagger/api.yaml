@@ -148,9 +148,8 @@ paths:
           required: true
       responses:
         200:
-          description: "返回"
-          schema:
-            type: file
+          description: "举报网页html"
+          
         400:
           description: "错误"
           schema:
