@@ -1178,11 +1178,7 @@ paths:
           required: true
       responses:
         200:
-          description: "成功"
-          schema:
-            type: file
-            format: file
-            description: "头像文件"
+          description: "头像文件"
         400:
           description: "错误"
           schema:
