@@ -107,6 +107,7 @@ func (f *File) getFilePath(c *wkhttp.Context) {
 func (f *File) uploadFile(c *wkhttp.Context) {
 	uploadPath := c.Query("path")
 	fileType := c.Query("type")
+	contentType := c.DefaultPostForm("contenttype", "application/octet-stream")
 	err := f.checkReq(Type(fileType), uploadPath)
 	if err != nil {
 		c.ResponseError(err)
@@ -122,7 +123,7 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 	if !strings.HasPrefix(path, "/") {
 		path = fmt.Sprintf("/%s", path)
 	}
-	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), "application/octet-stream", func(w io.Writer) error {
+	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), contentType, func(w io.Writer) error {
 		_, err := io.Copy(w, file)
 		return err
 	})
