@@ -1,4 +1,3 @@
-
 # #################### 基础配置 ####################
 mode: "debug" #   运行模式 debug or release
 #addr: ":8090" # api监听地址
@@ -23,16 +22,17 @@ mode: "debug" #   运行模式 debug or release
 #  sqlDir: "assets/sql" # 数据库脚本路径
 #  migration: true #  是否合并数据库
 #  redisAddr: "" # redis地址
+#  redisPass: "" # redis密码
 #  asynctaskRedisAddr: "" # 异步任务的redis地址 不写默认为RedisAddr的地址
 
 ##################### 外网配置 ####################
-#external: 
+#external:
 #  ip: "" # 外网ip
 #  baseURL: "" # 外网访问地址 例如 http://10.2.3.1:8090
 #  webLoginURL: "" # web im的登录地址 例如 https://web.tangsengdaodao.com
 
 ##################### 日志配置 ####################
-#logger: 
+#logger:
 #  level: 0 # 日志级别 0:未配置,将根据mode属性判断 1:debug 2:info 3:warn 4:error
 #  dir: "./logs" # 日志目录
 #  lineNum: false # 是否打印行号
@@ -47,10 +47,10 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #  signName: "" # 阿里云短信签名
 #aliyunInternationalSMS: # 阿里云国际短信，如果配置了该项，遇到国际区号的手机号，将使用该配置发送短信
 #  accessKeyID: "" # 阿里云国际短信accessKeyID
-#  accessSecret: "" # 阿里云国际短信accessSecret  
+#  accessSecret: "" # 阿里云国际短信accessSecret
 #uniSMS:
 #  accessKeyID: "" # unisms accessKeyID
-#  signature: "" # unisms signature  
+#  signature: "" # unisms signature
 
 ##################### 文件服务 ####################
 #fileService: "minio" # 文件服务 minio or aliyunOSS or seaweedFS
@@ -76,7 +76,7 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #    password: ""
 #    cert: "" # apns证书路径 例如：configs/push/push.p12
 #  hms: # 华为推送
-#    packageName: "" # 华为推送包名 例如：com.xinbida.tangsengdaodao  
+#    packageName: "" # 华为推送包名 例如：com.xinbida.tangsengdaodao
 #    appID: "" # 华为推送appID
 #    appSecret: "" # 华为推送appSecret
 #  mi: # 小米推送
@@ -88,7 +88,7 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #    packageName: "" # vivo推送包名 例如：com.xinbida.tangsengdaodao
 #    appID: "" # vivo推送appID
 #    appKey: "" # vivo推送appKey
-#    appSecret: "" # vivo推送appSecret 
+#    appSecret: "" # vivo推送appSecret
 #  oppo: # oppo推送
 #    packageName: "" # oppo推送包名 例如：com.xinbida.tangsengdaodao
 #    appID: "" # oppo推送appID
@@ -96,7 +96,7 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #    appSecret: "" # oppo推送appSecret
 #    masterSecret: "" # oppo推送masterSecret
 
-##################### 注册 ####################  
+##################### 注册 ####################
 #register:
 #  off: false # 是否关闭注册
 #  onlyChina: false # 是否只允许中国手机号注册
@@ -117,20 +117,20 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #  defaultCount: 900 # 默认头像数量
 #  partition: 100 # 头像分区数量
 
-##################### 短号配置 ####################  
+##################### 短号配置 ####################
 #shortNo:
 #  numOn: false # 短号是否为纯数字
 #  numLen: 7 # 短号长度
 #  editOff: false # 是否允许修改短号
 
-##################### 机器人配置 ####################    
+##################### 机器人配置 ####################
 #robot:
 #  messageExpire: 7d # 机器人消息过期时间
 #  inlineQueryTimeout: 10s # 机器人inline query超时时间
 #  eventPoolSize: 100 # 事件池大小
 
-# #################### 第三方登录 ####################   
-#gitee:   
+# #################### 第三方登录 ####################
+#gitee:
 #  oauthURL: "https://gitee.com/oauth/authorize" # gitee oauth地址
 #  clientID: ""  #  gitee client id
 #  clientSecret: "" # gitee client secret
@@ -141,7 +141,7 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #  clientSecret: ""  # github client secret
 
 # #################### 缓存配置 ####################
-#cache: 
+#cache:
 #  tokenCachePrefix: "token:" # token缓存前缀
 #  tokenExpire: 30d # token过期时间
 #  loginDeviceCachePrefix: "login_device:" # 登录设备缓存前缀
