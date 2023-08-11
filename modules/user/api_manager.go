@@ -1,7 +1,11 @@
 package user
 
 import (
+	"crypto/rand"
 	"fmt"
+	"io/ioutil"
+	"math/big"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -32,7 +36,7 @@ type Manager struct {
 
 // NewManager NewManager
 func NewManager(ctx *config.Context) *Manager {
-	return &Manager{
+	m := &Manager{
 		ctx:           ctx,
 		Log:           log.NewTLog("userManager"),
 		db:            newManagerDB(ctx),
@@ -42,6 +46,8 @@ func NewManager(ctx *config.Context) *Manager {
 		userSettingDB: NewSettingDB(ctx.DB()),
 		onlineService: NewOnlineService(ctx),
 	}
+	m.createManagerAccount()
+	return m
 }
 
 // Route 配置路由规则
@@ -683,6 +689,69 @@ func (m *Manager) addSystemFriend(uid string) error {
 		return err
 	}
 	return nil
+}
+
+// 创建一个系统管理账户
+func (m *Manager) createManagerAccount() {
+	user, err := m.userDB.QueryByUID(m.ctx.GetConfig().Account.AdminUID)
+	if err != nil {
+		m.Error("查询系统管理账号错误", zap.Error(err))
+		return
+	}
+	if user != nil && user.UID != "" {
+		return
+	}
+	// 生成随机密码
+	passwd := make([]rune, 8)
+	codeModel := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	for i := range passwd {
+		index, _ := rand.Int(rand.Reader, big.NewInt(int64(len(codeModel))))
+		passwd[i] = codeModel[int(index.Int64())]
+	}
+	username := "admin"
+	var pwd = string(passwd)
+	var saveStr = fmt.Sprintf("name:%s pwd:%s", username, pwd)
+	fileDir := m.ctx.GetConfig().RootDir
+	fileName := fmt.Sprintf("%s/account.json", fileDir)
+	_, err = os.Stat(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			_, err = os.Create(fileName)
+			if err != nil {
+				m.Error("创建保存后台管理账号信息文件错误", zap.Error(err))
+				return
+			}
+		}
+	}
+
+	if err != nil {
+		_, err = os.Create(fileName)
+		if err != nil {
+			m.Error("创建保存后台管理文件错误", zap.Error(err))
+		}
+	}
+	err = ioutil.WriteFile(fileName, []byte(saveStr), 0)
+	if err != nil {
+		m.Error("保存密码到文件错误", zap.Error(err))
+		return
+	}
+
+	err = m.userDB.Insert(&Model{
+		UID:      m.ctx.GetConfig().Account.AdminUID,
+		Name:     "超级管理员",
+		ShortNo:  "30000",
+		Category: "system",
+		Role:     "superAdmin",
+		Username: username,
+		Zone:     "0086",
+		Phone:    "13000000002",
+		Status:   1,
+		Password: util.MD5(util.MD5(pwd)),
+	})
+	if err != nil {
+		m.Error("新增系统管理员错误", zap.Error(err))
+		return
+	}
 }
 
 type managerLoginReq struct {
