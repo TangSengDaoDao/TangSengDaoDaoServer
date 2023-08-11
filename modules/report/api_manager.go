@@ -72,7 +72,7 @@ func (m *Manager) reportList(c *wkhttp.Context) {
 		return
 	}
 	result := make([]*managerReportResp, 0)
-	if list != nil && len(list) > 0 {
+	if len(list) > 0 {
 		uids := make([]string, 0)
 		reportUserUIDs := make([]string, 0)
 		reportGroupIDs := make([]string, 0)

@@ -1,7 +1,11 @@
 package user
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -32,7 +36,7 @@ type Manager struct {
 
 // NewManager NewManager
 func NewManager(ctx *config.Context) *Manager {
-	return &Manager{
+	m := &Manager{
 		ctx:           ctx,
 		Log:           log.NewTLog("userManager"),
 		db:            newManagerDB(ctx),
@@ -42,6 +46,8 @@ func NewManager(ctx *config.Context) *Manager {
 		userSettingDB: NewSettingDB(ctx.DB()),
 		onlineService: NewOnlineService(ctx),
 	}
+	m.createManagerAccount()
+	return m
 }
 
 // Route 配置路由规则
@@ -292,6 +298,12 @@ func (m *Manager) list(c *wkhttp.Context) {
 			uids = append(uids, user.UID)
 		}
 		resps, err := m.onlineService.GetUserLastOnlineStatus(uids)
+		respsdata := map[string]*config.OnlinestatusResp{}
+		if len(resps) > 0 {
+			for _, v := range resps {
+				respsdata[v.UID] = v
+			}
+		}
 		if err != nil {
 			m.Error("查询用户在线状态失败", zap.Error(err))
 			c.ResponseError(errors.New("查询用户在线状态失败"))
@@ -324,9 +336,13 @@ func (m *Manager) list(c *wkhttp.Context) {
 				deviceName = device.DeviceName
 				lastLoginTime = util.ToyyyyMMddHHmm(time.Unix(device.LastLogin, 0))
 			}
-			if i < len(resps) {
+			/* if i < len(resps) {
 				online = resps[i].Online
 				lastOnlineTime = util.ToyyyyMMddHHmm(time.Unix(int64(resps[i].LastOffline), 0))
+			} */
+			if respsdata[user.UID] != nil {
+				online = respsdata[user.UID].Online
+				lastOnlineTime = util.ToyyyyMMddHHmm(time.Unix(int64(respsdata[user.UID].LastOffline), 0))
 			}
 			result = append(result, &managerUserResp{
 				UID:            user.UID,
@@ -683,6 +699,64 @@ func (m *Manager) addSystemFriend(uid string) error {
 		return err
 	}
 	return nil
+}
+
+// 创建一个系统管理账户
+func (m *Manager) createManagerAccount() {
+	user, err := m.userDB.QueryByUID(m.ctx.GetConfig().Account.AdminUID)
+	if err != nil {
+		m.Error("查询系统管理账号错误", zap.Error(err))
+		return
+	}
+	if user != nil && user.UID != "" {
+		return
+	}
+	// 生成随机密码
+	passwd := make([]rune, 8)
+	codeModel := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	for i := range passwd {
+		index, _ := rand.Int(rand.Reader, big.NewInt(int64(len(codeModel))))
+		passwd[i] = codeModel[int(index.Int64())]
+	}
+	username := "admin"
+	var pwd = string(passwd)
+	var saveStr = fmt.Sprintf("name:%s pwd:%s", username, pwd)
+	fileDir := m.ctx.GetConfig().RootDir
+	fileName := path.Join(fileDir, "account.json")
+
+	_, err = os.Stat(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			_, err = os.Create(fileName)
+			if err != nil {
+				m.Error("创建保存后台管理账号信息文件错误", zap.Error(err))
+				return
+			}
+		}
+	}
+
+	err = os.WriteFile(fileName, []byte(saveStr), 0644)
+	if err != nil {
+		m.Error("保存密码到文件错误", zap.Error(err))
+		return
+	}
+
+	err = m.userDB.Insert(&Model{
+		UID:      m.ctx.GetConfig().Account.AdminUID,
+		Name:     "超级管理员",
+		ShortNo:  "30000",
+		Category: "system",
+		Role:     "superAdmin",
+		Username: username,
+		Zone:     "0086",
+		Phone:    "13000000002",
+		Status:   1,
+		Password: util.MD5(util.MD5(pwd)),
+	})
+	if err != nil {
+		m.Error("新增系统管理员错误", zap.Error(err))
+		return
+	}
 }
 
 type managerLoginReq struct {

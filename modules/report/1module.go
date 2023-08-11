@@ -26,4 +26,15 @@ func init() {
 			Swagger: swaggerContent,
 		}
 	})
+
+	// 注册举报管理模块
+	register.AddModule(func(ctx interface{}) register.Module {
+
+		return register.Module{
+			Name: "report_manager",
+			SetupAPI: func() register.APIRouter {
+				return NewManager(ctx.(*config.Context))
+			},
+		}
+	})
 }
