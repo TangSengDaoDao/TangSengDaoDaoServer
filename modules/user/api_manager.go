@@ -3,9 +3,9 @@ package user
 import (
 	"crypto/rand"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -712,7 +712,8 @@ func (m *Manager) createManagerAccount() {
 	var pwd = string(passwd)
 	var saveStr = fmt.Sprintf("name:%s pwd:%s", username, pwd)
 	fileDir := m.ctx.GetConfig().RootDir
-	fileName := fmt.Sprintf("%s/account.json", fileDir)
+	fileName := path.Join(fileDir, "account.json")
+
 	_, err = os.Stat(fileName)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -724,13 +725,7 @@ func (m *Manager) createManagerAccount() {
 		}
 	}
 
-	if err != nil {
-		_, err = os.Create(fileName)
-		if err != nil {
-			m.Error("创建保存后台管理文件错误", zap.Error(err))
-		}
-	}
-	err = ioutil.WriteFile(fileName, []byte(saveStr), 0)
+	err = os.WriteFile(fileName, []byte(saveStr), 0644)
 	if err != nil {
 		m.Error("保存密码到文件错误", zap.Error(err))
 		return
