@@ -2131,12 +2131,21 @@ func (u *User) pwdforget(c *wkhttp.Context) {
 		c.ResponseError(errors.New("该账号不存在"))
 		return
 	}
-	//线上验证短信验证码
-	err = u.smsServie.Verify(context.Background(), req.Zone, req.Phone, req.Code, commonapi.CodeTypeForgetLoginPWD)
-	if err != nil {
-		c.ResponseError(err)
-		return
+	//测试模式
+	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
+		if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
+			c.ResponseError(errors.New("验证码错误"))
+			return
+		}
+	} else {
+		//线上验证短信验证码
+		err = u.smsServie.Verify(context.Background(), req.Zone, req.Phone, req.Code, commonapi.CodeTypeForgetLoginPWD)
+		if err != nil {
+			c.ResponseError(err)
+			return
+		}
 	}
+
 	err = u.db.UpdateUsersWithField("password", util.MD5(util.MD5(req.Pwd)), userInfo.UID)
 	if err != nil {
 		u.Error("修改登录密码错误", zap.Error(err))
