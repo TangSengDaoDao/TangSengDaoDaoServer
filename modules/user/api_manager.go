@@ -298,6 +298,12 @@ func (m *Manager) list(c *wkhttp.Context) {
 			uids = append(uids, user.UID)
 		}
 		resps, err := m.onlineService.GetUserLastOnlineStatus(uids)
+		respsdata := map[string]*config.OnlinestatusResp{}
+		if len(resps) > 0 {
+			for _, v := range resps {
+				respsdata[v.UID] = v
+			}
+		}
 		if err != nil {
 			m.Error("查询用户在线状态失败", zap.Error(err))
 			c.ResponseError(errors.New("查询用户在线状态失败"))
@@ -330,9 +336,13 @@ func (m *Manager) list(c *wkhttp.Context) {
 				deviceName = device.DeviceName
 				lastLoginTime = util.ToyyyyMMddHHmm(time.Unix(device.LastLogin, 0))
 			}
-			if i < len(resps) {
+			/* if i < len(resps) {
 				online = resps[i].Online
 				lastOnlineTime = util.ToyyyyMMddHHmm(time.Unix(int64(resps[i].LastOffline), 0))
+			} */
+			if respsdata[user.UID] != nil {
+				online = respsdata[user.UID].Online
+				lastOnlineTime = util.ToyyyyMMddHHmm(time.Unix(int64(respsdata[user.UID].LastOffline), 0))
 			}
 			result = append(result, &managerUserResp{
 				UID:            user.UID,
