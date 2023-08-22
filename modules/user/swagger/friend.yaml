@@ -52,7 +52,7 @@ paths:
       security:
         - token: []
   /friend/sure:
-    delete:
+    post:
       tags:
         - "friend"
       summary: "确认加好友"
@@ -82,7 +82,8 @@ paths:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
-
+      security:
+          - token: []
   /friend/sync:
     get:
       tags:
