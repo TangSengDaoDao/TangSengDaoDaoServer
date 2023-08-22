@@ -32,7 +32,7 @@
 架构图
 ------------
 
-![架构图](./docs/architecture.png)
+![架构图](./docs/architecture1.png)
 
 
 相关源码
