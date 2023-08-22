@@ -1,11 +1,7 @@
 package user
 
 import (
-	"crypto/rand"
 	"fmt"
-	"math/big"
-	"os"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -708,39 +704,12 @@ func (m *Manager) createManagerAccount() {
 		m.Error("查询系统管理账号错误", zap.Error(err))
 		return
 	}
-	if user != nil && user.UID != "" {
+	if (user != nil && user.UID != "") || m.ctx.GetConfig().AdminPwd == "" {
 		return
 	}
-	// 生成随机密码
-	passwd := make([]rune, 8)
-	codeModel := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	for i := range passwd {
-		index, _ := rand.Int(rand.Reader, big.NewInt(int64(len(codeModel))))
-		passwd[i] = codeModel[int(index.Int64())]
-	}
+
 	username := "admin"
-	var pwd = string(passwd)
-	var saveStr = fmt.Sprintf("name:%s pwd:%s", username, pwd)
-	fileDir := m.ctx.GetConfig().RootDir
-	fileName := path.Join(fileDir, "account.json")
-
-	_, err = os.Stat(fileName)
-	if err != nil {
-		if os.IsNotExist(err) {
-			_, err = os.Create(fileName)
-			if err != nil {
-				m.Error("创建保存后台管理账号信息文件错误", zap.Error(err))
-				return
-			}
-		}
-	}
-
-	err = os.WriteFile(fileName, []byte(saveStr), 0644)
-	if err != nil {
-		m.Error("保存密码到文件错误", zap.Error(err))
-		return
-	}
-
+	var pwd = m.ctx.GetConfig().AdminPwd
 	err = m.userDB.Insert(&Model{
 		UID:      m.ctx.GetConfig().Account.AdminUID,
 		Name:     "超级管理员",
