@@ -1998,7 +1998,7 @@ func (u *User) destroyAccount(c *wkhttp.Context) {
 	}
 
 
-	err = u.ctx.QuitUserDevice(loginUID, -1) // 退出web
+	err = u.ctx.QuitUserDevice(loginUID, -1) // 退出所有设备
 	if err != nil {
 		u.Error("退出设备失败", zap.Error(err))
 		c.ResponseError(errors.New("退出设备失败"))
