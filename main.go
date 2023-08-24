@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -35,7 +36,10 @@ func loadConfigFromFile(cfgFile string) *viper.Viper {
 }
 
 func main() {
-	vp := loadConfigFromFile("configs/tsdd.yaml")
+	var CfgFile string //config file
+	flag.StringVar(&CfgFile, "config", "configs/tsdd.yaml", "config file")
+	flag.Parse()
+	vp := loadConfigFromFile(CfgFile)
 	vp.SetEnvPrefix("ts")
 	vp.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	vp.AutomaticEnv()
@@ -59,9 +63,10 @@ func main() {
 	var serverType string
 	if len(os.Args) > 1 {
 		serverType = strings.TrimSpace(os.Args[1])
+		serverType = strings.Replace(serverType, "-", "", -1)
 	}
 
-	if serverType == "api" || serverType == "" { // api服务启动
+	if serverType == "api" || serverType == "" || serverType == "config" { // api服务启动
 		runAPI(ctx)
 	}
 
