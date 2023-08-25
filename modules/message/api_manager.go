@@ -54,7 +54,7 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 	}
 }
 func (m *Manager) sendMsgToFriends(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -105,7 +105,7 @@ func (m *Manager) sendMessageToFriends(toUids []string, fromUID string, content 
 	return nil
 }
 func (m *Manager) delete(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -175,7 +175,7 @@ func (m *Manager) delete(c *wkhttp.Context) {
 	c.ResponseOK()
 }
 func (m *Manager) deleteProhibitWords(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -272,7 +272,7 @@ func (m *Manager) prohibitWords(c *wkhttp.Context) {
 	})
 }
 func (m *Manager) addProhibitWords(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -514,7 +514,7 @@ func (m *Manager) record(c *wkhttp.Context) {
 	})
 }
 func (m *Manager) sendMsgToAllUsers(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -572,7 +572,7 @@ func (m *Manager) sendMessageBatch(uids [][]string, content string) error {
 
 // 发送消息
 func (m *Manager) sendMsg(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return

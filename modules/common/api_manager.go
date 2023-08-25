@@ -41,7 +41,7 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 	}
 }
 func (m *Manager) deleteAppModule(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -73,7 +73,7 @@ func (m *Manager) deleteAppModule(c *wkhttp.Context) {
 
 // 新增app模块
 func (m *Manager) addAppModule(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -118,7 +118,7 @@ func (m *Manager) addAppModule(c *wkhttp.Context) {
 	c.ResponseOK()
 }
 func (m *Manager) updateAppModule(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -188,7 +188,7 @@ func (m *Manager) getAppModule(c *wkhttp.Context) {
 	c.Response(list)
 }
 func (m *Manager) updateConfig(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return

@@ -33,11 +33,11 @@ func (m *managerDB) queryUserListWithPage(pageSize, page uint64, onelineStatus i
 	// return users, err
 
 	var users []*managerUserModel
-	selectStm := m.session.Select("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at,max(user_online.online) online").From("user").LeftJoin("user_online", "user.uid=user_online.uid")
+	selectStm := m.session.Select("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at,user.gitee_uid,user.github_uid,user.wx_openid,max(user_online.online) online").From("user").LeftJoin("user_online", "user.uid=user_online.uid")
 	if onelineStatus != -1 {
 		selectStm = selectStm.Where("user_online.online=?", onelineStatus)
 	}
-	selectStm = selectStm.GroupBy("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at")
+	selectStm = selectStm.GroupBy("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at,user.gitee_uid,user.github_uid,user.wx_openid")
 
 	// select  from user left join user_online on user.uid=user_online.uid where user_online.online=1  group by user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at  limit 100
 	_, err := selectStm.Offset((page-1)*pageSize).Limit(pageSize).OrderDir("user.created_at", false).Load(&users)
@@ -48,11 +48,11 @@ func (m *managerDB) queryUserListWithPage(pageSize, page uint64, onelineStatus i
 // onelineStatus 在线状态 -1 为所有 0. 离线 1. 在线
 func (m *managerDB) queryUserListWithPageAndKeyword(keyword string, onelineStatus int, pageSize, page uint64) ([]*managerUserModel, error) {
 	var users []*managerUserModel
-	selectStm := m.session.Select("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at,max(user_online.online) online").From("user").LeftJoin("user_online", "user.uid=user_online.uid").Where("user.name like ? or user.uid like ? or user.phone like ? or user.short_no like ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
+	selectStm := m.session.Select("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at,user.gitee_uid,user.github_uid,user.wx_openid,max(user_online.online) online").From("user").LeftJoin("user_online", "user.uid=user_online.uid").Where("user.name like ? or user.uid like ? or user.phone like ? or user.short_no like ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%")
 	if onelineStatus != -1 {
 		selectStm = selectStm.Where("user_online.online=?", onelineStatus)
 	}
-	selectStm = selectStm.GroupBy("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at")
+	selectStm = selectStm.GroupBy("user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at,user.gitee_uid,user.github_uid,user.wx_openid")
 
 	// select  from user left join user_online on user.uid=user_online.uid where user_online.online=1  group by user.uid,user.name,user.status,user.phone,user.short_no,user.sex,user.is_destroy,user.created_at  limit 100
 	_, err := selectStm.Offset((page-1)*pageSize).Limit(pageSize).OrderDir("user.created_at", false).Load(&users)
@@ -93,6 +93,22 @@ func (m *managerDB) queryUserOnline(uid string) ([]*userOnline, error) {
 	return list, err
 }
 
+func (m *managerDB) queryUserWithNameAndRole(username string, role string) (*managerUserModel, error) {
+	var user *managerUserModel
+	_, err := m.session.Select("*").From("user").Where("username=? and role=?", username, role).Load(&user)
+	return user, err
+}
+
+func (m *managerDB) queryUsersWithRole(role string) ([]*managerUserModel, error) {
+	var list []*managerUserModel
+	_, err := m.session.Select("*").From("user").Where("role=?", role).Load(&list)
+	return list, err
+}
+func (m *managerDB) deleteUserWithUIDAndRole(uid, role string) error {
+	_, err := m.session.DeleteFrom("user").Where("uid=? and role=?", uid, role).Exec()
+	return err
+}
+
 type managerLoginModel struct {
 	Username string
 	UID      string
@@ -102,11 +118,15 @@ type managerLoginModel struct {
 }
 
 type managerUserModel struct {
+	Username  string
 	Name      string
 	UID       string
 	Status    int
 	Phone     string
 	ShortNo   string
+	WXOpenid  string // 微信openid
+	GiteeUID  string // gitee uid
+	GithubUID string // github uid
 	Sex       int
 	IsDestroy int
 	db.BaseModel
