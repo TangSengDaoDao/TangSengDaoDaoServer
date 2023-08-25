@@ -89,6 +89,35 @@ https://tangsengdaodao.com
 https://githubim.com
 
 
+演示地址
+------------
+
+| Android扫描体验 | iOS扫描体验(商店版本 apple store 搜“唐僧叨叨”) |
+|:---:|:---:|
+|![](docs/download/android.png)|![](docs/download/iOS.png)|
+
+| Web端 | Windows端 | MAC端 | Ubuntun端 |
+|:---:|:---:|:---:|:---:|
+|[点击体验](https://web.botgate.cn)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)|
+
+
+动画演示
+------------
+
+||||
+|:---:|:---:|:--:|
+|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
+
+
+|||          |
+|:---:|:---:|:-------------------:|
+|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
+
+![](docs/screenshot/pc2.png)
+
+![](docs/screenshot/pc1.png)
+
+
 功能特性
 ------------
 - [x] 全局特性
@@ -157,35 +186,6 @@ https://githubim.com
     - [x] 黑暗模式
     - [x] 设备管理
 
-
-
-动画演示
-------------
-
-||||
-|:---:|:---:|:--:|
-|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
-
-
-|||          |
-|:---:|:---:|:-------------------:|
-|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
-
-![](docs/screenshot/pc2.png)
-
-![](docs/screenshot/pc1.png)
-
-
-演示地址
-------------
-
-| Android扫描体验 | iOS扫描体验(商店版本 apple store 搜“唐僧叨叨”) |
-|:---:|:---:|
-|![](docs/download/android.png)|![](docs/download/iOS.png)|
-
-| Web端 | Windows端 | MAC端 | Ubuntun端 |
-|:---:|:---:|:---:|:---:|
-|[点击体验](https://web.botgate.cn)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)|
 
 
 Star
