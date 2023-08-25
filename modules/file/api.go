@@ -95,6 +95,12 @@ func (f *File) getFilePath(c *wkhttp.Context) {
 	} else if Type(fileType) == TypeSticker {
 		// 自定义表情
 		path = fmt.Sprintf("%s/file/upload?type=%s&path=/%s/%s.gif", f.ctx.GetConfig().External.APIBaseURL, fileType, loginUID, util.GenerUUID())
+	} else if Type(fileType) == TypeWorkplaceBanner {
+		// 工作台横幅
+		path = fmt.Sprintf("%s/file/upload?type=%s&path=/workplace/banner/%s", f.ctx.GetConfig().External.APIBaseURL, fileType, path)
+	} else if Type(fileType) == TypeWorkplaceAppIcon {
+		// 工作台appIcon
+		path = fmt.Sprintf("%s/file/upload?type=%s&path=/workplace/appicon/%s", f.ctx.GetConfig().External.APIBaseURL, fileType, path)
 	} else {
 		path = fmt.Sprintf("%s/file/upload?type=%s&path=%s", f.ctx.GetConfig().External.APIBaseURL, fileType, uploadPath)
 	}
