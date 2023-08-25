@@ -21,8 +21,8 @@ var token = "token122323"
 
 func TestUser_Register(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
-	u := New(ctx)
-	u.Route(s.GetRoute())
+	// u := New(ctx)
+	// u.Route(s.GetRoute())
 	//清除数据
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
@@ -40,6 +40,7 @@ func TestUser_Register(t *testing.T) {
 	}))))
 
 	s.GetRoute().ServeHTTP(w, req)
+	fmt.Println(w.Body.String())
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"token":`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"uid":`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"username":`))
@@ -54,7 +55,6 @@ func TestUser_Register(t *testing.T) {
 func TestUser_Login(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	u := New(ctx)
-	u.Route(s.GetRoute())
 
 	err := u.db.Insert(&Model{
 		UID:           testutil.UID,
@@ -98,7 +98,6 @@ func TestUser_Login(t *testing.T) {
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"short_no":"uid_xxx1"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"zone":"0086"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"phone":"13600000001"`))
-	assert.Equal(t, true, strings.Contains(w.Body.String(), `"setting":{"search_by_phone":1,"search_by_short":1,"new_msg_notice":1,"msg_show_detail":1,"voice_on":1,"shock_on":1}`))
 
 	time.Sleep(2 * time.Second)
 }

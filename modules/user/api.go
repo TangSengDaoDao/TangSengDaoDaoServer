@@ -1996,19 +1996,13 @@ func (u *User) destroyAccount(c *wkhttp.Context) {
 		c.ResponseError(errors.New("注销账号错误"))
 		return
 	}
-	// 更新聊天token
-	token := util.GenerUUID()
-	_, err = u.ctx.UpdateIMToken(config.UpdateIMTokenReq{
-		UID:         loginUID,
-		Token:       token,
-		DeviceFlag:  config.APP,
-		DeviceLevel: config.DeviceLevelMaster,
-	})
+	err = u.ctx.QuitUserDevice(c.GetLoginUID(), -1) // 退出全部登陆设备
 	if err != nil {
-		u.Error("更新IM的token失败！", zap.Error(err))
-		c.ResponseError(errors.New("更新IM的token失败！"))
+		u.Error("退出登陆设备失败", zap.Error(err))
+		c.ResponseError(errors.New("退出登陆设备失败"))
 		return
 	}
+
 	c.ResponseOK()
 }
 

@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS github_user (
     followers INT NOT NULL DEFAULT 0 COMMENT '关注者数量',
     following INT NOT NULL DEFAULT 0 COMMENT '被关注者数量',
     github_created_at VARCHAR(30)  NOT NULL DEFAULT '' COMMENT '创建时间',
-    github_updated_at VARCHAR(30)  NOT NULL DEFAULT '' '更新时间',
+    github_updated_at VARCHAR(30)  NOT NULL DEFAULT '' COMMENT '更新时间',
     private_gists INT NOT NULL DEFAULT 0 COMMENT '私有代码片段数量',
     total_private_repos INT NOT NULL DEFAULT 0 COMMENT '私有仓库总数',
     owned_private_repos INT NOT NULL DEFAULT 0 COMMENT '拥有的私有仓库数量',
