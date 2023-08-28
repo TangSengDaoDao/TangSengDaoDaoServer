@@ -73,7 +73,7 @@ func (m *Manager) list(c *wkhttp.Context) {
 }
 
 func (m *Manager) delete(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -127,7 +127,7 @@ func (m *Manager) delete(c *wkhttp.Context) {
 
 // 启用或禁用机器人
 func (m *Manager) updateRobotStatus(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return

@@ -18,4 +18,8 @@ const (
 	TypeCommon Type = "common"
 	// TypeChatBg 聊天背景
 	TypeChatBg Type = "chatbg"
+	// TypeWorkplaceBanner
+	TypeWorkplaceBanner Type = "workplacebanner"
+	// TypeWorkplaceAppIcon
+	TypeWorkplaceAppIcon Type = "workplaceappicon"
 )

@@ -12,31 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/server"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
-var uid = "10000"
-var friendUID = "10001"
 var token = "token122323"
 
-func newTestServer() (*server.Server, *config.Context) {
-	os.Remove("test.db")
-	cfg := config.New()
-	cfg.Test = true
-	ctx := config.NewContext(cfg)
-	err := ctx.Cache().Set(cfg.Cache.TokenCachePrefix+token, uid+"@test")
-	if err != nil {
-		panic(err)
-	}
-	// 创建server
-	s := server.New(ctx)
-	return s, ctx
-
-}
 func TestUser_Register(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	// u := New(ctx)
@@ -390,7 +372,7 @@ func TestSendLoginCheckPhoneCode(t *testing.T) {
 		VoiceOn:       1,
 		ShockOn:       1,
 		Zone:          "0086",
-		Phone:         "13641677914",
+		Phone:         "13781388696",
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -421,7 +403,7 @@ func TestLoginCheckPhone(t *testing.T) {
 		VoiceOn:       1,
 		ShockOn:       1,
 		Zone:          "0086",
-		Phone:         "13641677914",
+		Phone:         "13781388696",
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("POST", "/v1/user/login/check_phone", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
@@ -437,7 +419,7 @@ func TestLoginCheckPhone(t *testing.T) {
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"category":"客服"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"short_no":"uid_xxx1"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"zone":"0086"`))
-	assert.Equal(t, true, strings.Contains(w.Body.String(), `"phone":"13641677914"`))
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"phone":"13781388696"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"setting":{"search_by_phone":1,"search_by_short":1,"new_msg_notice":1,"msg_show_detail":1,"voice_on":1,"shock_on":1}`))
 }
 func TestCustomerservices(t *testing.T) {
@@ -459,7 +441,7 @@ func TestCustomerservices(t *testing.T) {
 		VoiceOn:       1,
 		ShockOn:       1,
 		Zone:          "0086",
-		Phone:         "13641677914",
+		Phone:         "13781388696",
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()

@@ -378,8 +378,8 @@ paths:
     post:
       tags:
         - "userManager"
-      summary: "修改管理员密码"
-      description: "修改管理员密码"
+      summary: "修改登录管理员密码"
+      description: "修改登录管理员密码"
       operationId: "user updatepassword"
       consumes:
         - "application/json"
@@ -399,6 +399,107 @@ paths:
               new_password:
                 type: string
                 description: "新密码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/user/admin:
+    post:
+      tags:
+        - "userManager"
+      summary: "添加管理员【超级管理员才能操作】"
+      description: "添加管理员【超级管理员才能操作】"
+      operationId: "user add admin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "管理员信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+                description: "登录密码"
+              login_name:
+                type: string
+                description: "登录用户名"
+              name:
+                type: string
+                description: "用户名"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:  
+      tags:
+        - "userManager"
+      summary: "管理员列表【超级管理员才能操作】"
+      description: "管理员列表【超级管理员才能操作】"
+      operationId: "user get admin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties: 
+                uid:
+                  type: string
+                  description: "用户uid"
+                name:
+                  type: string
+                  description: "用户名"
+                username: 
+                  type: string
+                  description: "登录用户名"
+                register_time:
+                  type: string
+                  description: "添加时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "userManager"
+      summary: "管理员列表【超级管理员才能操作】"
+      description: "管理员列表【超级管理员才能操作】"
+      operationId: "user delete admin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "uid"
+          type: string
+          description: "删除用户uid"
+          required: true
       responses:
         200:
           description: "返回"
@@ -1822,6 +1923,15 @@ definitions:
       is_destroy:
         type: integer
         description: "是否已注销 1.是"
+      wx_openid:
+        type: string
+        description: "微信授权登录返回"
+      gitee_uid:
+        type: string
+        description: "Gitee授权登录返回"
+      github_uid:
+        type: string
+        description: "GitHub授权登录返回"
   UserLoginReq:
     type: "object"
     properties:

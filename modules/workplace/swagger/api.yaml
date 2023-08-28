@@ -1,0 +1,693 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "workplace"
+    description: "工作台"
+  - name: "workplaceManager"
+    description: "工作台后台管理"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /manager/workplace/category:
+    post:
+      tags:
+        - "workplaceManager"
+      summary: "新增分类"
+      description: "新增分类"
+      operationId: "m category add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "分类名称"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "分类名称"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:  
+      tags:
+        - "workplaceManager"
+      summary: "获取分类"
+      description: "获取分类"
+      operationId: "m category get"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties: 
+                category_no:
+                  type: string
+                  description: "分类编号"
+                name:
+                  type: string
+                  description: "分类名称"
+                sort_num:
+                  type: integer
+                  description: "排序号"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/category/reorder:
+    put:
+      tags:
+        - "workplaceManager"
+      summary: "排序分类"
+      description: "排序分类"
+      operationId: "m reorder cateogry"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "排序分类编号"
+          required: true
+          schema:
+            type: object
+            properties:
+              category_nos:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/app:
+    post:
+      tags:
+        - "workplaceManager"
+      summary: "新增app"
+      description: "新增app"
+      operationId: "m add app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "app信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              category_no:
+                type: string
+                description: "所属分类编号"
+              icon:
+                type: string
+                description: "应用logo"
+              name:
+                type: string
+                description: "应用名称"
+              description:
+                type: string
+                description: "应用介绍"
+              app_category:
+                type: string
+                description: "应用分类 [‘机器人’ ‘客服’]"
+              jump_type:
+                type: integer
+                description: "打开方式 0.网页 1.原生"
+              route:
+                type: string
+                description: "打开地址"
+              is_paid_app:
+                type: integer
+                description: "是否付费应用 1.是"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put: 
+      tags:
+        - "workplaceManager"
+      summary: "修改app"
+      description: "修改app"
+      operationId: "m update app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "app信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_id:
+                type: string
+                description: "应用ID"
+              status: 
+                type: integer
+                description: "是否可用 1.是"
+              category_no:
+                type: string
+                description: "所属分类编号"
+              icon:
+                type: string
+                description: "应用logo"
+              name:
+                type: string
+                description: "应用名称"
+              description:
+                type: string
+                description: "应用介绍"
+              app_category:
+                type: string
+                description: "应用分类 [‘机器人’ ‘客服’]"
+              jump_type:
+                type: integer
+                description: "打开方式 0.网页 1.原生"
+              route:
+                type: string
+                description: "打开地址"
+              is_paid_app:
+                type: integer
+                description: "是否付费应用 1.是"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete: 
+      tags:
+        - "workplaceManager"
+      summary: "删除app"
+      description: "删除app"
+      operationId: "m delete app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+        - in: "query"
+          name: "category_no"
+          type: string
+          description: "分类ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/banner:
+    post:
+      tags:
+        - "workplaceManager"
+      summary: "添加横幅"
+      description: "添加横幅"
+      operationId: "m add banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "横幅信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              cover:
+                type: string
+                description: "封面"
+              title: 
+                type: string
+                description: "标题"
+              description:
+                type: string
+                description: "介绍"
+              jump_type:
+                type: integer
+                description: "打开方式 0.网页 1.原生"
+              route:
+                type: string
+                description: "打开地址"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete: 
+      tags:
+        - "workplaceManager"
+      summary: "删除横幅"
+      description: "删除横幅"
+      operationId: "m delete banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "banner_no"
+          type: string
+          description: "横幅ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /workplace/banner:
+    get:
+      tags:
+        - "workplace"
+      summary: "获取横幅"
+      description: "获取横幅"
+      operationId: "banners"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/banner"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /workplace/user/app:
+    get:
+      tags:
+        - "workplace"
+      summary: "获取用户添加的app"
+      description: "获取用户添加的app"
+      operationId: "user added app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "workplace"
+      summary: "用户添加app"
+      description: "用户添加app"
+      operationId: "user add app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "添加app数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_id:
+                type: string
+                description: "应用ID"
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "workplace"
+      summary: "用户删除app"
+      description: "用户删除app"
+      operationId: "user delete app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /workplace/user/app/reorder:
+    put:
+      tags:
+        - "workplace"
+      summary: "用户排序app"
+      description: "用户排序app"
+      operationId: "user reorder app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "排序应用ids"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_ids:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /workplace/category:
+    get:
+      tags:
+        - "workplace"
+      summary: "获取分类"
+      description: "获取分类"
+      operationId: "get category list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties: 
+                category_no:
+                  type: string
+                  description: "分类编号"
+                sort_num:
+                  type: integer
+                  description: "排序编号"
+                name:
+                  type: string
+                  description: "分类名称"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /workplace/category/app:
+    get:
+      tags:
+        - "workplace"
+      summary: "查询某个分类下所有app"
+      description: "查询某个分类下所有app"
+      operationId: "get category app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /workplace/user/app/record:
+    post:
+      tags:
+        - "workplace"
+      summary: "添加用户应用使用记录"
+      description: "添加用户应用使用记录"
+      operationId: "add app record"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "应用ID"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_id:
+                type: string
+                description: "应用ID"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    get:
+      tags:
+        - "workplace"
+      summary: "查询用户常用app"
+      description: "查询用户常用app"
+      operationId: "get app record"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete: 
+      tags:
+        - "workplace"
+      summary: "删除用户使用记录"
+      description: "删除用户使用记录"
+      operationId: "delete app record"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+
+definitions:
+  banner:
+    type: "object"
+    properties:
+      cover:
+        type: string
+        description: "横幅封面"
+      title:
+        type: string
+        description: "封面标题"
+      description:
+        type: string
+        description: "封面介绍"
+      jump_type:
+        type: integer
+        description: "跳转方式 0.网页 1.原生"
+      route:
+        type: string
+        description: "打开地址"
+  appResp:
+    type: object
+    properties:
+      is_added:
+        type: integer
+        description: "是否已添加 1.是"
+      app_id:
+        type: string
+        description: "应用ID"
+      sort_num:
+        type: integer
+        description: "排序编号"
+      category_no:
+        type: string
+        description: "所属分类编号"
+      icon:
+        type: string
+        description: "应用logo"
+      name:
+        type: string
+        description: "应用名称"
+      description:
+        type: string
+        description: "应用介绍"
+      app_category:
+        type: string
+        description: "应用类型 [‘机器人’ ‘客服’]"
+      status:
+        type: integer
+        description: "1.可以 0.不可用"
+      jump_type:
+        type: integer
+        description: "打开方式 1.原生 0.网页"
+      route:
+        type: string
+        description: "应用打开地址"
+      is_paid_app:
+        type: integer
+        description: "是否为付费应用"
+
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

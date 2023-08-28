@@ -190,7 +190,7 @@ func (m *Manager) disablelist(c *wkhttp.Context) {
 
 // 封禁或解禁某个群
 func (m *Manager) leftbangroup(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -279,7 +279,7 @@ func (m *Manager) leftbangroup(c *wkhttp.Context) {
 
 // 禁言
 func (m *Manager) forbidden(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -370,7 +370,7 @@ func (m *Manager) forbidden(c *wkhttp.Context) {
 
 // 移除群成员
 func (m *Manager) removeMember(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return

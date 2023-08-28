@@ -54,6 +54,9 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 	}
 	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
 	{
+		auth.POST("/user/admin", m.addAdminUser)              // 添加一个管理员
+		auth.GET("/user/admin", m.getAdminUsers)              // 查询管理员用户
+		auth.DELETE("/user/admin", m.deleteAdminUsers)        // 删除管理员用户
 		auth.POST("/user/add", m.addUser)                     // 添加一个用户
 		auth.GET("/user/list", m.list)                        // 用户列表
 		auth.GET("/user/friends", m.friends)                  // 某个用户的好友
@@ -133,6 +136,14 @@ func (m *Manager) login(c *wkhttp.Context) {
 		c.ResponseError(errors.New("设置token缓存失败！"))
 		return
 	}
+
+	err = m.ctx.Cache().SetAndExpire(fmt.Sprintf("%s%d%s", m.ctx.GetConfig().Cache.UIDTokenCachePrefix, config.Web, userInfo.UID), token, m.ctx.GetConfig().Cache.TokenExpire)
+	if err != nil {
+		m.Error("设置uidtoken缓存失败！", zap.Error(err))
+		c.ResponseError(errors.New("设置token缓存失败！"))
+		return
+	}
+
 	c.Response(&managerLoginResp{
 		UID:   userInfo.UID,
 		Token: token,
@@ -141,9 +152,157 @@ func (m *Manager) login(c *wkhttp.Context) {
 	})
 }
 
+// 删除管理员用户
+func (m *Manager) deleteAdminUsers(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	uid := c.Query("uid")
+	if uid == "" {
+		c.ResponseError(errors.New("删除用户uid不能为空"))
+		return
+	}
+	user, err := m.userDB.QueryByUID(uid)
+	if err != nil {
+		m.Error("查询管理员用户错误", zap.Error(err))
+		c.ResponseError(errors.New("查询管理员用户错误"))
+		return
+	}
+	if user == nil || len(user.UID) == 0 {
+		c.ResponseError(errors.New("该用户不存在"))
+		return
+	}
+	if user.Role == "" {
+		c.ResponseError(errors.New("该用户不是管理员账号不能删除"))
+		return
+	}
+	if user.Role == string(wkhttp.SuperAdmin) {
+		c.ResponseError(errors.New("超级管理员账号不能删除"))
+		return
+	}
+	err = m.db.deleteUserWithUIDAndRole(uid, string(wkhttp.Admin))
+	if err != nil {
+		m.Error("删除管理员错误", zap.Error(err))
+		c.ResponseError(errors.New("删除管理员错误"))
+		return
+	}
+	oldToken, err := m.ctx.Cache().Get(fmt.Sprintf("%s%d%s", m.ctx.GetConfig().Cache.UIDTokenCachePrefix, config.Web, user.UID))
+	if err != nil {
+		m.Error("获取旧token错误", zap.Error(err))
+		c.ResponseError(errors.New("获取旧token错误"))
+		return
+	}
+	if oldToken != "" {
+		err = m.ctx.Cache().Delete(m.ctx.GetConfig().Cache.TokenCachePrefix + oldToken)
+		if err != nil {
+			m.Error("清除旧token数据错误", zap.Error(err))
+			c.ResponseError(errors.New("清除旧token数据错误"))
+			return
+		}
+	}
+	c.ResponseOK()
+}
+
+// 查询管理员列表
+func (m *Manager) getAdminUsers(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	users, err := m.db.queryUsersWithRole(string(wkhttp.Admin))
+	if err != nil {
+		m.Error("查询管理员用户错误", zap.Error(err))
+		c.ResponseError(errors.New("查询管理员用户错误"))
+		return
+	}
+	list := make([]*adminUserResp, 0)
+	if len(users) > 0 {
+		for _, user := range users {
+			list = append(list, &adminUserResp{
+				UID:          user.UID,
+				Name:         user.Name,
+				Username:     user.Username,
+				RegisterTime: user.CreatedAt.String(),
+			})
+		}
+	}
+	c.Response(list)
+}
+
+// 添加一个管理员
+func (m *Manager) addAdminUser(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type reqVO struct {
+		LoginName string `json:"login_name"`
+		Name      string `json:"name"`
+		Password  string `json:"password"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	if req.LoginName == "" {
+		c.ResponseError(errors.New("登录用户名不能为空"))
+		return
+	}
+	if req.Name == "" {
+		c.ResponseError(errors.New("用户名不能为空"))
+		return
+	}
+	if req.Password == "" {
+		c.ResponseError(errors.New("密码不能为空"))
+		return
+	}
+	user, err := m.db.queryUserWithNameAndRole(req.Name, string(wkhttp.Admin))
+	if err != nil {
+		m.Error("查询用户是否存在错误", zap.String("username", req.Name))
+		c.ResponseError(errors.New("查询用户是否存在错误"))
+		return
+	}
+	if user != nil && len(user.UID) > 0 {
+		c.ResponseError(errors.New("该用户名已存在"))
+		return
+	}
+	userModel := &Model{}
+	userModel.UID = util.GenerUUID()
+	userModel.Name = req.Name
+	userModel.Vercode = fmt.Sprintf("%s@%d", util.GenerUUID(), common.User)
+	userModel.QRVercode = fmt.Sprintf("%s@%d", util.GenerUUID(), common.QRCode)
+	userModel.Phone = ""
+	userModel.Username = req.LoginName
+	userModel.Zone = ""
+	userModel.Role = string(wkhttp.Admin)
+	userModel.Password = util.MD5(util.MD5(req.Password))
+	userModel.ShortNo = util.Ten2Hex(time.Now().UnixNano())
+	userModel.IsUploadAvatar = 0
+	userModel.NewMsgNotice = 0
+	userModel.MsgShowDetail = 0
+	userModel.SearchByPhone = 0
+	userModel.SearchByShort = 0
+	userModel.VoiceOn = 0
+	userModel.ShockOn = 0
+	userModel.Sex = 1
+	userModel.Status = int(common.UserAvailable)
+	err = m.userDB.Insert(userModel)
+	if err != nil {
+		m.Error("添加管理员错误", zap.String("username", req.Name))
+		c.ResponseError(err)
+		return
+	}
+	c.ResponseOK()
+}
+
 // 添加一个用户
 func (m *Manager) addUser(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -340,10 +499,11 @@ func (m *Manager) list(c *wkhttp.Context) {
 				online = respsdata[user.UID].Online
 				lastOnlineTime = util.ToyyyyMMddHHmm(time.Unix(int64(respsdata[user.UID].LastOffline), 0))
 			}
+			showPhone := getShowPhoneNum(user.Phone)
 			result = append(result, &managerUserResp{
 				UID:            user.UID,
 				Name:           user.Name,
-				Phone:          user.Phone,
+				Phone:          showPhone,
 				Sex:            user.Sex,
 				ShortNo:        user.ShortNo,
 				LastLoginTime:  lastLoginTime,
@@ -354,6 +514,9 @@ func (m *Manager) list(c *wkhttp.Context) {
 				RegisterTime:   user.CreatedAt.String(),
 				Status:         user.Status,
 				IsDestroy:      user.IsDestroy,
+				GiteeUID:       user.GiteeUID,
+				GithubUID:      user.GithubUID,
+				WXOpenid:       user.WXOpenid,
 			})
 			i++
 		}
@@ -448,10 +611,11 @@ func (m *Manager) disableUsers(c *wkhttp.Context) {
 	result := make([]*managerDisableUserResp, 0)
 	if len(list) > 0 {
 		for _, user := range list {
+			showPhone := getShowPhoneNum(user.Phone)
 			result = append(result, &managerDisableUserResp{
 				Name:         user.Name,
 				ShortNo:      user.ShortNo,
-				Phone:        user.Phone,
+				Phone:        showPhone,
 				UID:          user.UID,
 				ClosureTime:  user.UpdatedAt.String(),
 				RegisterTime: user.CreatedAt.String(),
@@ -466,7 +630,7 @@ func (m *Manager) disableUsers(c *wkhttp.Context) {
 
 // 封禁或解禁用户
 func (m *Manager) liftBanUser(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -539,7 +703,7 @@ func (m *Manager) liftBanUser(c *wkhttp.Context) {
 
 // 修改登录密码
 func (m *Manager) updatePwd(c *wkhttp.Context) {
-	err := c.CheckLoginRole()
+	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -708,14 +872,15 @@ func (m *Manager) createManagerAccount() {
 		return
 	}
 
-	username := "admin"
+	username := string(wkhttp.SuperAdmin)
+	role := string(wkhttp.SuperAdmin)
 	var pwd = m.ctx.GetConfig().AdminPwd
 	err = m.userDB.Insert(&Model{
 		UID:      m.ctx.GetConfig().Account.AdminUID,
 		Name:     "超级管理员",
 		ShortNo:  "30000",
 		Category: "system",
-		Role:     "superAdmin",
+		Role:     role,
 		Username: username,
 		Zone:     "0086",
 		Phone:    "13000000002",
@@ -726,6 +891,24 @@ func (m *Manager) createManagerAccount() {
 		m.Error("新增系统管理员错误", zap.Error(err))
 		return
 	}
+}
+func getShowPhoneNum(mobile string) string {
+	if len(mobile) <= 3 {
+		return mobile
+	}
+	phone := mobile[:3]
+	var length = len(mobile) - 3
+	if length > 4 {
+		length = 4
+	}
+	for i := 0; i < length; i++ {
+		phone = fmt.Sprintf("%s*", phone)
+	}
+	var index = 3 + length
+	if index > 0 && index < len(mobile) {
+		return phone + mobile[index:]
+	}
+	return phone
 }
 
 type managerLoginReq struct {
@@ -751,6 +934,12 @@ type managerBlackUserResp struct {
 	UID      string `json:"uid"`
 	CreateAt string `json:"create_at"`
 }
+type adminUserResp struct {
+	Name         string `json:"name"`
+	UID          string `json:"uid"`
+	Username     string `json:"username"`
+	RegisterTime string `json:"register_time"`
+}
 type managerUserResp struct {
 	Name           string `json:"name"`
 	UID            string `json:"uid"`
@@ -765,6 +954,9 @@ type managerUserResp struct {
 	LastOnlineTime string `json:"last_online_time"`
 	Status         int    `json:"status"`
 	IsDestroy      int    `json:"is_destroy"`
+	WXOpenid       string `json:"wx_openid"`  // 微信openid
+	GiteeUID       string `json:"gitee_uid"`  // gitee uid
+	GithubUID      string `json:"github_uid"` // github uid
 }
 
 type managerFriendResp struct {
