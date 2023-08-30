@@ -118,6 +118,8 @@ https://githubim.com
 
 ![](docs/screenshot/pc22.png)
 
+![](docs/screenshot/pc33.png)
+
 
 功能特性
 ------------
