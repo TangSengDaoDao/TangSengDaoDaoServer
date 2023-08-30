@@ -114,9 +114,9 @@ https://githubim.com
 |:---:|:---:|:-------------------:|
 |![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
 
-![](docs/screenshot/pc2.png)
+![](docs/screenshot/pc11.png)
 
-![](docs/screenshot/pc1.png)
+![](docs/screenshot/pc22.png)
 
 
 功能特性
