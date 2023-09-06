@@ -34,6 +34,7 @@
 
 ![架构图](./docs/architecture1.png)
 
+
 采用大道至简的设计原则，我们尽最大的努力让架构简单化，让开发者上手成本和学习成本大大降低。
 
 我们的架构设计原则：`简洁化`、`可扩展性`、`高可用`
@@ -113,9 +114,11 @@ https://githubim.com
 |:---:|:---:|:-------------------:|
 |![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
 
-![](docs/screenshot/pc2.png)
+![](docs/screenshot/pc11.png)
 
-![](docs/screenshot/pc1.png)
+![](docs/screenshot/pc22.png)
+
+![](docs/screenshot/pc33.png)
 
 
 功能特性
