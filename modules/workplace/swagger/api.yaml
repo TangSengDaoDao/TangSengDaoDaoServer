@@ -40,14 +40,14 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    get:  
+    get:
       tags:
         - "workplaceManager"
       summary: "获取分类"
@@ -63,7 +63,7 @@ paths:
           schema:
             type: array
             items:
-              properties: 
+              properties:
                 category_no:
                   type: string
                   description: "分类编号"
@@ -106,7 +106,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -160,14 +160,14 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    put: 
+    put:
       tags:
         - "workplaceManager"
       summary: "修改app"
@@ -188,7 +188,7 @@ paths:
               app_id:
                 type: string
                 description: "应用ID"
-              status: 
+              status:
                 type: integer
                 description: "是否可用 1.是"
               category_no:
@@ -219,14 +219,14 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    delete: 
+    delete:
       tags:
         - "workplaceManager"
       summary: "删除app"
@@ -251,7 +251,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -280,7 +280,7 @@ paths:
               cover:
                 type: string
                 description: "封面"
-              title: 
+              title:
                 type: string
                 description: "标题"
               description:
@@ -296,14 +296,65 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    delete: 
+    get:
+      tags:
+        - "workplaceManager"
+      summary: "横幅列表"
+      description: "横幅列表"
+      operationId: "m list banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/banner"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put: 
+      tags:
+        - "workplaceManager"
+      summary: "修改横幅"
+      description: "修改横幅"
+      operationId: "m update banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "添加app数据"
+          required: true
+          schema:
+            $ref: "#/definitions/banner"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
       tags:
         - "workplaceManager"
       summary: "删除横幅"
@@ -323,7 +374,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -403,7 +454,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -430,7 +481,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -464,7 +515,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -488,7 +539,7 @@ paths:
           schema:
             type: array
             items:
-              properties: 
+              properties:
                 category_no:
                   type: string
                   description: "分类编号"
@@ -590,7 +641,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-    delete: 
+    delete:
       tags:
         - "workplace"
       summary: "删除用户使用记录"
@@ -628,6 +679,9 @@ definitions:
   banner:
     type: "object"
     properties:
+      banner_no:
+        type: string
+        description: "横幅编号"
       cover:
         type: string
         description: "横幅封面"

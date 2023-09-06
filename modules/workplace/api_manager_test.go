@@ -21,11 +21,63 @@ func TestAddBanner(t *testing.T) {
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("POST", "/v1/manager/workplace/banner", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
-		"cover":       "cover_1122",
+		"cover":       "https://api.botgate.cn/v1/users/admin/avatar",
 		"title":       "横幅title",
 		"description": "横幅介绍",
-		"jump_type":   1,
-		"route":       "moment",
+		"jump_type":   0,
+		"route":       "https://element-plus.gitee.io/zh-CN/",
+	}))))
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+func TestGetBanners(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	bannerNo := "no1"
+	err = wm.db.insertBanner(&bannerModel{
+		BannerNo:    bannerNo,
+		Cover:       "cover_1122",
+		Title:       "",
+		Description: "ddd",
+		JumpType:    1,
+		Route:       "moment",
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("GET", "/v1/manager/workplace/banner", nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"cover":"cover_1122"`))
+}
+func TestUpdateBanner(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	bannerNo := "no1"
+	err = wm.db.insertBanner(&bannerModel{
+		BannerNo:    bannerNo,
+		Cover:       "cover_1122",
+		Title:       "",
+		Description: "ddd",
+		JumpType:    1,
+		Route:       "moment",
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/banner", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"banner_no":   bannerNo,
+		"cover":       "cover_1122u",
+		"title":       "u",
+		"description": "dddu",
+		"jump_type":   0,
+		"route":       "https://githubim.com",
 	}))))
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)

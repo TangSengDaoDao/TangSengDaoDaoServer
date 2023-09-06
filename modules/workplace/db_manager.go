@@ -71,6 +71,16 @@ func (d *managerDB) updateApp(app *appModel) error {
 	}).Where("app_id=?", app.AppID).Exec()
 	return err
 }
+func (d *managerDB) updateBanner(banner *bannerModel) error {
+	_, err := d.session.Update("workplace_banner").SetMap(map[string]interface{}{
+		"cover":       banner.Cover,
+		"title":       banner.Title,
+		"description": banner.Description,
+		"jump_type":   banner.JumpType,
+		"route":       banner.Route,
+	}).Where("banner_no=?", banner.BannerNo).Exec()
+	return err
+}
 
 func (d *managerDB) updateCategorySortNumWithTx(categoryNo string, sortNum int, tx *dbr.Tx) error {
 	_, err := tx.Update("workplace_category").SetMap(map[string]interface{}{

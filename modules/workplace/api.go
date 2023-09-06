@@ -393,6 +393,7 @@ func (w *Workplace) getBanner(c *wkhttp.Context) {
 	if len(models) > 0 {
 		for _, m := range models {
 			list = append(list, &bannerResp{
+				BannerNo:    m.BannerNo,
 				Cover:       m.Cover,
 				Title:       m.Title,
 				Description: m.Description,
@@ -421,11 +422,13 @@ func (app *appModel) getAppResp(isAdded int) *appResp {
 }
 
 type bannerResp struct {
+	BannerNo    string `json:"banner_no"`   // 横幅编号
 	Cover       string `json:"cover"`       // 封面
 	Title       string `json:"title"`       // 标题
 	Description string `json:"description"` // 介绍
 	JumpType    int    `json:"jump_type"`   // 打开方式 0.网页 1.原生
 	Route       string `json:"route"`       // 打开地址
+	CreatedAt   string `json:"created_at"`  // 创建时间
 }
 
 type appResp struct {

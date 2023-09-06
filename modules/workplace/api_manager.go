@@ -15,14 +15,16 @@ import (
 type manager struct {
 	ctx *config.Context
 	log.Log
-	db *managerDB
+	db   *managerDB
+	wpDB *db
 }
 
 func NewManager(ctx *config.Context) *manager {
 	return &manager{
-		ctx: ctx,
-		Log: log.NewTLog("Workplace_manager"),
-		db:  newManagerDB(ctx),
+		ctx:  ctx,
+		Log:  log.NewTLog("Workplace_manager"),
+		db:   newManagerDB(ctx),
+		wpDB: newDB(ctx),
 	}
 }
 
@@ -38,7 +40,78 @@ func (m *manager) Route(r *wkhttp.WKHttp) {
 		auth.DELETE("/workplace/app", m.deleteApp)                 // 删除app
 		auth.POST("/workplace/banner", m.addBanner)                // 添加横幅
 		auth.DELETE("/workplace/banner", m.deleteBanner)           // 删除横幅
+		auth.GET("/workplace/banner", m.getBanners)                // 获取横幅
+		auth.PUT("/workplace/banner", m.updateBanner)              // 修改横幅
 	}
+}
+
+func (m *manager) updateBanner(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	var req updateBannerReq
+	if err := c.BindJSON(&req); err != nil {
+		m.Error(common.ErrData.Error(), zap.Error(err))
+		c.ResponseError(common.ErrData)
+		return
+	}
+	if req.BannerNo == "" {
+		c.ResponseError(errors.New("横幅编号不能为空"))
+		return
+	}
+	if strings.TrimSpace(req.Route) == "" {
+		c.ResponseError(errors.New("横幅跳转地址不能为空"))
+		return
+	}
+	if strings.TrimSpace(req.Cover) == "" {
+		c.ResponseError(errors.New("横幅封面不能为空"))
+		return
+	}
+	err = m.db.updateBanner(&bannerModel{
+		BannerNo:    req.BannerNo,
+		Cover:       req.Cover,
+		Title:       req.Title,
+		Description: req.Description,
+		Route:       req.Route,
+		JumpType:    req.JumpType,
+	})
+	if err != nil {
+		m.Error("修改横幅错误", zap.Error(err))
+		c.ResponseError(errors.New("修改横幅错误"))
+		return
+	}
+	c.ResponseOK()
+}
+
+func (m *manager) getBanners(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	banners, err := m.wpDB.queryBanner()
+	if err != nil {
+		m.Error("查询横幅错误", zap.Error(err))
+		c.ResponseError(errors.New("查询横幅错误"))
+		return
+	}
+	list := make([]*bannerResp, 0)
+	if len(banners) > 0 {
+		for _, banner := range banners {
+			list = append(list, &bannerResp{
+				BannerNo:    banner.BannerNo,
+				Title:       banner.Title,
+				Cover:       banner.Cover,
+				Description: banner.Description,
+				JumpType:    banner.JumpType,
+				Route:       banner.Route,
+				CreatedAt:   banner.CreatedAt.String(),
+			})
+		}
+	}
+	c.Response(list)
 }
 
 func (m *manager) deleteBanner(c *wkhttp.Context) {
@@ -368,4 +441,8 @@ type bannerReq struct {
 	Description string `json:"description"` // 介绍
 	JumpType    int    `json:"jump_type"`   // 打开方式 0.网页 1.原生
 	Route       string `json:"route"`       // 打开地址
+}
+type updateBannerReq struct {
+	BannerNo string `json:"banner_no"` // 横幅编号
+	bannerReq
 }
