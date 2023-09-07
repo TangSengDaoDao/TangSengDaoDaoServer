@@ -189,13 +189,13 @@ func TestAddAPP(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("POST", "/v1/manager/workplace/app", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
-		"category_no":  no,
 		"icon":         "xxx",
 		"name":         "组织架构",
 		"description":  "平面化组织架构",
 		"app_category": "bot",
 		"jump_type":    0,
-		"route":        "https://www.githubim.com",
+		"app_route":    "https://www.githubim.com",
+		"web_route":    "https://www.githubim.com",
 		"is_paid_app":  0,
 	}))))
 	w := httptest.NewRecorder()
@@ -211,28 +211,27 @@ func TestUpdateAPP(t *testing.T) {
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
 	appId := "wkim"
-	categoryNo := "im"
 	err = wm.db.insertAPP(&appModel{
 		AppID:       appId,
-		CategoryNo:  categoryNo,
 		Icon:        "xxxxx",
 		Name:        "悟空IM",
 		Description: "悟空IM让信息传递更简单",
 		JumpType:    0,
-		Route:       "http://www.githubim.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/app", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
 		"app_id":       appId,
-		"category_no":  categoryNo,
 		"icon":         "xxxxxu",
 		"name":         "悟空IMu",
 		"description":  "悟空IM让信息传递更简单u",
 		"app_category": "bot",
 		"jump_type":    0,
-		"route":        "https://www.githubim.com",
+		"app_route":    "https://www.githubim.com",
+		"web_route":    "https://www.tangsengdaodoa.com",
 		"is_paid_app":  0,
 	}))))
 	w := httptest.NewRecorder()
@@ -248,22 +247,267 @@ func TestDeleteAPP(t *testing.T) {
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
 	appId := "wkim"
-	categoryNo := "im"
 	err = wm.db.insertAPP(&appModel{
 		AppID:       appId,
-		CategoryNo:  categoryNo,
 		Icon:        "xxxxx",
 		Name:        "悟空IM",
 		Description: "悟空IM让信息传递更简单",
 		JumpType:    0,
-		Route:       "http://www.githubim.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/app?app_id=%s&category_no=%s", appId, categoryNo), bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
-		"app_id": appId,
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/app?app_id=%s", appId), nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAppList(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	appId := "wkim"
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId,
+		Icon:        "xxxxx",
+		Name:        "悟空IM",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertAPP(&appModel{
+		AppID:       "tsdd",
+		Icon:        "ddddd",
+		Name:        "唐僧叨叨",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("GET", "/v1/manager/workplace/app", nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"app_id":"tsdd"`))
+}
+
+func TestGetCategoryApps(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	appId1 := "wkim"
+	appId2 := "tsdd"
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId1,
+		Icon:        "xxxxx",
+		Name:        "悟空IM",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId2,
+		Icon:        "dddddd",
+		Name:        "唐僧叨叨",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	categoryNo := "no1"
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId1,
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/manager/workplace/category/app?category_no=%s", categoryNo), nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"app_id":"tsdd"`))
+}
+
+func TestReorderCategoryApp(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	appId1 := "wkim"
+	appId2 := "tsdd"
+	categoryNo := "no1"
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId1,
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: "3",
+	})
+	assert.NoError(t, err)
+
+	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/category/app/reorder", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"app_ids":     []string{appId1, appId2},
+		"category_no": categoryNo,
 	}))))
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAddCategoryApp(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	appId1 := "wkim"
+	appId2 := "tsdd"
+	categoryNo := "no1"
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId1,
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: "3",
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId1,
+		Icon:        "xxxxx",
+		Name:        "悟空IM",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId2,
+		Icon:        "dddddd",
+		Name:        "唐僧叨叨",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("POST", "/v1/manager/workplace/category/app", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"app_ids":     []string{appId1, appId2},
+		"category_no": categoryNo,
+	}))))
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestDeleteCategoryApp(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	appId1 := "wkim"
+	appId2 := "tsdd"
+	categoryNo := "no1"
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId1,
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId2,
+		SortNum:    10,
+		CategoryNo: "3",
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId1,
+		Icon:        "xxxxx",
+		Name:        "悟空IM",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertAPP(&appModel{
+		AppID:       appId2,
+		Icon:        "dddddd",
+		Name:        "唐僧叨叨",
+		Description: "悟空IM让信息传递更简单",
+		JumpType:    0,
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
+		Status:      1,
+		IsPaidApp:   0,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/category/app?category_no=%s&app_id=%s", categoryNo, appId1), nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)

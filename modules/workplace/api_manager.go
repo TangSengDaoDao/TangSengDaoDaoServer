@@ -32,17 +32,260 @@ func NewManager(ctx *config.Context) *manager {
 func (m *manager) Route(r *wkhttp.WKHttp) {
 	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
 	{
-		auth.POST("/workplace/category", m.addCategory)            // 添加分类
-		auth.GET("/workplace/category", m.getCategory)             // 获取分类
-		auth.PUT("/workplace/category/reorder", m.reorderCategory) // 排序分类
-		auth.POST("/workplace/app", m.addApp)                      // 添加app
-		auth.PUT("/workplace/app", m.updateApp)                    // 修改app
-		auth.DELETE("/workplace/app", m.deleteApp)                 // 删除app
-		auth.POST("/workplace/banner", m.addBanner)                // 添加横幅
-		auth.DELETE("/workplace/banner", m.deleteBanner)           // 删除横幅
-		auth.GET("/workplace/banner", m.getBanners)                // 获取横幅
-		auth.PUT("/workplace/banner", m.updateBanner)              // 修改横幅
+		auth.POST("/workplace/category", m.addCategory)                   // 添加分类
+		auth.GET("/workplace/category", m.getCategory)                    // 获取分类
+		auth.PUT("/workplace/category/reorder", m.reorderCategory)        // 排序分类
+		auth.GET("/workplace/category/app", m.getCategoryApps)            // 获取分类下app
+		auth.PUT("/workplace/category/app/reorder", m.reorderCategoryApp) // 排序分类下app
+		auth.POST("/workplace/category/app", m.addCategoryApp)            // 新增分类下app
+		auth.DELETE("/workplace/category/app", m.deleteCategoryApp)       // 删除分类下app
+		auth.POST("/workplace/app", m.addApp)                             // 添加app
+		auth.PUT("/workplace/app", m.updateApp)                           // 修改app
+		auth.DELETE("/workplace/app", m.deleteApp)                        // 删除app
+		auth.GET("/workplace/app", m.getApps)                             // 获取app
+		auth.POST("/workplace/banner", m.addBanner)                       // 添加横幅
+		auth.DELETE("/workplace/banner", m.deleteBanner)                  // 删除横幅
+		auth.GET("/workplace/banner", m.getBanners)                       // 获取横幅
+		auth.PUT("/workplace/banner", m.updateBanner)                     // 修改横幅
 	}
+}
+
+func (m *manager) getApps(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	apps, err := m.db.queryAllApp()
+	if err != nil {
+		m.Error("查询所有应用错误", zap.Error(err))
+		c.ResponseError(errors.New("查询所有应用错误"))
+		return
+	}
+	list := make([]*appDetailResp, 0)
+	if len(apps) > 0 {
+		for _, app := range apps {
+			list = append(list, &appDetailResp{
+				AppID:       app.AppID,
+				AppCategory: app.AppCategory,
+				AppRoute:    app.AppRoute,
+				WebRoute:    app.WebRoute,
+				IsPaidApp:   app.IsPaidApp,
+				Name:        app.Name,
+				Description: app.Description,
+				Icon:        app.Icon,
+				Status:      app.Status,
+				JumpType:    app.JumpType,
+			})
+		}
+	}
+	c.Response(list)
+}
+
+func (m *manager) deleteCategoryApp(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	categoryNo := c.Query("category_no")
+	appId := c.Query("app_id")
+	if categoryNo == "" {
+		c.ResponseError(errors.New("分类编号不能为空"))
+		return
+	}
+	if appId == "" {
+		c.ResponseError(errors.New("应用ID不能为空"))
+		return
+	}
+	err = m.db.deleteCategoryApp(appId, categoryNo)
+	if err != nil {
+		m.Error("删除分类下app错误", zap.Error(err))
+		c.ResponseError(errors.New("删除分类下app错误"))
+		return
+	}
+	c.ResponseOK()
+}
+
+func (m *manager) addCategoryApp(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type reqVO struct {
+		CategoryNo string   `json:"category_no"`
+		AppIds     []string `json:"app_ids"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		m.Error(common.ErrData.Error(), zap.Error(err))
+		c.ResponseError(common.ErrData)
+		return
+	}
+	if req.CategoryNo == "" {
+		c.ResponseError(errors.New("分类编号不能为空"))
+		return
+	}
+	if len(req.AppIds) == 0 {
+		c.ResponseError(errors.New("应用ID不能为空"))
+		return
+	}
+	appList, err := m.wpDB.queryAppWithAppIds(req.AppIds)
+	if err != nil {
+		m.Error("查询一批应用错误", zap.Error(err))
+		c.ResponseError(errors.New("查询一批应用错误"))
+		return
+	}
+	if len(appList) != len(req.AppIds) {
+		c.ResponseError(errors.New("添加的应用不存在"))
+		return
+	}
+	apps, err := m.wpDB.queryAppWithCategroyNo(req.CategoryNo)
+	if err != nil {
+		m.Error("查询该分类下应用错误", zap.Error(err))
+		c.ResponseError(errors.New("查询该分类下应用错误"))
+		return
+	}
+	saveIds := make([]string, 0)
+	if len(apps) > 0 {
+		var isAdd = true
+		for _, appId := range req.AppIds {
+			for _, app := range apps {
+				if appId == app.AppID {
+					isAdd = false
+					break
+				}
+			}
+			if isAdd {
+				saveIds = append(saveIds, appId)
+			}
+		}
+	}
+	if len(saveIds) == 0 {
+		c.ResponseOK()
+		return
+	}
+	tx, _ := m.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
+	var tempSortNum = len(saveIds)
+	for _, appId := range saveIds {
+		err := m.db.insertCategoryAppWithTx(&categoryAppModel{
+			AppId:      appId,
+			SortNum:    tempSortNum,
+			CategoryNo: req.CategoryNo,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("添加分类下app错误", zap.Error(err))
+			c.ResponseError(errors.New("添加分类下app错误"))
+			return
+		}
+		tempSortNum--
+	}
+	err = tx.Commit()
+	if err != nil {
+		m.Error("数据库事物提交失败", zap.Error(err))
+		c.ResponseError(errors.New("数据库事物提交失败"))
+		tx.Rollback()
+		return
+	}
+	c.ResponseOK()
+}
+func (m *manager) reorderCategoryApp(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type reqVO struct {
+		CategoryNo string   `json:"category_no"`
+		AppIds     []string `json:"app_ids"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		m.Error(common.ErrData.Error(), zap.Error(err))
+		c.ResponseError(common.ErrData)
+		return
+	}
+	if req.CategoryNo == "" {
+		c.ResponseError(errors.New("分类编号不能为空"))
+		return
+	}
+	if len(req.AppIds) == 0 {
+		c.ResponseError(errors.New("应用ID不能为空"))
+		return
+	}
+	tx, _ := m.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
+	var tempSortNum = len(req.AppIds)
+	for _, appId := range req.AppIds {
+		err := m.db.updateCategoryAppSortNumWithTx(req.CategoryNo, appId, tempSortNum, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("修改分类下app排序错误", zap.Error(err))
+			c.ResponseError(errors.New("修改分类下app排序错误"))
+			return
+		}
+		tempSortNum--
+	}
+	err = tx.Commit()
+	if err != nil {
+		m.Error("数据库事物提交失败", zap.Error(err))
+		c.ResponseError(errors.New("数据库事物提交失败"))
+		tx.Rollback()
+		return
+	}
+	c.ResponseOK()
+}
+
+func (m *manager) getCategoryApps(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	categoryNo := c.Query("category_no")
+	if categoryNo == "" {
+		c.ResponseError(errors.New("分类编号不能为空"))
+		return
+	}
+	apps, err := m.wpDB.queryAppWithCategroyNo(categoryNo)
+	if err != nil {
+		m.Error("获取分类下的app错误", zap.Error(err))
+		c.ResponseError(errors.New("获取分类下的app错误"))
+		return
+	}
+
+	list := make([]*appDetailResp, 0)
+	if len(apps) > 0 {
+		for _, app := range apps {
+			list = append(list, &appDetailResp{
+				AppID:       app.AppID,
+				SortNum:     app.SortNum,
+				Icon:        app.Icon,
+				Name:        app.Name,
+				Description: app.Description,
+				JumpType:    app.JumpType,
+				AppCategory: app.AppCategory,
+				Status:      app.Status,
+				AppRoute:    app.AppRoute,
+				WebRoute:    app.WebRoute,
+				IsPaidApp:   app.IsPaidApp,
+			})
+		}
+	}
+	c.Response(list)
 }
 
 func (m *manager) updateBanner(c *wkhttp.Context) {
@@ -217,13 +460,13 @@ func (m *manager) updateApp(c *wkhttp.Context) {
 	err = m.db.updateApp(&appModel{
 		AppID:       req.AppId,
 		AppCategory: req.AppCategory,
-		CategoryNo:  req.CategoryNo,
 		Icon:        req.Icon,
 		Name:        req.Name,
 		Description: req.Description,
 		Status:      req.Status,
 		JumpType:    req.JumpType,
-		Route:       req.Route,
+		AppRoute:    req.AppRoute,
+		WebRoute:    req.WebRoute,
 		IsPaidApp:   req.IsPaidApp,
 	})
 	if err != nil {
@@ -240,13 +483,12 @@ func (m *manager) deleteApp(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	categoryNo := c.Query("category_no")
 	appId := c.Query("app_id")
-	if categoryNo == "" || appId == "" {
+	if appId == "" {
 		c.ResponseError(errors.New("分类ID和应用ID均不能为空"))
 		return
 	}
-	err = m.db.deleteApp(appId, categoryNo)
+	err = m.db.deleteApp(appId)
 	if err != nil {
 		m.Error("删除应用错误", zap.Error(err))
 		c.ResponseError(errors.New("删除应用错误"))
@@ -314,7 +556,7 @@ func (m *manager) addApp(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	app, err := m.db.queryAppWithAppNameAndCategoryNo(req.Name, req.CategoryNo)
+	app, err := m.db.queryAppWithAppNameAndCategoryNo(req.Name)
 	if err != nil {
 		m.Error("查询此分类下app是否存在此名称错误", zap.Error(err))
 		c.ResponseError(errors.New("查询此分类下app是否存在此名称错误"))
@@ -325,27 +567,16 @@ func (m *manager) addApp(c *wkhttp.Context) {
 		return
 	}
 
-	cateogry, err := m.db.queryCategoryWithCategoryNo(req.CategoryNo)
-	if err != nil {
-		m.Error("查询此分类是否存在错误", zap.Error(err))
-		c.ResponseError(errors.New("查询此分类是否存在错误"))
-		return
-	}
-
-	if cateogry == nil || len(cateogry.CategoryNo) == 0 {
-		c.ResponseError(errors.New("此分类不存在"))
-		return
-	}
 	err = m.db.insertAPP(&appModel{
 		AppID:       util.GenerUUID(),
 		Name:        req.Name,
 		Description: req.Description,
-		CategoryNo:  req.CategoryNo,
 		Icon:        req.Icon,
 		AppCategory: req.AppCategory,
 		Status:      1,
 		JumpType:    req.JumpType,
-		Route:       req.Route,
+		AppRoute:    req.AppRoute,
+		WebRoute:    req.WebRoute,
 		IsPaidApp:   req.IsPaidApp,
 	})
 	if err != nil {
@@ -408,10 +639,7 @@ func (req *appReq) checkAddAPP() error {
 	if strings.TrimSpace(req.Name) == "" {
 		return errors.New("应用名称不能为空")
 	}
-	if strings.TrimSpace(req.CategoryNo) == "" {
-		return errors.New("应用分类ID不能为空")
-	}
-	if strings.TrimSpace(req.Route) == "" {
+	if strings.TrimSpace(req.AppRoute) == "" {
 		return errors.New("应用打开地址不能为空")
 	}
 	if strings.TrimSpace(req.Icon) == "" {
@@ -426,13 +654,13 @@ type updateAppReq struct {
 	appReq
 }
 type appReq struct {
-	CategoryNo  string `json:"category_no"`  //  所属分类编号
 	Icon        string `json:"icon"`         // 应用icon
 	Name        string `json:"name"`         // 应用名称
 	Description string `json:"description"`  // 应用介绍
 	AppCategory string `json:"app_category"` // 应用分类 [‘机器人’ ‘客服’]
 	JumpType    int    `json:"jump_type"`    // 打开方式 0.网页 1.原生
-	Route       string `json:"route"`        // 打开地址
+	AppRoute    string `json:"app_route"`    // app打开地址
+	WebRoute    string `json:"web_route"`    // web打开地址
 	IsPaidApp   int    `json:"is_paid_app"`  // 是否为付费应用 0.否 1.是
 }
 type bannerReq struct {

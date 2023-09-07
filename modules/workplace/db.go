@@ -65,9 +65,9 @@ func (d *db) queryAppWithAppId(appId string) (*appModel, error) {
 	return app, err
 }
 
-func (d *db) queryAppWithCategroyNo(categoryNo string) ([]*appModel, error) {
-	var apps []*appModel
-	_, err := d.session.Select("*").From("workplace_app").Where("category_no=?", categoryNo).Load(&apps)
+func (d *db) queryAppWithCategroyNo(categoryNo string) ([]*cAppModel, error) {
+	var apps []*cAppModel
+	_, err := d.session.Select("workplace_category_app.sort_num,workplace_app.app_id,workplace_app.icon,workplace_app.name,workplace_app.description,workplace_app.app_category,workplace_app.jump_type,workplace_app.status,workplace_app.app_route,workplace_app.web_route,workplace_app.is_paid_app,workplace_app.created_at").From("workplace_category_app").LeftJoin("workplace_app", "workplace_category_app.app_id=workplace_app.app_id").Where("workplace_category_app.category_no=?", categoryNo).OrderDir("workplace_category_app.sort_num", false).Load(&apps)
 	return apps, err
 }
 
@@ -145,16 +145,22 @@ type userAppModel struct {
 	Uid     string // 所属用户uid
 	dba.BaseModel
 }
+
+type cAppModel struct {
+	SortNum int // 排序编号
+	appModel
+}
+
 type appModel struct {
 	AppID       string // 应用ID
-	CategoryNo  string //  所属分类编号
 	Icon        string // 应用icon
 	Name        string // 应用名称
 	Description string // 应用介绍
 	AppCategory string // 应用分类 [‘机器人’ ‘客服’]
 	Status      int    // 是否可用 0.禁用 1.可用
 	JumpType    int    // 打开方式 0.网页 1.原生
-	Route       string // 打开地址
+	AppRoute    string // app打开地址
+	WebRoute    string // web打开地址
 	IsPaidApp   int    // 是否为付费应用 0.否 1.是
 	dba.BaseModel
 }

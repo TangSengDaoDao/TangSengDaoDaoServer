@@ -34,7 +34,7 @@ func (w *Workplace) Route(r *wkhttp.WKHttp) {
 		auth.DELETE("/user/app", w.deleteApp)           // 删除app
 		auth.PUT("/user/app/reorder", w.reorderApp)     // 排序app
 		auth.POST("/user/app/record", w.addRecord)      // 添加使用记录
-		auth.GET("/user/app/record", w.getCommonApp)    // 查询常用app
+		auth.GET("/user/app/record", w.getRecord)       // 查询常用app
 		auth.DELETE("/user/app/record", w.deleteRecord) // 删除使用记录
 		auth.GET("/category", w.getCategory)            // 获取分类
 		auth.GET("/category/app", w.getAppWithCategory) // 获取某个分类下的应用
@@ -57,7 +57,7 @@ func (w *Workplace) deleteRecord(c *wkhttp.Context) {
 	c.ResponseOK()
 }
 
-func (w *Workplace) getCommonApp(c *wkhttp.Context) {
+func (w *Workplace) getRecord(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
 	records, err := w.db.queryRecordWithUid(loginUID)
 	if err != nil {
@@ -188,6 +188,7 @@ func (w *Workplace) getAppWithCategory(c *wkhttp.Context) {
 				}
 			}
 			appResp := app.getAppResp(isAdded)
+			appResp.SortNum = app.SortNum
 			list = append(list, appResp)
 		}
 	}
@@ -340,7 +341,7 @@ func (w *Workplace) getApps(c *wkhttp.Context) {
 		w.Error("查询用户应用错误", zap.Error(err))
 		return
 	}
-	list := make([]*userAppResp, 0)
+	list := make([]*appDetailResp, 0)
 	appIds := make([]string, 0)
 	if len(models) > 0 {
 		for _, m := range models {
@@ -360,17 +361,17 @@ func (w *Workplace) getApps(c *wkhttp.Context) {
 				}
 			}
 			if app != nil {
-				list = append(list, &userAppResp{
+				list = append(list, &appDetailResp{
 					AppID:       m.AppID,
 					SortNum:     m.SortNum,
-					CategoryNo:  app.CategoryNo,
 					Icon:        app.Icon,
 					Name:        app.Name,
 					Description: app.Description,
 					AppCategory: app.AppCategory,
 					Status:      app.Status,
 					JumpType:    app.JumpType,
-					Route:       app.Route,
+					AppRoute:    app.AppRoute,
+					WebRoute:    app.WebRoute,
 					IsPaidApp:   app.IsPaidApp,
 				})
 			}
@@ -410,13 +411,13 @@ func (app *appModel) getAppResp(isAdded int) *appResp {
 	appResp.IsAdded = isAdded
 	appResp.AppID = app.AppID
 	appResp.AppCategory = app.AppCategory
-	appResp.CategoryNo = app.CategoryNo
 	appResp.Icon = app.Icon
 	appResp.Name = app.Name
 	appResp.Description = app.Description
 	appResp.Status = app.Status
 	appResp.JumpType = app.JumpType
-	appResp.Route = app.Route
+	appResp.AppRoute = app.AppRoute
+	appResp.WebRoute = app.WebRoute
 	appResp.IsPaidApp = app.IsPaidApp
 	return appResp
 }
@@ -433,20 +434,20 @@ type bannerResp struct {
 
 type appResp struct {
 	IsAdded int `json:"is_added"` // 1.已经添加 0.未添加
-	userAppResp
+	appDetailResp
 }
 
-type userAppResp struct {
+type appDetailResp struct {
 	AppID       string `json:"app_id"`       // 分类项唯一id
 	SortNum     int    `json:"sort_num"`     // 排序编号
-	CategoryNo  string `json:"category_no"`  // 所属分类编号
 	Icon        string `json:"icon"`         // 应用icon
 	Name        string `json:"name"`         // 应用名称
 	Description string `json:"description"`  // 应用介绍
 	AppCategory string `json:"app_category"` // 应用分类 [‘机器人’ ‘客服’]
 	Status      int    `json:"status"`       // 是否可用 0.禁用 1.可用
 	JumpType    int    `json:"jump_type"`    // 打开方式 0.网页 1.原生
-	Route       string `json:"route"`        // 打开地址
+	AppRoute    string `json:"app_route"`    // app打开地址
+	WebRoute    string `json:"web_route"`    // web打开地址
 	IsPaidApp   int    `json:"is_paid_app"`  // 是否为付费应用 0.否 1.是
 }
 type categoryResp struct {
