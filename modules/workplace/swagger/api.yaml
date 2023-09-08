@@ -40,14 +40,14 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    get:  
+    get:
       tags:
         - "workplaceManager"
       summary: "获取分类"
@@ -63,7 +63,7 @@ paths:
           schema:
             type: array
             items:
-              properties: 
+              properties:
                 category_no:
                   type: string
                   description: "分类编号"
@@ -106,7 +106,144 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/category/app:
+    get:
+      tags:
+        - "workplaceManager"
+      summary: "获取分类下所有app"
+      description: "获取分类下所有app"
+      operationId: "m category app list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    post:
+      tags:
+        - "workplaceManager"
+      summary: "新增分类下app"
+      description: "新增分类下app"
+      operationId: "m category app add"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "appids"
+          required: true
+          schema:
+            type: object
+            properties:
+              category_no:
+                type: string
+                description: "分类编号"
+              app_ids:
+                type: array
+                items:
+                  type: string
+                  description: "app id"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "workplaceManager"
+      summary: "删除分类下app"
+      description: "删除分类下app"
+      operationId: "m category app delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+        - in: "query"
+          name: "app_id"
+          type: string
+          description: "应用ID"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/category/app/reorder:
+    put:
+      tags:
+        - "workplaceManager"
+      summary: "排序分类下app"
+      description: "排序分类下app"
+      operationId: "m category app reorder"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "appids"
+          required: true
+          schema:
+            type: object
+            properties:
+              category_no:
+                type: string
+                description: "分类编号"
+              app_ids:
+                type: array
+                items:
+                  type: string
+                  description: "app id"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -132,9 +269,6 @@ paths:
           schema:
             type: object
             properties:
-              category_no:
-                type: string
-                description: "所属分类编号"
               icon:
                 type: string
                 description: "应用logo"
@@ -150,9 +284,12 @@ paths:
               jump_type:
                 type: integer
                 description: "打开方式 0.网页 1.原生"
-              route:
+              app_route:
                 type: string
-                description: "打开地址"
+                description: "app打开地址"
+              web_route:
+                type: string
+                description: "web打开地址"
               is_paid_app:
                 type: integer
                 description: "是否付费应用 1.是"
@@ -160,14 +297,35 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    put: 
+    get:
+      tags:
+        - "workplaceManager"
+      summary: "app列表"
+      description: "app列表"
+      operationId: "m list app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+    put:
       tags:
         - "workplaceManager"
       summary: "修改app"
@@ -188,12 +346,9 @@ paths:
               app_id:
                 type: string
                 description: "应用ID"
-              status: 
+              status:
                 type: integer
                 description: "是否可用 1.是"
-              category_no:
-                type: string
-                description: "所属分类编号"
               icon:
                 type: string
                 description: "应用logo"
@@ -209,9 +364,12 @@ paths:
               jump_type:
                 type: integer
                 description: "打开方式 0.网页 1.原生"
-              route:
+              app_route:
                 type: string
-                description: "打开地址"
+                description: "app打开地址"
+              web_route:
+                type: string
+                description: "web打开地址"
               is_paid_app:
                 type: integer
                 description: "是否付费应用 1.是"
@@ -219,14 +377,14 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    delete: 
+    delete:
       tags:
         - "workplaceManager"
       summary: "删除app"
@@ -242,16 +400,11 @@ paths:
           type: string
           description: "应用ID"
           required: true
-        - in: "query"
-          name: "category_no"
-          type: string
-          description: "分类ID"
-          required: true
       responses:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -280,7 +433,7 @@ paths:
               cover:
                 type: string
                 description: "封面"
-              title: 
+              title:
                 type: string
                 description: "标题"
               description:
@@ -296,14 +449,65 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
-    delete: 
+    get:
+      tags:
+        - "workplaceManager"
+      summary: "横幅列表"
+      description: "横幅列表"
+      operationId: "m list banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/banner"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    put:
+      tags:
+        - "workplaceManager"
+      summary: "修改横幅"
+      description: "修改横幅"
+      operationId: "m update banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "添加app数据"
+          required: true
+          schema:
+            $ref: "#/definitions/banner"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
       tags:
         - "workplaceManager"
       summary: "删除横幅"
@@ -323,7 +527,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -403,7 +607,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -430,7 +634,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -464,7 +668,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -488,7 +692,7 @@ paths:
           schema:
             type: array
             items:
-              properties: 
+              properties:
                 category_no:
                   type: string
                   description: "分类编号"
@@ -590,7 +794,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-    delete: 
+    delete:
       tags:
         - "workplace"
       summary: "删除用户使用记录"
@@ -628,6 +832,9 @@ definitions:
   banner:
     type: "object"
     properties:
+      banner_no:
+        type: string
+        description: "横幅编号"
       cover:
         type: string
         description: "横幅封面"
@@ -655,9 +862,6 @@ definitions:
       sort_num:
         type: integer
         description: "排序编号"
-      category_no:
-        type: string
-        description: "所属分类编号"
       icon:
         type: string
         description: "应用logo"
@@ -676,9 +880,12 @@ definitions:
       jump_type:
         type: integer
         description: "打开方式 1.原生 0.网页"
-      route:
+      app_route:
         type: string
-        description: "应用打开地址"
+        description: "app应用打开地址"
+      web_route:
+        type: string
+        description: "web应用打开地址"
       is_paid_app:
         type: integer
         description: "是否为付费应用"

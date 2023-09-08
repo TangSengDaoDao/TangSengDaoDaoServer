@@ -32,7 +32,7 @@ paths:
         - in: "query"
           name: "type"
           type: string
-          description: "文件类型 'momentcover(动态封面)', 'moment(动态)', 'sticker(贴图)', 'chat(聊天)', 'report(举报)', 'common(通用)', 'chatbg(聊天背景)' "
+          description: "文件类型 'momentcover(动态封面)', 'moment(动态)', 'sticker(贴图)', 'chat(聊天)', 'report(举报)', 'common(通用)', 'chatbg(聊天背景)', 'workplaceappicon(工作台appicon)', 'workplacebanner(工作台横幅)' "
           required: true
       responses:
         200:

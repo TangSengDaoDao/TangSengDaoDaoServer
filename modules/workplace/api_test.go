@@ -58,15 +58,14 @@ func TestUserAddApp(t *testing.T) {
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
 	var appId = "wukongIM"
-	var categoryNo = "chat"
 	err = wm.db.insertAPP(&appModel{
 		AppID:       appId,
-		CategoryNo:  categoryNo,
 		Icon:        "xxxxx",
 		Name:        "悟空IM",
 		Description: "悟空IM让信息传递更简单",
 		JumpType:    0,
-		Route:       "http://www.githubim.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
@@ -92,24 +91,24 @@ func TestUserGetApp(t *testing.T) {
 	var appId2 = "tsdd"
 	err = wm.db.insertAPP(&appModel{
 		AppID:       appId1,
-		CategoryNo:  "im",
 		Icon:        "xxxxx",
 		Name:        "悟空IM",
 		Description: "悟空IM让信息传递更简单",
 		JumpType:    0,
-		Route:       "http://www.githubim.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
 	err = wm.db.insertAPP(&appModel{
 		AppID:       appId2,
-		CategoryNo:  "chat",
 		Icon:        "xxxxx",
 		Name:        "唐僧叨叨",
 		Description: "唐僧叨叨让企业轻松拥有自己的即时通讯",
 		JumpType:    0,
-		Route:       "https://tangsengdaodao.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
@@ -219,6 +218,18 @@ func TestGetAppWithCategory(t *testing.T) {
 		SortNum:    1,
 	})
 	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		CategoryNo: categoryNo,
+		AppId:      "wkim",
+		SortNum:    1,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		CategoryNo: categoryNo,
+		AppId:      "tsdd",
+		SortNum:    10,
+	})
+	assert.NoError(t, err)
 	err = wp.db.insertUserApp(&userAppModel{
 		AppID:   "wkim",
 		SortNum: 1,
@@ -227,24 +238,24 @@ func TestGetAppWithCategory(t *testing.T) {
 	assert.NoError(t, err)
 	err = wm.db.insertAPP(&appModel{
 		AppID:       "wkim",
-		CategoryNo:  categoryNo,
 		Icon:        "xxxxx",
 		Name:        "悟空IM",
 		Description: "悟空IM让信息传递更简单",
 		JumpType:    0,
-		Route:       "http://www.githubim.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
 	err = wm.db.insertAPP(&appModel{
 		AppID:       "tsdd",
-		CategoryNo:  categoryNo,
 		Icon:        "xxxxx",
 		Name:        "唐僧叨叨",
 		Description: "唐僧叨叨让企业轻松拥有自己的即时通讯",
 		JumpType:    0,
-		Route:       "https://tangsengdaodao.com",
+		AppRoute:    "http://www.githubim.com",
+		WebRoute:    "http://www.githubim.com",
 		Status:      1,
 		IsPaidApp:   0,
 	})
@@ -263,11 +274,10 @@ func TestAddRecord(t *testing.T) {
 	assert.NoError(t, err)
 	appID := "tsdd"
 	err = wm.db.insertAPP(&appModel{
-		AppID:      appID,
-		Name:       "唐僧叨叨",
-		Icon:       "xxx",
-		CategoryNo: "chat",
-		Status:     1,
+		AppID:  appID,
+		Name:   "唐僧叨叨",
+		Icon:   "xxx",
+		Status: 1,
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -289,19 +299,17 @@ func TestGetRecord(t *testing.T) {
 	appID1 := "wkim"
 	appID2 := "tsdd"
 	err = wm.db.insertAPP(&appModel{
-		AppID:      appID2,
-		Name:       "唐僧叨叨",
-		Icon:       "xxx",
-		CategoryNo: "chat",
-		Status:     1,
+		AppID:  appID2,
+		Name:   "唐僧叨叨",
+		Icon:   "xxx",
+		Status: 1,
 	})
 	assert.NoError(t, err)
 	err = wm.db.insertAPP(&appModel{
-		AppID:      appID1,
-		Name:       "悟空IM",
-		Icon:       "xxx",
-		CategoryNo: "im",
-		Status:     1,
+		AppID:  appID1,
+		Name:   "悟空IM",
+		Icon:   "xxx",
+		Status: 1,
 	})
 	assert.NoError(t, err)
 	err = wp.db.insertRecord(&recordModel{
