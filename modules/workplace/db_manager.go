@@ -125,6 +125,11 @@ func (d *managerDB) queryAllApp() ([]*appModel, error) {
 	_, err := d.session.Select("*").From("workplace_app").OrderDir("created_at", false).Load(&models)
 	return models, err
 }
+func (d *managerDB) queryMaxSortNumCategoryApp(categoryNo string) (*categoryAppModel, error) {
+	var m *categoryAppModel
+	_, err := d.session.Select("*").From("workplace_category_app").Where("category_no=?", categoryNo).OrderDir("sort_num", false).Limit(1).Load(&m)
+	return m, err
+}
 
 type categoryAppModel struct {
 	CategoryNo string
