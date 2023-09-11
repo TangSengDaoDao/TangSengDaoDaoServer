@@ -507,7 +507,7 @@ func (w *Webhook) push(toUser *user.Resp, msgResp msgOfflineNotify) (pushResp, e
 	}
 	pusher := w.pushMap[common.DeviceType(deviceType)][bundleID]
 	if pusher == nil {
-		w.Warn("不支持的推送设备！", zap.String("deviceType", deviceType), zap.String("uid", toUID))
+		w.Warn("不支持的推送设备！", zap.String("deviceType", deviceType), zap.String("uid", toUID), zap.String("bundleID", bundleID))
 		return pushResp{
 			deviceType:  deviceType,
 			deviceToken: deviceToken,
