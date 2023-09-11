@@ -190,7 +190,7 @@ func (w *Webhook) handleMessageNotify(messages []MsgResp) ([]string, error) {
 		messageM.ChannelID = fakeChannelID
 		err := w.messageDB.insertOrUpdateTx(messageM, tx)
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			w.Error("插入消息失败！", zap.Error(err))
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func (w *Webhook) handleMessageNotify(messages []MsgResp) ([]string, error) {
 
 	}
 	if err := tx.Commit(); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		w.Error("提交事务失败！", zap.Error(err))
 		return nil, err
 	}
