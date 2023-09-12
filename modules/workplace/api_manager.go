@@ -148,23 +148,33 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 		return
 	}
 	saveIds := make([]string, 0)
-	if len(apps) > 0 {
+	for _, appId := range req.AppIds {
 		var isAdd = true
-		for _, appId := range req.AppIds {
+		if len(apps) > 0 {
 			for _, app := range apps {
 				if appId == app.AppID {
 					isAdd = false
 					break
 				}
 			}
-			if isAdd {
-				saveIds = append(saveIds, appId)
-			}
+		}
+		if isAdd {
+			saveIds = append(saveIds, appId)
 		}
 	}
 	if len(saveIds) == 0 {
 		c.ResponseOK()
 		return
+	}
+	maxSortNumApp, err := m.db.queryMaxSortNumCategoryApp(req.CategoryNo)
+	if err != nil {
+		m.Error("查询分类应用最大序号错误", zap.Error(err))
+		c.ResponseError(errors.New("查询分类应用最大序号错误"))
+		return
+	}
+	maxNum := 0
+	if maxSortNumApp != nil {
+		maxNum = maxSortNumApp.SortNum
 	}
 	tx, _ := m.ctx.DB().Begin()
 	defer func() {
@@ -173,7 +183,7 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
-	var tempSortNum = len(saveIds)
+	var tempSortNum = len(saveIds) + maxNum
 	for _, appId := range saveIds {
 		err := m.db.insertCategoryAppWithTx(&categoryAppModel{
 			AppId:      appId,
