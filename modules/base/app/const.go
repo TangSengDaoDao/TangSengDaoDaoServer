@@ -13,3 +13,14 @@ const (
 func (s Status) Int() int {
 	return int(s)
 }
+
+func (s Status) String() string {
+	switch s {
+	case StatusDisable:
+		return "disable"
+	case StatusEnable:
+		return "enable"
+	default:
+		return "unknown"
+	}
+}

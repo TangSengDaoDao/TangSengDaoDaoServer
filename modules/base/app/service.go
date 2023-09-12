@@ -83,11 +83,12 @@ func (s *Service) CreateApp(r Req) (*Resp, error) {
 
 }
 
-// Resp app返回
 type Resp struct {
-	AppID  string
-	AppKey string
-	Status Status
+	AppID   string
+	AppKey  string
+	AppName string
+	AppLogo string
+	Status  Status
 }
 
 type Req struct {

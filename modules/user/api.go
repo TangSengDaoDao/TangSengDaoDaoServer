@@ -23,6 +23,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/app"
 	commonapi "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
 	common2 "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/common"
@@ -60,43 +61,49 @@ type User struct {
 
 	setting *Setting
 	log.Log
-	ctx                   *config.Context
-	userDeviceTokenPrefix string
-	loginUUIDPrefix       string
-	loginLog              *LoginLog
-	identitieDB           *identitieDB
-	onetimePrekeysDB      *onetimePrekeysDB
-	maillistDB            *maillistDB
-	commonService         common2.IService
-	deviceFlagDB          *deviceFlagDB
-	deviceFlagsCache      []*deviceFlagModel
+	ctx                      *config.Context
+	userDeviceTokenPrefix    string
+	loginUUIDPrefix          string
+	openapiAuthcodePrefix    string
+	openapiAccessTokenPrefix string
+	loginLog                 *LoginLog
+	identitieDB              *identitieDB
+	onetimePrekeysDB         *onetimePrekeysDB
+	maillistDB               *maillistDB
+	commonService            common2.IService
+	deviceFlagDB             *deviceFlagDB
+	deviceFlagsCache         []*deviceFlagModel
+	appService               app.IService
 }
 
 // New New
 func New(ctx *config.Context) *User {
 	u := &User{
-		ctx:                   ctx,
-		db:                    NewDB(ctx),
-		deviceDB:              newDeviceDB(ctx),
-		friendDB:              newFriendDB(ctx),
-		smsServie:             commonapi.NewSMSService(ctx),
-		settingDB:             NewSettingDB(ctx.DB()),
-		setting:               NewSetting(ctx),
-		userDeviceTokenPrefix: common.UserDeviceTokenPrefix,
-		loginUUIDPrefix:       "loginUUID:",
-		onlineDB:              newOnlineDB(ctx),
-		onlineService:         NewOnlineService(ctx),
-		Log:                   log.NewTLog("User"),
-		fileService:           file.NewService(ctx),
-		userService:           NewService(ctx),
-		loginLog:              NewLoginLog(ctx),
-		identitieDB:           newIdentitieDB(ctx),
-		onetimePrekeysDB:      newOnetimePrekeysDB(ctx),
-		maillistDB:            newMaillistDB(ctx),
-		deviceFlagDB:          newDeviceFlagDB(ctx),
-		giteeDB:               newGiteeDB(ctx),
-		githubDB:              newGithubDB(ctx),
-		commonService:         common2.NewService(ctx),
+		ctx:                      ctx,
+		db:                       NewDB(ctx),
+		deviceDB:                 newDeviceDB(ctx),
+		friendDB:                 newFriendDB(ctx),
+		smsServie:                commonapi.NewSMSService(ctx),
+		settingDB:                NewSettingDB(ctx.DB()),
+		setting:                  NewSetting(ctx),
+		userDeviceTokenPrefix:    common.UserDeviceTokenPrefix,
+		loginUUIDPrefix:          "loginUUID:",
+		openapiAuthcodePrefix:    "openapi:authcodePrefix:",
+		openapiAccessTokenPrefix: "openapi:accessTokenPrefix:",
+		onlineDB:                 newOnlineDB(ctx),
+		onlineService:            NewOnlineService(ctx),
+		Log:                      log.NewTLog("User"),
+		fileService:              file.NewService(ctx),
+		userService:              NewService(ctx),
+		loginLog:                 NewLoginLog(ctx),
+		identitieDB:              newIdentitieDB(ctx),
+		onetimePrekeysDB:         newOnetimePrekeysDB(ctx),
+		maillistDB:               newMaillistDB(ctx),
+		deviceFlagDB:             newDeviceFlagDB(ctx),
+		giteeDB:                  newGiteeDB(ctx),
+		githubDB:                 newGithubDB(ctx),
+		commonService:            common2.NewService(ctx),
+		appService:               app.NewService(ctx),
 	}
 	u.updateSystemUserToken()
 	source.SetUserProvider(u)
@@ -145,6 +152,10 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		// #################### 用户通讯录 ####################
 		user.POST("/maillist", u.addMaillist)
 		user.GET("/maillist", u.getMailList)
+
+		// #################### openapi ####################
+		user.GET("/openapi/authcode", u.authcodeGet) // 获取用户的授权authcode
+
 	}
 	v := r.Group("/v1")
 	{
@@ -173,6 +184,10 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		// gitee
 		v.GET("/user/gitee", u.gitee)            // gitee认证页面
 		v.GET("/user/oauth/gitee", u.giteeOAuth) // gitee登录
+
+		// #################### openapi ####################
+		user.GET("/openapi/access_token", u.accessTokenGet) // 获取用户的授权access_token
+		user.GET("/openapi/userinfo", u.userinfoGet)        // 获取用户信息
 	}
 
 	u.ctx.AddOnlineStatusListener(u.onlineService.listenOnlineStatus) // 监听在线状态

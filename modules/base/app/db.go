@@ -35,8 +35,10 @@ func (d *DB) insert(m *model) error {
 }
 
 type model struct {
-	AppID  string
-	AppKey string
-	Status int
+	AppID   string
+	AppKey  string
+	AppName string
+	AppLogo string
+	Status  int
 	db.BaseModel
 }
