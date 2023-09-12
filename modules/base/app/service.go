@@ -41,9 +41,11 @@ func (s *Service) GetApp(appID string) (*Resp, error) {
 		return nil, fmt.Errorf("app[%s]不存在！", appID)
 	}
 	return &Resp{
-		AppID:  appM.AppID,
-		AppKey: appM.AppKey,
-		Status: Status(appM.Status),
+		AppID:   appM.AppID,
+		AppName: appM.AppName,
+		AppLogo: appM.AppLogo,
+		AppKey:  appM.AppKey,
+		Status:  Status(appM.Status),
 	}, nil
 }
 
