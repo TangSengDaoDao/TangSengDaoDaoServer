@@ -19,7 +19,7 @@ func New(ctx *config.Context) *App {
 }
 
 func (a *App) Route(r *wkhttp.WKHttp) {
-	r.GET("/apps/:app_id", a.get)
+	r.GET("/v1/apps/:app_id", a.get)
 }
 
 func (a *App) get(c *wkhttp.Context) {
