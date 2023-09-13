@@ -186,8 +186,8 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		v.GET("/user/oauth/gitee", u.giteeOAuth) // gitee登录
 
 		// #################### openapi ####################
-		user.GET("/openapi/access_token", u.accessTokenGet) // 获取用户的授权access_token
-		user.GET("/openapi/userinfo", u.userinfoGet)        // 获取用户信息
+		v.GET("/openapi/access_token", u.accessTokenGet) // 获取用户的授权access_token
+		v.GET("/openapi/userinfo", u.userinfoGet)        // 获取用户信息
 	}
 
 	u.ctx.AddOnlineStatusListener(u.onlineService.listenOnlineStatus) // 监听在线状态
