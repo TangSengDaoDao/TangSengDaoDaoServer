@@ -60,6 +60,8 @@
 |:---:|:---:|:---:|:---:|
 |[点击体验](https://web.botgate.cn)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)|
 
+`app端在登录页面长按标题可以进入手机号登录`
+
 演示账号：
 
 | 账号 | 密码 |
@@ -70,7 +72,7 @@
 | 15900000005 | a1234567 |
 | 15900000006 | a1234567 |
 
-`app端在登录页面长按标题可以进入手机号登录`
+
 
 架构图
 ------------
