@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -16,6 +17,39 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
+
+// 通过用户名注册
+func (u *User) usernameRegister(c *wkhttp.Context) {
+	var req usernameRegisterReq
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	if req.Username == "" {
+		c.ResponseError(errors.New("用户名不能为空"))
+		return
+	}
+	if strings.TrimSpace(req.Password) == "" {
+		c.Response(errors.New("密码不能为空！"))
+		return
+	}
+	if len(req.Username) < 8 || len(req.Username) > 22 {
+		c.ResponseError(errors.New("用户名必须在8-22位"))
+		return
+	}
+	userInfo, err := u.db.QueryByUsername(req.Username)
+	if err != nil {
+		u.Error("查询用户信息失败！", zap.String("username", req.Username))
+		c.ResponseError(err)
+		return
+	}
+	if userInfo != nil {
+		c.ResponseError(errors.New("该用户名已存在"))
+		return
+	}
+	// 通过用户名注册
+	u.registerWithUsername(req.Username, req.Password, int(req.Flag), req.Device, c)
+}
 
 // 用户名登录
 func (u *User) usernameLogin(c *wkhttp.Context) {
@@ -46,31 +80,31 @@ func (u *User) usernameLogin(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	if userInfo != nil {
-		if util.MD5(util.MD5(req.Password)) != userInfo.Password {
-			c.ResponseError(errors.New("密码不正确！"))
-			return
-		}
-		if userInfo.Web3PublicKey == "" {
-			c.ResponseWithStatus(http.StatusBadRequest, map[string]interface{}{
-				"status": 110,
-				"msg":    "需要上传公钥",
-				"uid":    userInfo.UID,
-			})
-			return
-		}
-		result, err := u.execLogin(userInfo, config.DeviceFlag(req.Flag), req.Device, loginSpanCtx)
-		if err != nil {
-			c.ResponseError(err)
-			return
-		}
-		c.Response(result)
-		publicIP := util.GetClientPublicIP(c.Request)
-		go u.sentWelcomeMsg(publicIP, userInfo.UID)
-	} else {
-		// 通过用户名注册
-		u.registerWithUsername(req.Username, req.Password, int(req.Flag), req.Device, c)
+	if userInfo == nil {
+		c.ResponseError(errors.New("该用户名不存在"))
+		return
 	}
+
+	if util.MD5(util.MD5(req.Password)) != userInfo.Password {
+		c.ResponseError(errors.New("密码不正确！"))
+		return
+	}
+	if userInfo.Web3PublicKey == "" {
+		c.ResponseWithStatus(http.StatusBadRequest, map[string]interface{}{
+			"status": 110,
+			"msg":    "需要上传公钥",
+			"uid":    userInfo.UID,
+		})
+		return
+	}
+	result, err := u.execLogin(userInfo, config.DeviceFlag(req.Flag), req.Device, loginSpanCtx)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	c.Response(result)
+	publicIP := util.GetClientPublicIP(c.Request)
+	go u.sentWelcomeMsg(publicIP, userInfo.UID)
 }
 func (u *User) registerWithUsername(username string, password string, flag int, device *deviceReq, c *wkhttp.Context) {
 	registerSpan := u.ctx.Tracer().StartSpan(
@@ -333,4 +367,11 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 		"verify_text": verifyText,
 	})
 
+}
+
+type usernameRegisterReq struct {
+	Username string     `json:"username"` // 用户名
+	Password string     `json:"password"`
+	Flag     uint8      `json:"flag"`   // 注册设备的标记 0.APP 1.PC
+	Device   *deviceReq `json:"device"` //注册用户设备信息
 }

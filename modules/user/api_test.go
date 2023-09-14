@@ -52,12 +52,12 @@ func TestUser_Register(t *testing.T) {
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"phone":"13600000002"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"setting":{"search_by_phone":1,"search_by_short":1,"new_msg_notice":1,"msg_show_detail":1,"voice_on":1,"shock_on":1}`))
 }
-func TestUsernameLogin(t *testing.T) {
+func TestUsernameRegister(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	u := New(ctx)
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
-	username := "userone"
+	username := "userone123123"
 	password := "123123"
 	u.db.Insert(&Model{
 		UID:      "123",
@@ -65,6 +65,36 @@ func TestUsernameLogin(t *testing.T) {
 		Password: util.MD5(util.MD5(password)),
 		Name:     username,
 		ShortNo:  "123",
+		Status:   1,
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/v1/user/usernameregister", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"username": "skldkdlskds",
+		"password": password,
+		"device": map[string]interface{}{
+			"device_id":    "device_id3",
+			"device_name":  "device_name1",
+			"device_model": "device_model1",
+		},
+	}))))
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"status":110`))
+}
+func TestUsernameLogin(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone123123"
+	password := "123123"
+	u.db.Insert(&Model{
+		UID:           "123",
+		Username:      username,
+		Password:      util.MD5(util.MD5(password)),
+		Name:          username,
+		ShortNo:       "123",
+		Status:        1,
+		Web3PublicKey: "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
 	})
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/v1/user/usernamelogin", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
@@ -77,7 +107,7 @@ func TestUsernameLogin(t *testing.T) {
 		},
 	}))))
 	s.GetRoute().ServeHTTP(w, req)
-	assert.Equal(t, true, strings.Contains(w.Body.String(), `"status":110`))
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"username":userone123123`))
 }
 func TestUploadWeb3PublicKey(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
