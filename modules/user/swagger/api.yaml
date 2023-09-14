@@ -341,7 +341,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /manager/user/liftban/{uid}/{status}: 
+  /manager/user/liftban/{uid}/{status}:
     put:
       tags:
         - "userManager"
@@ -449,7 +449,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-    get:  
+    get:
       tags:
         - "userManager"
       summary: "管理员列表【超级管理员才能操作】"
@@ -465,14 +465,14 @@ paths:
           schema:
             type: array
             items:
-              properties: 
+              properties:
                 uid:
                   type: string
                   description: "用户uid"
                 name:
                   type: string
                   description: "用户名"
-                username: 
+                username:
                   type: string
                   description: "登录用户名"
                 register_time:
@@ -1031,6 +1031,295 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /user/usernameregister:
+    post:
+      tags:
+        - "user"
+      summary: "用户名注册"
+      description: "用户名注册"
+      operationId: "user usernameregister"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "登录请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: "用户名[8-22位]"
+              password:
+                type: string
+                description: "密码"
+              device:
+                type: object
+                properties:
+                  device_id:
+                    type: string
+                    description: "设备ID"
+                  device_name:
+                    type: string
+                    description: "设备名称"
+                  device_model:
+                    type: string
+                    description: "设备型号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "用户id，注册成功后需上传web3公钥"    
+        400:
+          description: "错误"
+          schema:
+           $ref: "#/definitions/response"     
+  /user/usernamelogin:
+    post:
+      tags:
+        - "user"
+      summary: "用户名登录"
+      description: "用户名登录"
+      operationId: "user usernamelogin"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "登录请求"
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: "用户名[8-22位]"
+              password:
+                type: string
+                description: "密码"
+              device:
+                type: object
+                properties:
+                  device_id:
+                    type: string
+                    description: "设备ID"
+                  device_name:
+                    type: string
+                    description: "设备名称"
+                  device_model:
+                    type: string
+                    description: "设备型号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/UserLoginResp"
+        400:
+          description: "错误"
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+                description: "110 需要上传web3公钥"
+              uid:
+                type: string
+                description: "用户id"
+  /user/web3publickey:
+    post:
+      tags:
+        - "user"
+      summary: "上传web3公钥"
+      description: "上传web3公钥"
+      operationId: "upload web3 公钥"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "提交数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              uid:
+                type: string
+                description: "用户id"
+              web3_public_key:
+                type: string
+                description: "web3公钥"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/UserLoginResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /user/web3verifytext:
+    get:
+      tags:
+        - "user"
+      summary: "获取web3签名明文"
+      description: "获取web3签名明文"
+      operationId: "get web verify text"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "uid"
+          type: integer
+          description: "用户ID"
+          required: true
+        - in: "query"
+          name: "type"
+          type: string
+          description: "校验类型‘password’ ‘login’"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              verify_text:
+                type: string
+                description: "需要签名的明文"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /user/web3verifysign:
+    post:
+      tags:
+        - "user"
+      summary: "验证web3签名"
+      description: "验证web3签名"
+      operationId: "verify sign"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "签名信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              verify_text:
+                type: string
+                description: "明文"
+              sign_text:
+                type: string
+                description: "web3 sign 密文"
+              type:
+                type: string
+                description: "校验类型 ‘password’ | ’login‘"
+              uid:
+                type: string
+                description: "用户ID"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /user/updatepassword: 
+    put:
+      tags:
+        - "user"
+      summary: "修改登录密码"
+      description: "修改登录密码"
+      operationId: "update login pwd"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "用户信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              password:
+                type: string
+                description: "旧密码"
+              new_password:
+                type: string
+                description: "新密码"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
+  /user/pwdforget_web3:
+    post:
+      tags:
+        - "user"
+      summary: "通过web3验证重置密码"
+      description: "通过web3验证重置密码"
+      operationId: "reset password with web3"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "密钥信息"
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: "用户名"
+              password:
+                type: string
+                description: "新密码"
+              verify_text:
+                type: string
+                description: "明文"
+              sign_text:
+                type: string
+                description: "web3 sign 密文"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
 
   /user/current:
     put:

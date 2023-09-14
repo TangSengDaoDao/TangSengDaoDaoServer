@@ -1,5 +1,12 @@
 package user
 
+const (
+	// Web3VerifyLogin 校验登录
+	Web3VerifyLogin string = "login"
+	// Web3VerifyPassword 校验密码
+	Web3VerifyPassword string = "password"
+)
+
 // Status 状态
 type Status int
 

@@ -303,6 +303,7 @@ type Model struct {
 	WXUnionid         string // 微信unionid
 	GiteeUID          string // gitee uid
 	GithubUID         string // github uid
+	Web3PublicKey     string // web3公钥
 	db.BaseModel
 }
 

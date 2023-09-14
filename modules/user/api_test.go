@@ -52,6 +52,158 @@ func TestUser_Register(t *testing.T) {
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"phone":"13600000002"`))
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"setting":{"search_by_phone":1,"search_by_short":1,"new_msg_notice":1,"msg_show_detail":1,"voice_on":1,"shock_on":1}`))
 }
+func TestUsernameRegister(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone123123"
+	password := "123123"
+	u.db.Insert(&Model{
+		UID:      "123",
+		Username: username,
+		Password: util.MD5(util.MD5(password)),
+		Name:     username,
+		ShortNo:  "123",
+		Status:   1,
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/v1/user/usernameregister", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"username": "skldkdlskds",
+		"password": password,
+		"device": map[string]interface{}{
+			"device_id":    "device_id3",
+			"device_name":  "device_name1",
+			"device_model": "device_model1",
+		},
+	}))))
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"status":110`))
+}
+func TestUsernameLogin(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone123123"
+	password := "123123"
+	u.db.Insert(&Model{
+		UID:           "123",
+		Username:      username,
+		Password:      util.MD5(util.MD5(password)),
+		Name:          username,
+		ShortNo:       "123",
+		Status:        1,
+		Web3PublicKey: "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/v1/user/usernamelogin", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"username": username,
+		"password": password,
+		"device": map[string]interface{}{
+			"device_id":    "device_id3",
+			"device_name":  "device_name1",
+			"device_model": "device_model1",
+		},
+	}))))
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"username":userone123123`))
+}
+func TestUploadWeb3PublicKey(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone"
+	password := "123123"
+	uid := "123"
+	u.db.Insert(&Model{
+		UID:      uid,
+		Username: username,
+		Password: util.MD5(util.MD5(password)),
+		Name:     username,
+		ShortNo:  "123",
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/v1/user/web3publickey", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"uid":             uid,
+		"web3_public_key": "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
+	}))))
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"uid":123`))
+}
+func TestGetVerifyText(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	uid := "123"
+	err = u.db.Insert(&Model{
+		UID:           uid,
+		Username:      "123",
+		ShortNo:       "123",
+		Status:        1,
+		Web3PublicKey: "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
+	})
+	assert.NoError(t, err)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/user/web3verifytext?uid=%s", uid), nil)
+	s.GetRoute().ServeHTTP(w, req)
+	panic(w.Body)
+}
+func TestUpdatePassword(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone"
+	password := "123123"
+	u.db.Insert(&Model{
+		UID:           testutil.UID,
+		Username:      username,
+		Password:      util.MD5(util.MD5(password)),
+		Name:          username,
+		ShortNo:       "123",
+		Web3PublicKey: "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
+	})
+	w := httptest.NewRecorder()
+
+	req, _ := http.NewRequest("PUT", "/v1/user/updatepassword", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"new_password": "new_pwd_123",
+		"password":     password,
+	}))))
+	req.Header.Set("token", testutil.Token)
+
+	s.GetRoute().ServeHTTP(w, req)
+	panic(w.Body)
+	// assert.Equal(t, http.StatusOK, w.Code)
+}
+func TestResetPwd(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone"
+	password := "123123"
+	u.db.Insert(&Model{
+		UID:           "123",
+		Username:      username,
+		Password:      util.MD5(util.MD5(password)),
+		Name:          username,
+		ShortNo:       "123",
+		Web3PublicKey: "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/v1/user/pwdforget_web3", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"username":    username,
+		"password":    "new_pwd_123",
+		"verify_text": "hello123",
+		"sign_text":   "44459fd9146290dcd913350bae6fe79fd48050d39b3c1c315e8f032af3b555d41af6f2c07d4d0f1d8d5dd041af8175e657ae981cf47e58aa5547ab08fc7066e401",
+	}))))
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
 func TestUser_Login(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	u := New(ctx)
