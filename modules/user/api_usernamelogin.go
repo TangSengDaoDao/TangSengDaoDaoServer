@@ -48,7 +48,7 @@ func (u *User) usernameRegister(c *wkhttp.Context) {
 		return
 	}
 	// 通过用户名注册
-	u.registerWithUsername(req.Username, req.Password, int(req.Flag), req.Device, c)
+	u.registerWithUsername(req.Username, req.Name, req.Password, int(req.Flag), req.Device, c)
 }
 
 // 用户名登录
@@ -106,7 +106,7 @@ func (u *User) usernameLogin(c *wkhttp.Context) {
 	publicIP := util.GetClientPublicIP(c.Request)
 	go u.sentWelcomeMsg(publicIP, userInfo.UID)
 }
-func (u *User) registerWithUsername(username string, password string, flag int, device *deviceReq, c *wkhttp.Context) {
+func (u *User) registerWithUsername(username string, name string, password string, flag int, device *deviceReq, c *wkhttp.Context) {
 	registerSpan := u.ctx.Tracer().StartSpan(
 		"user.register",
 		opentracing.ChildOf(c.GetSpanContext()),
@@ -120,7 +120,7 @@ func (u *User) registerWithUsername(username string, password string, flag int, 
 	var model = &createUserModel{
 		UID:      uid,
 		Sex:      1,
-		Name:     username,
+		Name:     name,
 		Zone:     "",
 		Phone:    "",
 		Username: username,
@@ -151,10 +151,8 @@ func (u *User) registerWithUsername(username string, password string, flag int, 
 		c.ResponseError(errors.New("注册失败！"))
 		return
 	}
-	c.ResponseWithStatus(http.StatusBadRequest, map[string]interface{}{
-		"status": 110,
-		"msg":    "需要上传公钥",
-		"uid":    uid,
+	c.Response(map[string]interface{}{
+		"uid": uid,
 	})
 }
 
@@ -183,6 +181,10 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 		c.ResponseError(errors.New("校验字符不能为空"))
 		return
 	}
+	if req.SignText == "" {
+		c.ResponseError(errors.New("签名字符不能为空"))
+		return
+	}
 	user, err := u.db.QueryByUsername(req.Username)
 	if err != nil {
 		u.Error("查询用户信息错误", zap.Error(err))
@@ -198,7 +200,7 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 		return
 	}
 	// 判断签名明文是否存在
-	cacheKey := fmt.Sprintf("web3_verify:%s", user.UID)
+	cacheKey := fmt.Sprintf("web3_verify:%s_%s", user.UID, Web3VerifyPassword)
 	verifyText, err := u.ctx.GetRedisConn().GetString(cacheKey)
 	if err != nil {
 		u.Error("获取签名信息错误", zap.Error(err))
@@ -330,12 +332,90 @@ func (u *User) uploadWeb3PublicKey(c *wkhttp.Context) {
 	c.Response(newLoginUserDetailResp(userInfo, token, u.ctx))
 }
 
+// 验签
+func (u *User) web3verifySignature(c *wkhttp.Context) {
+	type reqVO struct {
+		VerifyText string `json:"verify_text"`
+		SignText   string `json:"sign_text"`
+		Type       string `json:"type"` // password | login
+		UID        string `json:"uid"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	if req.UID == "" {
+		c.ResponseError(errors.New("用户uid不能为空"))
+		return
+	}
+	if req.VerifyText == "" {
+		c.ResponseError(errors.New("校验字符不能为空"))
+		return
+	}
+	if req.SignText == "" {
+		c.ResponseError(errors.New("签名字符不能为空"))
+		return
+	}
+	if req.Type == "" || (req.Type != Web3VerifyLogin && req.Type != Web3VerifyPassword) {
+		c.ResponseError(errors.New("验证类型不匹配"))
+		return
+	}
+
+	user, err := u.db.QueryByUID(req.UID)
+	if err != nil {
+		u.Error("查询用户信息错误", zap.Error(err))
+		c.ResponseError(err)
+		return
+	}
+	if user == nil {
+		c.ResponseError(errors.New("该用户不存在"))
+		return
+	}
+	if user.Web3PublicKey == "" {
+		c.ResponseError(errors.New("该用户未上传公钥"))
+		return
+	}
+	// 判断签名明文是否存在
+	cacheKey := fmt.Sprintf("web3_verify:%s_%s", user.UID, req.Type)
+	verifyText, err := u.ctx.GetRedisConn().GetString(cacheKey)
+	if err != nil {
+		u.Error("获取签名信息错误", zap.Error(err))
+		c.ResponseError(err)
+		return
+	}
+	if verifyText == "" || req.VerifyText != verifyText {
+		c.ResponseError(errors.New("签名信息不存在"))
+		return
+	}
+
+	verify, err := u.verifySignature(user.Web3PublicKey, req.VerifyText, req.SignText)
+	if err != nil {
+		c.ResponseError(errors.New("校验签名错误"))
+		return
+	}
+	if !verify {
+		c.ResponseError(errors.New("签名错误"))
+		return
+	}
+	err = u.ctx.GetRedisConn().Del(cacheKey)
+	if err != nil {
+		u.Error("清除缓存错误", zap.Error(err))
+	}
+	c.ResponseOK()
+}
+
 // 获取验证字符串
 func (u *User) getVerifyText(c *wkhttp.Context) {
-	uid := c.Query("uid")
 
+	uid := c.Query("uid")
+	verifyType := c.Query("type")
 	if uid == "" {
 		c.ResponseError(errors.New("uid不能为空"))
+		return
+	}
+	if verifyType == "" || (verifyType != Web3VerifyLogin && verifyType != Web3VerifyPassword) {
+		c.ResponseError(errors.New("验证类型不匹配"))
 		return
 	}
 	user, err := u.db.QueryByUID(uid)
@@ -356,7 +436,7 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 	now := time.Now()
 	timeStr := strconv.Itoa(now.Year()) + fmt.Sprintf("%02d", now.Month()) + fmt.Sprintf("%02d", now.Day()) + fmt.Sprintf("%02d", now.Hour()) + fmt.Sprintf("%02d", now.Minute()) + fmt.Sprintf("%02d", now.Second())
 	verifyText := fmt.Sprintf("%s%s", randomStr, timeStr)
-	cacheKey := fmt.Sprintf("web3_verify:%s", uid)
+	cacheKey := fmt.Sprintf("web3_verify:%s_%s", uid, verifyType)
 	err = u.ctx.GetRedisConn().SetAndExpire(cacheKey, verifyText, time.Minute*5)
 	if err != nil {
 		u.Error("缓存校验信息错误", zap.Error(err))
@@ -369,7 +449,52 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 
 }
 
+// 修改登录密码
+func (u *User) updatePwd(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	type reqVO struct {
+		Password    string `json:"password"`
+		NewPassword string `json:"new_password"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	if req.Password == "" || req.NewPassword == "" {
+		c.ResponseError(errors.New("密码不能为空"))
+		return
+	}
+	if req.Password == req.NewPassword {
+		c.ResponseError(errors.New("新密码不能和旧密码相同"))
+		return
+	}
+	userInfo, err := u.db.QueryByUID(loginUID)
+	if err != nil {
+		u.Error("查询用户资料错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户资料错误"))
+		return
+	}
+	if userInfo == nil {
+		c.ResponseError(errors.New("该用户不存在"))
+		return
+	}
+	oldPwd := util.MD5(util.MD5(req.Password))
+	if oldPwd != userInfo.Password {
+		c.ResponseError(errors.New("旧密码错误"))
+		return
+	}
+	err = u.db.UpdateUsersWithField("password", util.MD5(util.MD5(req.NewPassword)), userInfo.UID)
+	if err != nil {
+		u.Error("修改登录密码错误", zap.Error(err))
+		c.ResponseError(errors.New("修改登录密码错误"))
+		return
+	}
+	c.ResponseOK()
+}
+
 type usernameRegisterReq struct {
+	Name     string     `json:"name"`     // 昵称
 	Username string     `json:"username"` // 用户名
 	Password string     `json:"password"`
 	Flag     uint8      `json:"flag"`   // 注册设备的标记 0.APP 1.PC

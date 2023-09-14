@@ -151,6 +151,33 @@ func TestGetVerifyText(t *testing.T) {
 	s.GetRoute().ServeHTTP(w, req)
 	panic(w.Body)
 }
+func TestUpdatePassword(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	username := "userone"
+	password := "123123"
+	u.db.Insert(&Model{
+		UID:           testutil.UID,
+		Username:      username,
+		Password:      util.MD5(util.MD5(password)),
+		Name:          username,
+		ShortNo:       "123",
+		Web3PublicKey: "03af80b90d25145da28c583359beb47b21796b2fe1a23c1511e443e7a64dfdb27d",
+	})
+	w := httptest.NewRecorder()
+
+	req, _ := http.NewRequest("PUT", "/v1/user/updatepassword", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"new_password": "new_pwd_123",
+		"password":     password,
+	}))))
+	req.Header.Set("token", testutil.Token)
+
+	s.GetRoute().ServeHTTP(w, req)
+	panic(w.Body)
+	// assert.Equal(t, http.StatusOK, w.Code)
+}
 func TestResetPwd(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	u := New(ctx)

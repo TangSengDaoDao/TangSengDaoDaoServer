@@ -142,6 +142,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		user.GET("/customerservices", u.customerservices)          //客服列表
 		user.DELETE("/destroy/:code", u.destroyAccount)            // 注销用户
 		user.POST("/sms/destroy", u.sendDestroyCode)               //获取注销账号短信验证码
+		user.PUT("/updatepassword", u.updatePwd)                   // 修改登录密码
 		// #################### 登录设备管理 ####################
 		user.GET("/devices", u.deviceList)                 // 用户登录设备
 		user.DELETE("/devices/:device_id", u.deviceDelete) // 删除登录设备
@@ -167,6 +168,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		v.POST("/user/web3publickey", u.uploadWeb3PublicKey)        // 上传web3公钥
 		v.POST("/user/pwdforget_web3", u.resetPwdWithWeb3PublicKey) // 通过web3公钥重置密码
 		v.GET("/user/web3verifytext", u.getVerifyText)              // 获取验证字符串
+		v.POST("/user/web3verifysign", u.web3verifySignature)       // 验证签名
 		// v.POST("user/wxlogin", u.wxLogin)
 		v.POST("/user/sms/forgetpwd", u.getForgetPwdSMS) //获取忘记密码验证码
 		v.POST("/user/pwdforget", u.pwdforget)           //重置登录密码
