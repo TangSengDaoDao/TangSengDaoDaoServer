@@ -1,0 +1,146 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "openapi"
+    description: "openapi"
+schemes:
+  - "https"
+basePath: "/v1"
+
+
+paths:
+  /openapi/authcode:
+    get:
+      tags:
+        - "openapi"
+      summary: "获取用户的授权authcode"
+      description: "获取用户的授权authcode"
+      operationId: "authcodeGet"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "app_id"
+          type: "string"
+          description: "申请的app_id"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/authcodeResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: [] 
+  /openapi/access_token:
+    get:
+      tags:
+        - "openapi"
+      summary: "获取用户的授权access_token"
+      description: "获取用户的授权access_token"
+      operationId: "accessTokenGet"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "authcode"
+          type: "string"
+          description: "授权code"
+          required: true
+        - in: "query"
+          name: "app_key"
+          type: "string"
+          description: "授权code"
+          required: true  
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/accessTokenResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+  /openapi/userinfo:
+    get:
+      tags:
+        - "openapi"
+      summary: "获取用户信息"
+      description: "获取用户信息"
+      operationId: "userinfoGet"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "access_token"
+          type: "string"
+          description: "获取的access_token"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/userinfoResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"          
+
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+definitions:
+    accessTokenResp:
+      type: "object"
+      properties:
+        access_token:
+          type: string
+          description: "access_token"
+        expire:
+          type: integer
+          description: "expire过期时间 单位秒" 
+    userinfoResp:
+      type: "object"
+      properties:
+        uid:
+          type: string
+          description: "用户唯一id"
+        name:
+          type: string
+          description: "用户名称" 
+        avatar:
+          type: string
+          description: "用户头像"    
+        app_id:
+          type: string
+          description: "应用ID"   
+    authcodeResp:
+      type: "object"
+      properties:
+        authcode:
+          type: string
+          description: "authcode"
+    response:
+      type: "object"
+      properties:
+        status:
+          type: integer
+          format: int
+        msg:
+          type: "string"      
