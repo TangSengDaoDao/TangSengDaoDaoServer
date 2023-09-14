@@ -190,7 +190,7 @@ func (w *Webhook) handleMessageNotify(messages []MsgResp) ([]string, error) {
 		messageM.ChannelID = fakeChannelID
 		err := w.messageDB.insertOrUpdateTx(messageM, tx)
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			w.Error("插入消息失败！", zap.Error(err))
 			return nil, err
 		}
@@ -198,7 +198,7 @@ func (w *Webhook) handleMessageNotify(messages []MsgResp) ([]string, error) {
 
 	}
 	if err := tx.Commit(); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		w.Error("提交事务失败！", zap.Error(err))
 		return nil, err
 	}
@@ -507,7 +507,7 @@ func (w *Webhook) push(toUser *user.Resp, msgResp msgOfflineNotify) (pushResp, e
 	}
 	pusher := w.pushMap[common.DeviceType(deviceType)][bundleID]
 	if pusher == nil {
-		w.Warn("不支持的推送设备！", zap.String("deviceType", deviceType), zap.String("uid", toUID))
+		w.Warn("不支持的推送设备！", zap.String("deviceType", deviceType), zap.String("uid", toUID), zap.String("bundleID", bundleID))
 		return pushResp{
 			deviceType:  deviceType,
 			deviceToken: deviceToken,

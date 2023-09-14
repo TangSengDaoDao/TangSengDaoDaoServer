@@ -124,7 +124,7 @@ func (o *OPPOPush) getAuthToken() string {
 		}
 	}
 	if authToken != "" {
-		o.ctx.GetRedisConn().SetAndExpire(o.authTokenCachePrefix, authToken, time.Hour*20)
+		_ = o.ctx.GetRedisConn().SetAndExpire(o.authTokenCachePrefix, authToken, time.Hour*20)
 	}
 	return authToken
 }

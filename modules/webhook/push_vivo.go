@@ -138,7 +138,7 @@ func (v *VIVOPush) getAuthToken() string {
 		}
 	}
 	if authToken != "" {
-		v.ctx.GetRedisConn().SetAndExpire(v.authTokenCachePrefix, authToken, time.Hour*20)
+		_ = v.ctx.GetRedisConn().SetAndExpire(v.authTokenCachePrefix, authToken, time.Hour*20)
 	}
 	return authToken
 }

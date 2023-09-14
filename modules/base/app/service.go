@@ -41,9 +41,11 @@ func (s *Service) GetApp(appID string) (*Resp, error) {
 		return nil, fmt.Errorf("app[%s]不存在！", appID)
 	}
 	return &Resp{
-		AppID:  appM.AppID,
-		AppKey: appM.AppKey,
-		Status: Status(appM.Status),
+		AppID:   appM.AppID,
+		AppName: appM.AppName,
+		AppLogo: appM.AppLogo,
+		AppKey:  appM.AppKey,
+		Status:  Status(appM.Status),
 	}, nil
 }
 
@@ -83,11 +85,12 @@ func (s *Service) CreateApp(r Req) (*Resp, error) {
 
 }
 
-// Resp app返回
 type Resp struct {
-	AppID  string
-	AppKey string
-	Status Status
+	AppID   string
+	AppKey  string
+	AppName string
+	AppLogo string
+	Status  Status
 }
 
 type Req struct {
