@@ -1050,7 +1050,7 @@ paths:
           schema:
             type: object
             properties:
-              name: 
+              name:
                 type: string
                 description: "昵称"
               username:
@@ -1077,16 +1077,16 @@ paths:
           schema:
             type: object
             properties:
-              uid:
-                type: string
-                description: "用户ID 注册成功后需上传web3公钥"
-              username:
-                type: string
-                description: "用户名"    
+              data:
+                type: object
+                $ref: "#/definitions/UserLoginResp"
+              need_upload_web3publickey:
+                type: integer
+                description: "是否需要上传公钥 1.是"
         400:
           description: "错误"
           schema:
-           $ref: "#/definitions/response"     
+            $ref: "#/definitions/response"
   /user/usernamelogin:
     post:
       tags:
@@ -1128,21 +1128,18 @@ paths:
         200:
           description: "返回"
           schema:
-            $ref: "#/definitions/UserLoginResp"
+            type: object
+            properties:
+              data:
+                type: object
+                $ref: "#/definitions/UserLoginResp"
+              need_upload_web3publickey:
+                type: integer
+                description: "是否需要上传公钥 1.是"
         400:
           description: "错误"
           schema:
-            type: object
-            properties:
-              status:
-                type: integer
-                description: "110 需要上传web3公钥"
-              uid:
-                type: string
-                description: "用户id"
-              username:
-                type: string
-                description: "用户名"
+            $ref: "#/definitions/response"
   /user/web3publickey:
     post:
       tags:
@@ -1162,9 +1159,6 @@ paths:
           schema:
             type: object
             properties:
-              uid:
-                type: string
-                description: "用户id"
               web3_public_key:
                 type: string
                 description: "web3公钥"
@@ -1177,6 +1171,8 @@ paths:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
+      security:
+        - token: []
   /user/web3verifytext:
     get:
       tags:
@@ -1252,7 +1248,7 @@ paths:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
-  /user/updatepassword: 
+  /user/updatepassword:
     put:
       tags:
         - "user"
