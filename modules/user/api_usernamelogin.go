@@ -225,7 +225,7 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 	}
 
 	updateMap := map[string]interface{}{}
-	updateMap["password"] = req.Password
+	updateMap["password"] = util.MD5(util.MD5(req.Password))
 	err = u.db.updateUser(updateMap, user.UID)
 	if err != nil {
 		u.Error("修改用户密码错误", zap.Error(err))
