@@ -91,9 +91,10 @@ func (u *User) usernameLogin(c *wkhttp.Context) {
 	}
 	if userInfo.Web3PublicKey == "" {
 		c.ResponseWithStatus(http.StatusBadRequest, map[string]interface{}{
-			"status": 110,
-			"msg":    "需要上传公钥",
-			"uid":    userInfo.UID,
+			"status":   110,
+			"msg":      "需要上传公钥",
+			"uid":      userInfo.UID,
+			"username": userInfo.Username,
 		})
 		return
 	}
@@ -152,7 +153,8 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		return
 	}
 	c.Response(map[string]interface{}{
-		"uid": uid,
+		"usernmae": username,
+		"uid":      uid,
 	})
 }
 
@@ -338,15 +340,15 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 		VerifyText string `json:"verify_text"`
 		SignText   string `json:"sign_text"`
 		Type       string `json:"type"` // password | login
-		UID        string `json:"uid"`
+		Username   string `json:"username"`
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseError(errors.New("请求数据格式有误！"))
 		return
 	}
-	if req.UID == "" {
-		c.ResponseError(errors.New("用户uid不能为空"))
+	if req.Username == "" {
+		c.ResponseError(errors.New("用户名不能为空"))
 		return
 	}
 	if req.VerifyText == "" {
@@ -362,7 +364,7 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 		return
 	}
 
-	user, err := u.db.QueryByUID(req.UID)
+	user, err := u.db.QueryByUsername(req.Username)
 	if err != nil {
 		u.Error("查询用户信息错误", zap.Error(err))
 		c.ResponseError(err)
@@ -407,18 +409,17 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 
 // 获取验证字符串
 func (u *User) getVerifyText(c *wkhttp.Context) {
-
-	uid := c.Query("uid")
+	username := c.Query("username")
 	verifyType := c.Query("type")
-	if uid == "" {
-		c.ResponseError(errors.New("uid不能为空"))
+	if username == "" {
+		c.ResponseError(errors.New("用户名不能为空"))
 		return
 	}
 	if verifyType == "" || (verifyType != Web3VerifyLogin && verifyType != Web3VerifyPassword) {
 		c.ResponseError(errors.New("验证类型不匹配"))
 		return
 	}
-	user, err := u.db.QueryByUID(uid)
+	user, err := u.db.QueryByUsername(username)
 	if err != nil {
 		u.Error("查询用户信息错误", zap.Error(err))
 		c.ResponseError(err)
@@ -436,7 +437,7 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 	now := time.Now()
 	timeStr := strconv.Itoa(now.Year()) + fmt.Sprintf("%02d", now.Month()) + fmt.Sprintf("%02d", now.Day()) + fmt.Sprintf("%02d", now.Hour()) + fmt.Sprintf("%02d", now.Minute()) + fmt.Sprintf("%02d", now.Second())
 	verifyText := fmt.Sprintf("%s%s", randomStr, timeStr)
-	cacheKey := fmt.Sprintf("web3_verify:%s_%s", uid, verifyType)
+	cacheKey := fmt.Sprintf("web3_verify:%s_%s", user.UID, verifyType)
 	err = u.ctx.GetRedisConn().SetAndExpire(cacheKey, verifyText, time.Minute*5)
 	if err != nil {
 		u.Error("缓存校验信息错误", zap.Error(err))
