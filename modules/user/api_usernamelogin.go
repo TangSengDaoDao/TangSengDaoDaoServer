@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -89,20 +88,20 @@ func (u *User) usernameLogin(c *wkhttp.Context) {
 		c.ResponseError(errors.New("密码不正确！"))
 		return
 	}
-	if userInfo.Web3PublicKey == "" {
-		c.ResponseWithStatus(http.StatusBadRequest, map[string]interface{}{
-			"status": 110,
-			"msg":    "需要上传公钥",
-			"uid":    userInfo.UID,
-		})
-		return
-	}
+
 	result, err := u.execLogin(userInfo, config.DeviceFlag(req.Flag), req.Device, loginSpanCtx)
 	if err != nil {
 		c.ResponseError(err)
 		return
 	}
-	c.Response(result)
+	needUploadWeb3PublicKey := 0
+	if userInfo.Web3PublicKey == "" {
+		needUploadWeb3PublicKey = 1
+	}
+	c.Response(map[string]interface{}{
+		"data":                      result,
+		"need_upload_web3publickey": needUploadWeb3PublicKey,
+	})
 	publicIP := util.GetClientPublicIP(c.Request)
 	go u.sentWelcomeMsg(publicIP, userInfo.UID)
 }
@@ -136,7 +135,7 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		}
 	}()
 	publicIP := util.GetClientPublicIP(c.Request)
-	_, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, tx, func() error {
+	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, tx, func() error {
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()
@@ -152,7 +151,8 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		return
 	}
 	c.Response(map[string]interface{}{
-		"uid": uid,
+		"data":                      result,
+		"need_upload_web3publickey": 1,
 	})
 }
 
@@ -223,7 +223,7 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 	}
 
 	updateMap := map[string]interface{}{}
-	updateMap["password"] = req.Password
+	updateMap["password"] = util.MD5(util.MD5(req.Password))
 	err = u.db.updateUser(updateMap, user.UID)
 	if err != nil {
 		u.Error("修改用户密码错误", zap.Error(err))
@@ -264,8 +264,8 @@ func (u *User) verifySignature(publicKey, verifyText, signText string) (bool, er
 
 // 上传web3Key
 func (u *User) uploadWeb3PublicKey(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
 	type reqVO struct {
-		UID           string `json:"uid"`
 		Web3PublicKey string `json:"web3_public_key"`
 	}
 	var req reqVO
@@ -273,17 +273,14 @@ func (u *User) uploadWeb3PublicKey(c *wkhttp.Context) {
 		c.ResponseError(errors.New("请求数据格式有误！"))
 		return
 	}
-	if req.UID == "" {
-		c.ResponseError(errors.New("用户uid不能为空"))
-		return
-	}
+
 	if req.Web3PublicKey == "" {
 		c.ResponseError(errors.New("公钥不能为空"))
 		return
 	}
-	userInfo, err := u.db.QueryByUID(req.UID)
+	userInfo, err := u.db.QueryByUID(loginUID)
 	if err != nil {
-		u.Error("查询用户信息失败！", zap.String("uid", req.UID))
+		u.Error("查询用户信息失败！", zap.String("uid", loginUID))
 		c.ResponseError(err)
 		return
 	}
@@ -298,38 +295,13 @@ func (u *User) uploadWeb3PublicKey(c *wkhttp.Context) {
 
 	updateMap := map[string]interface{}{}
 	updateMap["web3_public_key"] = req.Web3PublicKey
-	err = u.db.updateUser(updateMap, req.UID)
+	err = u.db.updateUser(updateMap, loginUID)
 	if err != nil {
 		u.Error("修改用户公钥错误", zap.Error(err))
 		c.ResponseError(err)
 		return
 	}
-
-	token := util.GenerUUID()
-	// 将token设置到缓存
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, fmt.Sprintf("%s@%s", userInfo.UID, userInfo.Name), u.ctx.GetConfig().Cache.TokenExpire)
-	if err != nil {
-		u.Error("设置token缓存失败！", zap.Error(err))
-		c.ResponseError(errors.New("设置token缓存失败！"))
-		return
-	}
-	// err = u.ctx.UpdateIMToken(userInfo.UID, token, config.DeviceFlag(0), config.DeviceLevelMaster)
-	imResp, err := u.ctx.UpdateIMToken(config.UpdateIMTokenReq{
-		UID:         userInfo.UID,
-		Token:       token,
-		DeviceFlag:  config.APP,
-		DeviceLevel: config.DeviceLevelMaster,
-	})
-	if err != nil {
-		u.Error("更新IM的token失败！", zap.Error(err))
-		c.ResponseError(errors.New("更新IM的token失败！"))
-		return
-	}
-	if imResp.Status == config.UpdateTokenStatusBan {
-		c.ResponseError(errors.New("此账号已经被封禁！"))
-		return
-	}
-	c.Response(newLoginUserDetailResp(userInfo, token, u.ctx))
+	c.ResponseOK()
 }
 
 // 验签
@@ -338,15 +310,15 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 		VerifyText string `json:"verify_text"`
 		SignText   string `json:"sign_text"`
 		Type       string `json:"type"` // password | login
-		UID        string `json:"uid"`
+		Username   string `json:"username"`
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseError(errors.New("请求数据格式有误！"))
 		return
 	}
-	if req.UID == "" {
-		c.ResponseError(errors.New("用户uid不能为空"))
+	if req.Username == "" {
+		c.ResponseError(errors.New("用户名不能为空"))
 		return
 	}
 	if req.VerifyText == "" {
@@ -362,7 +334,7 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 		return
 	}
 
-	user, err := u.db.QueryByUID(req.UID)
+	user, err := u.db.QueryByUsername(req.Username)
 	if err != nil {
 		u.Error("查询用户信息错误", zap.Error(err))
 		c.ResponseError(err)
@@ -407,18 +379,17 @@ func (u *User) web3verifySignature(c *wkhttp.Context) {
 
 // 获取验证字符串
 func (u *User) getVerifyText(c *wkhttp.Context) {
-
-	uid := c.Query("uid")
+	username := c.Query("username")
 	verifyType := c.Query("type")
-	if uid == "" {
-		c.ResponseError(errors.New("uid不能为空"))
+	if username == "" {
+		c.ResponseError(errors.New("用户名不能为空"))
 		return
 	}
 	if verifyType == "" || (verifyType != Web3VerifyLogin && verifyType != Web3VerifyPassword) {
 		c.ResponseError(errors.New("验证类型不匹配"))
 		return
 	}
-	user, err := u.db.QueryByUID(uid)
+	user, err := u.db.QueryByUsername(username)
 	if err != nil {
 		u.Error("查询用户信息错误", zap.Error(err))
 		c.ResponseError(err)
@@ -436,7 +407,7 @@ func (u *User) getVerifyText(c *wkhttp.Context) {
 	now := time.Now()
 	timeStr := strconv.Itoa(now.Year()) + fmt.Sprintf("%02d", now.Month()) + fmt.Sprintf("%02d", now.Day()) + fmt.Sprintf("%02d", now.Hour()) + fmt.Sprintf("%02d", now.Minute()) + fmt.Sprintf("%02d", now.Second())
 	verifyText := fmt.Sprintf("%s%s", randomStr, timeStr)
-	cacheKey := fmt.Sprintf("web3_verify:%s_%s", uid, verifyType)
+	cacheKey := fmt.Sprintf("web3_verify:%s_%s", user.UID, verifyType)
 	err = u.ctx.GetRedisConn().SetAndExpire(cacheKey, verifyText, time.Minute*5)
 	if err != nil {
 		u.Error("缓存校验信息错误", zap.Error(err))
