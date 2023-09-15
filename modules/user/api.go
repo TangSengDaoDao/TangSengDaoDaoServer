@@ -154,9 +154,6 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		user.POST("/maillist", u.addMaillist)
 		user.GET("/maillist", u.getMailList)
 
-		// #################### openapi ####################
-		user.GET("/openapi/authcode", u.authcodeGet) // 获取用户的授权authcode
-
 	}
 	v := r.Group("/v1")
 	{
@@ -192,9 +189,6 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		v.GET("/user/gitee", u.gitee)            // gitee认证页面
 		v.GET("/user/oauth/gitee", u.giteeOAuth) // gitee登录
 
-		// #################### openapi ####################
-		v.GET("/openapi/access_token", u.accessTokenGet) // 获取用户的授权access_token
-		v.GET("/openapi/userinfo", u.userinfoGet)        // 获取用户信息
 	}
 
 	u.ctx.AddOnlineStatusListener(u.onlineService.listenOnlineStatus) // 监听在线状态
