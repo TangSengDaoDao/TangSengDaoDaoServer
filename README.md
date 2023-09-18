@@ -36,18 +36,18 @@
 
 ||||
 |:---:|:---:|:--:|
-|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
+|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/conversationlist2.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/messages2.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/robot2.webp)|
 
 
 |||          |
 |:---:|:---:|:-------------------:|
-|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
+|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/weblogin2.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/apm2.webp)| ![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/others2.webp) |
 
-![](docs/screenshot/pc11.png)
+![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/pc11.png)
 
-![](docs/screenshot/pc22.png)
+![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/pc22.png)
 
-![](docs/screenshot/pc33.png)
+![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/pc33.png)
 
 演示地址
 ------------
@@ -56,7 +56,7 @@
 |:---:|:---:|
 |![](docs/download/android.png)|![](docs/download/iOS.png)|
 
-| Web端 | Windows端 | MAC端 | Ubuntun端 |
+| Web端 | Windows端 | MAC端 | Ubuntu端 |
 |:---:|:---:|:---:|:---:|
 |[点击体验](https://web.botgate.cn)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64_zh-CN.msi)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_x64.dmg)|[点击下载](https://github.com/TangSengDaoDao/TangSengDaoDaoWeb/releases/download/v1.0.0/tangsegndaodao_1.0.0_amd64.deb)|
 
