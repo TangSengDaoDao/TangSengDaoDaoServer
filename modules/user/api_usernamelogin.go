@@ -19,6 +19,10 @@ import (
 
 // 通过用户名注册
 func (u *User) usernameRegister(c *wkhttp.Context) {
+	if !u.ctx.GetConfig().Register.UsernameOn {
+		c.ResponseError(errors.New("暂不支持用户名注册"))
+		return
+	}
 	var req usernameRegisterReq
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseError(errors.New("请求数据格式有误！"))

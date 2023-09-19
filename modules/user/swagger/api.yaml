@@ -487,8 +487,8 @@ paths:
     delete:
       tags:
         - "userManager"
-      summary: "管理员列表【超级管理员才能操作】"
-      description: "管理员列表【超级管理员才能操作】"
+      summary: "删除管理员【超级管理员才能操作】"
+      description: "删除管理员【超级管理员才能操作】"
       operationId: "user delete admin"
       consumes:
         - "application/json"
