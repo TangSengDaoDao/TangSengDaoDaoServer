@@ -45,6 +45,49 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /channels/{channel_id}/{channel_type}/message/autodelete:
+    post:
+      tags:
+        - "channel"
+      summary: "设置频道消息定时删除"
+      description: "设置频道消息定时删除"
+      operationId: "setAutoDeleteForMessage"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "channel_id"
+          type: string
+          description: "频道ID"
+          required: true
+        - in: "path"
+          name: "channel_type"
+          type: integer
+          description: "channel类型"
+          required: true
+        - in: "body"
+          name: "body"
+          description: "设置频道消息定时删除"
+          required: true
+          schema:
+            type: object
+            properties:
+              msg_auto_delete_at:
+                type: integer
+                description: "定时删除时间(单位秒)"  
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []      
 securityDefinitions:
   token:
     type: "apiKey"

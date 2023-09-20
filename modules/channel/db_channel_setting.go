@@ -30,10 +30,16 @@ func (c *channelSettingDB) queryWithChannelIDs(channelIDs []string) ([]*channelS
 	return models, err
 }
 
+func (c *channelSettingDB) insertOrAddMsgAutoDeleteAt(channelID string, channelType uint8, msgAutoDeleteAt int64) error {
+	_, err := c.session.InsertBySql("insert into channel_setting (channel_id, channel_type, msg_auto_delete_at) values (?, ?, ?) ON DUPLICATE KEY UPDATE msg_auto_delete_at=VALUES(msg_auto_delete_at)", channelID, channelType, msgAutoDeleteAt).Exec()
+	return err
+}
+
 type channelSettingModel struct {
 	ChannelID         string
 	ChannelType       uint8
 	ParentChannelID   string
 	ParentChannelType uint8
+	MsgAutoDeleteAt   int64
 	db.BaseModel
 }
