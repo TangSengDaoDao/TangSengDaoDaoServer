@@ -1,6 +1,8 @@
 package channel
 
-import "github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+import (
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+)
 
 type IService interface {
 	// 获取频道设置集合

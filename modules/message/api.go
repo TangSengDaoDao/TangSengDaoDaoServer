@@ -1464,6 +1464,7 @@ type MsgSyncResp struct {
 	ToUID         string                 `json:"to_uid,omitempty"`          // 接受者uid
 	ChannelID     string                 `json:"channel_id"`                // 频道ID
 	ChannelType   uint8                  `json:"channel_type"`              // 频道类型
+	Expire        uint32                 `json:"expire,omitempty"`          // expire
 	Timestamp     int32                  `json:"timestamp"`                 // 服务器消息时间戳(10位，到秒)
 	Payload       map[string]interface{} `json:"payload"`                   // 消息内容
 	SignalPayload string                 `json:"signal_payload"`            // signal 加密后的payload base64编码,TODO: 这里为了兼容没加密的版本，所以新用SignalPayload字段
@@ -1501,6 +1502,7 @@ func (m *MsgSyncResp) from(msgResp *config.MessageResp, loginUID string, message
 	m.ToUID = msgResp.ToUID
 	m.ChannelID = msgResp.ChannelID
 	m.ChannelType = msgResp.ChannelType
+	m.Expire = msgResp.Expire
 	m.Timestamp = msgResp.Timestamp
 	if messageExtraM != nil {
 
@@ -1550,6 +1552,13 @@ func (m *MsgSyncResp) from(msgResp *config.MessageResp, loginUID string, message
 		m.IsDeleted = messageUserExtraM.MessageIsDeleted
 		m.VoiceStatus = messageUserExtraM.VoiceReaded
 	}
+
+	if msgResp.Expire > 0 {
+		if time.Now().Unix()-int64(msgResp.Expire) >= int64(msgResp.Timestamp) {
+			m.IsDeleted = 1
+		}
+	}
+
 	m.Payload = payloadMap
 
 	msgReactionList := make([]*reactionSimpleResp, 0, len(reactionModels))

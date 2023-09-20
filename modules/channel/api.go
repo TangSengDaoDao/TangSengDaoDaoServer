@@ -95,8 +95,8 @@ func (ch *Channel) channelGet(c *wkhttp.Context) {
 				ChannelType: channelSettingM.ParentChannelType,
 			}
 		}
-		if channelSettingM.MsgAutoDeleteAt > 0 {
-			channelResp.Extra["msg_auto_delete_at"] = channelSettingM.MsgAutoDeleteAt
+		if channelSettingM.MsgAutoDelete > 0 {
+			channelResp.Extra["msg_auto_delete"] = channelSettingM.MsgAutoDelete
 		}
 	}
 
@@ -154,14 +154,14 @@ func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
 	channelType := uint8(channelTypeI64)
 
 	var req struct {
-		MsgAutoDeleteAt int64 `json:"msg_auto_delete_at"` // 单位秒
+		MsgAutoDelete int64 `json:"msg_auto_delete"` // 单位秒
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.ResponseError(errors.New("参数错误"))
 		ch.Error("参数错误", zap.Error(err))
 		return
 	}
-	if req.MsgAutoDeleteAt <= 0 {
+	if req.MsgAutoDelete <= 0 {
 		c.ResponseError(errors.New("时间不能小于或等于0"))
 		return
 	}
@@ -183,17 +183,17 @@ func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
 		}
 	}
 
-	if err := ch.channelSettingDB.insertOrAddMsgAutoDeleteAt(fakeChannelID, channelType, req.MsgAutoDeleteAt); err != nil {
+	if err := ch.channelSettingDB.insertOrAddMsgAutoDelete(fakeChannelID, channelType, req.MsgAutoDelete); err != nil {
 		c.ResponseError(errors.New("设置失败"))
 		ch.Error("设置失败", zap.Error(err))
 		return
 	}
 	payload := []byte(util.ToJson(map[string]interface{}{
-		"content": fmt.Sprintf("{0} 设置消息在 %s 内自动删除", formatSecondToDisplayTime(req.MsgAutoDeleteAt)),
+		"content": fmt.Sprintf("{0} 设置消息在 %s 内自动删除", formatSecondToDisplayTime(req.MsgAutoDelete)),
 		"type":    common.Tip,
 		"data": map[string]interface{}{
-			"msg_auto_delete_at": req.MsgAutoDeleteAt,
-			"data_type":          "autoDeleteForMessage",
+			"msg_auto_delete": req.MsgAutoDelete,
+			"data_type":       "autoDeleteForMessage",
 		},
 	}))
 

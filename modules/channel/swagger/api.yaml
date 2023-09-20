@@ -74,7 +74,7 @@ paths:
           schema:
             type: object
             properties:
-              msg_auto_delete_at:
+              msg_auto_delete:
                 type: integer
                 description: "定时删除时间(单位秒)"  
       responses:

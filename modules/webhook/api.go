@@ -565,6 +565,7 @@ type MsgResp struct {
 	ToUID       string        `json:"to_uid"`       // 接受者uid
 	ChannelID   string        `json:"channel_id"`   // 频道ID
 	ChannelType uint8         `json:"channel_type"` // 频道类型
+	Expire      uint32        `json:"expire"`       // 消息过期时间（单位秒）
 	Timestamp   int32         `json:"timestamp"`    // 服务器消息时间戳(10位，到秒)
 	Payload     []byte        `json:"payload"`      // 消息内容
 	ContentType int           // 消息正文类型
@@ -579,6 +580,10 @@ func (m *MsgResp) toModel() *messageModel {
 	if setting.Signal {
 		signal = 1
 	}
+	var expireAt uint32 = 0
+	if m.Expire > 0 {
+		expireAt = uint32(m.Timestamp) + m.Expire
+	}
 	return &messageModel{
 		MessageID:   fmt.Sprintf("%d", m.MessageID),
 		MessageSeq:  int64(m.MessageSeq),
@@ -589,6 +594,8 @@ func (m *MsgResp) toModel() *messageModel {
 		FromUID:     m.FromUID,
 		ChannelID:   m.ChannelID,
 		ChannelType: m.ChannelType,
+		Expire:      m.Expire,
+		ExpireAt:    expireAt,
 		Timestamp:   m.Timestamp,
 		Payload:     string(m.Payload),
 		IsDeleted:   0,
@@ -609,6 +616,7 @@ func (m *MsgResp) toConfigMessageResp() *config.MessageResp {
 		ToUID:       m.ToUID,
 		ChannelID:   m.ChannelID,
 		ChannelType: m.ChannelType,
+		Expire:      m.Expire,
 		Timestamp:   m.Timestamp,
 		Payload:     m.Payload,
 	}
