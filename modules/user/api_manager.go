@@ -502,6 +502,7 @@ func (m *Manager) list(c *wkhttp.Context) {
 			showPhone := getShowPhoneNum(user.Phone)
 			result = append(result, &managerUserResp{
 				UID:            user.UID,
+				Username:       user.Username,
 				Name:           user.Name,
 				Phone:          showPhone,
 				Sex:            user.Sex,
@@ -944,6 +945,7 @@ type managerUserResp struct {
 	Name           string `json:"name"`
 	UID            string `json:"uid"`
 	Phone          string `json:"phone"`
+	Username       string `json:"username"`
 	ShortNo        string `json:"short_no"`
 	Sex            int    `json:"sex"`
 	RegisterTime   string `json:"register_time"`

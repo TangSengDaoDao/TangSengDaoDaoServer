@@ -195,6 +195,12 @@ func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
 			"msg_auto_delete": req.MsgAutoDelete,
 			"data_type":       "autoDeleteForMessage",
 		},
+		"extra": []config.UserBaseVo{
+			{
+				UID:  loginUID,
+				Name: c.GetLoginName(),
+			},
+		},
 	}))
 
 	err := ch.ctx.SendMessage(&config.MsgSendReq{
