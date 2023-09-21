@@ -1308,6 +1308,49 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /message/send: 
+    post:
+      tags:
+        - "message"
+      summary: "代发消息"
+      description: "代发消息"
+      operationId: "send message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "object"
+          description: "发送消息参数"
+          required: true
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: "发送者token"
+              receive_channel_id:
+                type: string
+                description: "接受channelID"
+              receive_channel_type:
+                type: integer
+                format: int
+                description: "接受channel类型"
+              payload: 
+                type: object
+                description: "消息正文"
+      responses:
+        200:
+          description: "返回"
+          schema:
+             $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
 securityDefinitions:
   token:
     type: "apiKey"

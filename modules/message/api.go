@@ -109,8 +109,79 @@ func (m *Message) Route(r *wkhttp.WKHttp) {
 	{
 		reaction.POST("/sync", m.syncReaction)
 	}
-
+	msg := r.Group("/v1/message")
+	{
+		msg.POST("/send", m.sendMsg) // 代发消息
+	}
 	m.ctx.AddMessagesListener(m.listenerMessages) // 监听消息
+}
+
+func (m *Message) sendMsg(c *wkhttp.Context) {
+	if !m.ctx.GetConfig().Message.SendMessageOn {
+		c.ResponseError(errors.New("不支持代发消息"))
+		return
+	}
+	var req struct {
+		Token              string                 `json:"token"`                // 发送者
+		ReceiveChannelID   string                 `json:"receive_channel_id"`   // 接受者id
+		ReceiveChannelType int                    `json:"receive_channel_type"` // 接受类型
+		Payload            map[string]interface{} `json:"payload"`              // 消息体
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseErrorf("数据格式有误！", err)
+		return
+	}
+	if req.Token == "" {
+		c.ResponseError(errors.New("发送者token不能为空"))
+		return
+	}
+	if req.ReceiveChannelID == "" {
+		c.ResponseError(errors.New("接受channelID不能为空"))
+		return
+	}
+	if req.Payload == nil {
+		c.ResponseError(errors.New("消息不能为空"))
+		return
+	}
+	uidAndName, err := m.ctx.Cache().Get(m.ctx.GetConfig().Cache.TokenCachePrefix + req.Token)
+	if err != nil {
+		m.Error("解析token错误", zap.Error(err))
+		c.ResponseError(errors.New("解析token错误"))
+		return
+	}
+	if strings.TrimSpace(uidAndName) == "" {
+		c.ResponseError(errors.New("请先登录"))
+		return
+	}
+	uidAndNames := strings.Split(uidAndName, "@")
+	if len(uidAndNames) < 2 {
+		c.ResponseError(errors.New("token错误"))
+		return
+	}
+	uid := uidAndNames[0]
+	if uid == "" {
+		c.ResponseError(errors.New("发送者不能为空"))
+		return
+	}
+	go m.sendMessage(req.ReceiveChannelID, req.ReceiveChannelType, uid, req.Payload)
+	c.ResponseOK()
+}
+
+func (m *Message) sendMessage(channelID string, channelType int, fromUID string, payload map[string]interface{}) error {
+	err := m.ctx.SendMessage(&config.MsgSendReq{
+		Header: config.MsgHeader{
+			RedDot: 1,
+		},
+		ChannelID:   channelID,
+		ChannelType: uint8(channelType),
+		FromUID:     fromUID,
+		Payload:     []byte(util.ToJson(payload)),
+	})
+	if err != nil {
+		m.Error("发送消息错误", zap.Error(err))
+		return errors.New("发送消息错误")
+	}
+	return nil
 }
 
 // 消息编辑
