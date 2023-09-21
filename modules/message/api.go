@@ -126,7 +126,6 @@ func (m *Message) sendMsg(c *wkhttp.Context) {
 		ReceiveChannelID   string                 `json:"receive_channel_id"`   // 接受者id
 		ReceiveChannelType uint8                  `json:"receive_channel_type"` // 接受类型
 		Payload            map[string]interface{} `json:"payload"`              // 消息体
-		IsVerify           int                    `json:"is_verify"`            // 是否验证好友关系｜群内身份
 	}
 	if err := c.BindJSON(&req); err != nil {
 		c.ResponseErrorf("数据格式有误！", err)
@@ -164,11 +163,6 @@ func (m *Message) sendMsg(c *wkhttp.Context) {
 		c.ResponseError(errors.New("发送者不能为空"))
 		return
 	}
-	if req.IsVerify == 0 {
-		go m.sendMessage(req.ReceiveChannelID, req.ReceiveChannelType, uid, req.Payload)
-		c.ResponseOK()
-		return
-	}
 
 	if req.ReceiveChannelType == common.ChannelTypePerson.Uint8() {
 		sendUserIsFriend, err := m.userService.IsFriend(uid, req.ReceiveChannelID)
@@ -204,7 +198,11 @@ func (m *Message) sendMsg(c *wkhttp.Context) {
 			return
 		}
 	}
-	go m.sendMessage(req.ReceiveChannelID, req.ReceiveChannelType, uid, req.Payload)
+	err = m.sendMessage(req.ReceiveChannelID, req.ReceiveChannelType, uid, req.Payload)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 	c.ResponseOK()
 }
 
