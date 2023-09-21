@@ -11,6 +11,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.7+incompatible
 	github.com/disintegration/imaging v1.6.2
 	github.com/eapache/queue v1.1.0
+	github.com/ethereum/go-ethereum v1.12.2
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.7.1
@@ -66,7 +67,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ethereum/go-ethereum v1.12.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect

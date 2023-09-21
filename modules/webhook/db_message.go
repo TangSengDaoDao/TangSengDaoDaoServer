@@ -24,7 +24,7 @@ func newMessageDB(ctx *config.Context) *messageDB {
 
 func (m *messageDB) insertOrUpdateTx(model *messageModel, tx *dbr.Tx) error {
 	tbl := m.getTable(model.ChannelID)
-	_, err := tx.InsertBySql(fmt.Sprintf("insert into %s(message_id,message_seq,client_msg_no,header,setting,`signal`,from_uid,channel_id,channel_type,timestamp,payload,is_deleted) values(?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE payload=payload", tbl), model.MessageID, model.MessageSeq, model.ClientMsgNo, model.Header, model.Setting, model.Signal, model.FromUID, model.ChannelID, model.ChannelType, model.Timestamp, model.Payload, model.IsDeleted).Exec()
+	_, err := tx.InsertBySql(fmt.Sprintf("insert into %s(message_id,message_seq,client_msg_no,header,setting,`signal`,from_uid,channel_id,channel_type,expire,expire_at,timestamp,payload,is_deleted) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE payload=payload", tbl), model.MessageID, model.MessageSeq, model.ClientMsgNo, model.Header, model.Setting, model.Signal, model.FromUID, model.ChannelID, model.ChannelType, model.Expire, model.ExpireAt, model.Timestamp, model.Payload, model.IsDeleted).Exec()
 	return err
 }
 
@@ -47,6 +47,8 @@ type messageModel struct {
 	FromUID     string
 	ChannelID   string
 	ChannelType uint8
+	Expire      uint32
+	ExpireAt    uint32
 	Timestamp   int32
 	Payload     string
 	IsDeleted   int
