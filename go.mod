@@ -3,7 +3,7 @@ module github.com/TangSengDaoDao/TangSengDaoDaoServer
 go 1.20
 
 require (
-	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.6-0.20230920103932-5011d17cb544
+	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.6-0.20230921055339-06efa63b7378
 	github.com/alibabacloud-go/darabonba-openapi v0.2.1
 	github.com/alibabacloud-go/sms-intl-20180501 v1.0.1
 	github.com/alibabacloud-go/tea v1.2.1
@@ -11,6 +11,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.7+incompatible
 	github.com/disintegration/imaging v1.6.2
 	github.com/eapache/queue v1.1.0
+	github.com/ethereum/go-ethereum v1.12.2
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-sql-driver/mysql v1.7.1
@@ -66,7 +67,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ethereum/go-ethereum v1.12.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect

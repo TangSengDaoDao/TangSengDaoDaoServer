@@ -53,7 +53,7 @@ paths:
       tags:
         - "file"
       summary: "上传文件"
-      description: "上传文件"
+      description: "通过 `获取文件上传路径`接口返回的地址上传文件"
       operationId: "upload file"
       consumes:
         - "multipart/form-data"

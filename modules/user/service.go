@@ -601,7 +601,7 @@ func (s *Service) IsFriend(uid string, toUID string) (bool, error) {
 		return false, errors.New("查询好友关系错误")
 	}
 	isFriend := true
-	if model == nil || model.UID == "" {
+	if model == nil || model.UID == "" || model.IsDeleted == 1 {
 		isFriend = false
 	}
 	return isFriend, nil
