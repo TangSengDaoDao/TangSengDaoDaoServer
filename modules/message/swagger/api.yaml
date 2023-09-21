@@ -1340,6 +1340,9 @@ paths:
               payload: 
                 type: object
                 description: "消息正文"
+              is_verify:
+                type: integer
+                description: "是否需要验证好友关系｜是否在群内 1.是"
       responses:
         200:
           description: "返回"
