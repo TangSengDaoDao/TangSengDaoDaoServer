@@ -72,6 +72,8 @@ type IService interface {
 	GetOnlineCount() (int64, error)
 	// 存在黑明单
 	ExistBlacklist(uid string, toUID string) (bool, error)
+	// 更新用户消息过期时长
+	UpdateUserMsgExpireSecond(uid string, msgExpireSecond int64) error
 }
 
 // Service Service

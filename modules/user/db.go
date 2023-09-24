@@ -216,6 +216,7 @@ func (d *DB) destroyAccount(uid, username, phone string) error {
 	}).Where("uid=?", uid).Exec()
 	return err
 }
+
 func (d *DB) queryWithWXOpenIDAndWxUnionidCtx(ctx context.Context, wxOpenid, wxUnionid string) (*Model, error) {
 	span, _ := d.ctx.Tracer().StartSpanFromContext(ctx, "queryWithWXOpenIDAndWxUnionid")
 	defer span.Finish()
@@ -241,6 +242,11 @@ func (d *DB) queryWithGithubUID(githubUID string) (*Model, error) {
 	var model *Model
 	_, err := d.session.Select("*").From("user").Where("github_uid=?", githubUID).Load(&model)
 	return model, err
+}
+
+func (d *DB) updateUserMsgExpireSecond(uid string, msgExpireSecond int64) error {
+	_, err := d.session.Update("user").Set("msg_expire_second", msgExpireSecond).Where("uid=?", uid).Exec()
+	return err
 }
 
 // ------------ model ------------
@@ -304,6 +310,7 @@ type Model struct {
 	GiteeUID          string // gitee uid
 	GithubUID         string // github uid
 	Web3PublicKey     string // web3公钥
+	MsgExpireSecond   int64  // 消息过期时长
 	db.BaseModel
 }
 
