@@ -696,6 +696,10 @@ func (s *Service) ExistBlacklist(uid string, toUID string) (bool, error) {
 	return s.friendDB.existBlacklist(uid, toUID)
 }
 
+func (s *Service) UpdateUserMsgExpireSecond(uid string, msgExpireSecond int64) error {
+	return s.db.updateUserMsgExpireSecond(uid, msgExpireSecond)
+}
+
 // Resp 用户返回
 type Resp struct {
 	UID            string
