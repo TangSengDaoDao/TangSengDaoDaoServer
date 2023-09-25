@@ -100,6 +100,20 @@ func (ch *Channel) channelGet(c *wkhttp.Context) {
 		}
 	}
 
+	if channelResp.Extra["msg_auto_delete"] == nil {
+		loginUser, err := ch.userService.GetUser(loginUID)
+		if err != nil {
+			ch.Error("查询用户失败！", zap.Error(err))
+			c.ResponseError(errors.New("查询用户失败！"))
+			return
+		}
+		if loginUser != nil {
+			if loginUser.MsgExpireSecond > 0 {
+				channelResp.Extra["msg_auto_delete"] = loginUser.MsgExpireSecond
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, channelResp)
 
 }
@@ -192,7 +206,7 @@ func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
 		}
 		if req.MsgAutoDelete > 0 {
 			payload := []byte(util.ToJson(map[string]interface{}{
-				"content": fmt.Sprintf("{0} 设置消息在 %s 内自动删除", formatSecondToDisplayTime(req.MsgAutoDelete)),
+				"content": fmt.Sprintf("{0}设置消息在 %s 后自动删除", formatSecondToDisplayTime(req.MsgAutoDelete)),
 				"type":    common.Tip,
 				"data": map[string]interface{}{
 					"msg_auto_delete": req.MsgAutoDelete,

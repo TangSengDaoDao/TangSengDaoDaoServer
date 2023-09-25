@@ -702,26 +702,28 @@ func (s *Service) UpdateUserMsgExpireSecond(uid string, msgExpireSecond int64) e
 
 // Resp 用户返回
 type Resp struct {
-	UID            string
-	Name           string
-	Zone           string
-	Phone          string
-	Email          string
-	IsUploadAvatar int
-	NewMsgNotice   int
-	MsgShowDetail  int //显示消息通知详情0.否1.是
+	UID             string
+	Name            string
+	Zone            string
+	Phone           string
+	Email           string
+	IsUploadAvatar  int
+	NewMsgNotice    int
+	MsgShowDetail   int //显示消息通知详情0.否1.是
+	MsgExpireSecond int64
 }
 
 func newResp(m *Model) *Resp {
 	return &Resp{
-		UID:            m.UID,
-		Name:           m.Name,
-		Zone:           m.Zone,
-		Phone:          m.Phone,
-		Email:          m.Email,
-		IsUploadAvatar: m.IsUploadAvatar,
-		NewMsgNotice:   m.NewMsgNotice,
-		MsgShowDetail:  m.MsgShowDetail,
+		UID:             m.UID,
+		Name:            m.Name,
+		Zone:            m.Zone,
+		Phone:           m.Phone,
+		Email:           m.Email,
+		IsUploadAvatar:  m.IsUploadAvatar,
+		NewMsgNotice:    m.NewMsgNotice,
+		MsgShowDetail:   m.MsgShowDetail,
+		MsgExpireSecond: m.MsgExpireSecond,
 	}
 }
 
