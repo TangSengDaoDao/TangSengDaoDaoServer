@@ -1,7 +1,5 @@
 package user
 
-const MsgAutoDeleteNoSet = -1
-
 const (
 	// Web3VerifyLogin 校验登录
 	Web3VerifyLogin string = "login"

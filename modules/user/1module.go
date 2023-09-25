@@ -147,9 +147,6 @@ func newChannelRespWithUserDetailResp(user *UserDetailResp) *model.ChannelResp {
 	extraMap["vercode"] = user.Vercode
 	extraMap["screenshot"] = user.Screenshot
 	extraMap["revoke_remind"] = user.RevokeRemind
-	if user.MsgAutoDelete > 0 {
-		extraMap["msg_auto_delete"] = user.MsgAutoDelete
-	}
 	resp.Extra = extraMap
 
 	return resp

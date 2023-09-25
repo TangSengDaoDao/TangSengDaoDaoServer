@@ -30,11 +30,6 @@ func (d *SettingDB) InsertUserSettingModelTx(setting *SettingModel, tx *dbr.Tx) 
 	return err
 }
 
-func (d *SettingDB) InsertOrUpdateSettingModelTx(setting *SettingModel, tx *dbr.Tx) error {
-	_, err := tx.InsertBySql("insert into user_setting (uid, to_uid, mute, top, chat_pwd_on, screenshot, revoke_remind, blacklist, receipt, flame, flame_second, remark, msg_auto_delete) values (?,?,?,?,?,?,?,?,?,?,?,?,?)", setting.UID, setting.ToUID, setting.Mute, setting.Top, setting.ChatPwdOn, setting.Screenshot, setting.RevokeRemind, setting.Blacklist, setting.Receipt, setting.Flame, setting.FlameSecond, setting.Remark, setting.MsgAutoDelete).Exec()
-	return err
-}
-
 // QueryUserSettingModel 查询用户设置
 func (d *SettingDB) QueryUserSettingModel(uid, loginUID string) (*SettingModel, error) {
 	var model *SettingModel
@@ -73,17 +68,16 @@ func (d *SettingDB) QueryUserSettings(uids []string, loginUID string) ([]*Settin
 // updateUserSettingModel 更新用户设置
 func (d *SettingDB) updateUserSettingModelWithToUIDTx(setting *SettingModel, uid string, toUID string, tx *dbr.Tx) error {
 	_, err := tx.Update("user_setting").SetMap(map[string]interface{}{
-		"mute":            setting.Mute,
-		"top":             setting.Top,
-		"blacklist":       setting.Blacklist,
-		"chat_pwd_on":     setting.ChatPwdOn,
-		"screenshot":      setting.Screenshot,
-		"revoke_remind":   setting.RevokeRemind,
-		"receipt":         setting.Receipt,
-		"flame":           setting.Flame,
-		"flame_second":    setting.FlameSecond,
-		"remark":          setting.Remark,
-		"msg_auto_delete": setting.MsgAutoDelete,
+		"mute":          setting.Mute,
+		"top":           setting.Top,
+		"blacklist":     setting.Blacklist,
+		"chat_pwd_on":   setting.ChatPwdOn,
+		"screenshot":    setting.Screenshot,
+		"revoke_remind": setting.RevokeRemind,
+		"receipt":       setting.Receipt,
+		"flame":         setting.Flame,
+		"flame_second":  setting.FlameSecond,
+		"remark":        setting.Remark,
 	}).Where("uid=? and to_uid=?", uid, toUID).Exec()
 	return err
 }
@@ -91,17 +85,16 @@ func (d *SettingDB) updateUserSettingModelWithToUIDTx(setting *SettingModel, uid
 // UpdateUserSettingModel 更新用户设置
 func (d *SettingDB) UpdateUserSettingModel(setting *SettingModel) error {
 	_, err := d.session.Update("user_setting").SetMap(map[string]interface{}{
-		"mute":            setting.Mute,
-		"top":             setting.Top,
-		"version":         setting.Version,
-		"chat_pwd_on":     setting.ChatPwdOn,
-		"screenshot":      setting.Screenshot,
-		"revoke_remind":   setting.RevokeRemind,
-		"receipt":         setting.Receipt,
-		"flame":           setting.Flame,
-		"flame_second":    setting.FlameSecond,
-		"remark":          setting.Remark,
-		"msg_auto_delete": setting.MsgAutoDelete,
+		"mute":          setting.Mute,
+		"top":           setting.Top,
+		"version":       setting.Version,
+		"chat_pwd_on":   setting.ChatPwdOn,
+		"screenshot":    setting.Screenshot,
+		"revoke_remind": setting.RevokeRemind,
+		"receipt":       setting.Receipt,
+		"flame":         setting.Flame,
+		"flame_second":  setting.FlameSecond,
+		"remark":        setting.Remark,
 	}).Where("id=?", setting.Id).Exec()
 	return err
 }
@@ -116,28 +109,26 @@ func (d *SettingDB) querySettingByUIDAndToUID(uid, toUID string) (*SettingModel,
 
 // SettingModel 用户设置
 type SettingModel struct {
-	UID           string // 用户UID
-	ToUID         string // 对方uid
-	Mute          int    // 免打扰
-	Top           int    // 置顶
-	ChatPwdOn     int    // 是否开启聊天密码
-	Screenshot    int    //截屏通知
-	RevokeRemind  int    //撤回提醒
-	Blacklist     int    //黑名单
-	Receipt       int    //消息是否回执
-	Flame         int    // 是否开启阅后即焚
-	FlameSecond   int    // 阅后即焚秒数
-	Version       int64  // 版本
-	Remark        string // 备注
-	MsgAutoDelete int64  // 自动删除消息
+	UID          string // 用户UID
+	ToUID        string // 对方uid
+	Mute         int    // 免打扰
+	Top          int    // 置顶
+	ChatPwdOn    int    // 是否开启聊天密码
+	Screenshot   int    //截屏通知
+	RevokeRemind int    //撤回提醒
+	Blacklist    int    //黑名单
+	Receipt      int    //消息是否回执
+	Flame        int    // 是否开启阅后即焚
+	FlameSecond  int    // 阅后即焚秒数
+	Version      int64  // 版本
+	Remark       string // 备注
 	db.BaseModel
 }
 
 func newDefaultSettingModel() *SettingModel {
 	return &SettingModel{
-		Screenshot:    1,
-		RevokeRemind:  1,
-		Receipt:       1,
-		MsgAutoDelete: MsgAutoDeleteNoSet,
+		Screenshot:   1,
+		RevokeRemind: 1,
+		Receipt:      1,
 	}
 }

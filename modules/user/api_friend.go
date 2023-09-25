@@ -379,33 +379,6 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 			return
 		}
 	}
-	if loginUser != nil && loginUser.MsgExpireSecond > 0 {
-		setting := newDefaultSettingModel()
-		setting.UID = loginUID
-		setting.ToUID = applyUID
-		setting.MsgAutoDelete = loginUser.MsgExpireSecond
-		err = f.settingDB.InsertOrUpdateSettingModelTx(setting, tx)
-		if err != nil {
-			f.Error("修改用户消息过期时间失败", zap.Error(err))
-			util.CheckErr(tx.Rollback())
-			c.ResponseError(errors.New("修改用户消息过期时间失败"))
-			return
-		}
-	}
-	if applyUser != nil && applyUser.MsgExpireSecond > 0 {
-		setting := newDefaultSettingModel()
-		setting.UID = applyUID
-		setting.ToUID = loginUID
-		setting.MsgAutoDelete = applyUser.MsgExpireSecond
-		err = f.settingDB.InsertOrUpdateSettingModelTx(setting, tx)
-		if err != nil {
-			f.Error("修改用户消息过期时间失败", zap.Error(err))
-			util.CheckErr(tx.Rollback())
-			c.ResponseError(errors.New("修改用户消息过期时间失败"))
-			return
-		}
-	}
-
 	// 是否是好友
 	loginFriendModel, err := f.db.queryWithUID(applyUID, loginUID)
 	//loginIsFriend, err := f.db.IsFriend(applyUID, loginUID)
