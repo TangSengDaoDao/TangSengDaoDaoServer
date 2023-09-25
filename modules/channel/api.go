@@ -95,23 +95,6 @@ func (ch *Channel) channelGet(c *wkhttp.Context) {
 				ChannelType: channelSettingM.ParentChannelType,
 			}
 		}
-		if channelSettingM.MsgAutoDelete > 0 {
-			channelResp.Extra["msg_auto_delete"] = channelSettingM.MsgAutoDelete
-		}
-	}
-
-	if channelResp.Extra["msg_auto_delete"] == nil {
-		loginUser, err := ch.userService.GetUser(loginUID)
-		if err != nil {
-			ch.Error("查询用户失败！", zap.Error(err))
-			c.ResponseError(errors.New("查询用户失败！"))
-			return
-		}
-		if loginUser != nil {
-			if loginUser.MsgExpireSecond > 0 {
-				channelResp.Extra["msg_auto_delete"] = loginUser.MsgExpireSecond
-			}
-		}
 	}
 
 	c.JSON(http.StatusOK, channelResp)

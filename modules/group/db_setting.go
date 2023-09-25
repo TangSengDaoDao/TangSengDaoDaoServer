@@ -7,6 +7,8 @@ import (
 	"github.com/gocraft/dbr/v2"
 )
 
+const GroupMsgAutoDeleteNoSet int64 = -1
+
 // DB DB
 type settingDB struct {
 	ctx     *config.Context
@@ -50,6 +52,12 @@ func (s *settingDB) InsertSetting(setting *Setting) error {
 	return err
 }
 
+// InsertSettingTx 添加设置
+func (s *settingDB) InsertSettingTx(setting *Setting, tx *dbr.Tx) error {
+	_, err := tx.InsertInto("group_setting").Columns(util.AttrToUnderscore(setting)...).Record(setting).Exec()
+	return err
+}
+
 // UpdateSetting 更新设置
 func (s *settingDB) UpdateSetting(setting *Setting) error {
 	_, err := s.session.Update("group_setting").SetMap(map[string]interface{}{
@@ -90,6 +98,7 @@ func (s *settingDB) UpdateSettingWithTx(setting *Setting, tx *dbr.Tx) error {
 		"flame":             setting.Flame,
 		"flame_second":      setting.FlameSecond,
 		"remark":            setting.Remark,
+		"msg_auto_delete":   setting.MsgAutoDelete,
 	}).Where("id=?", setting.Id).Exec()
 	return err
 }
@@ -111,5 +120,15 @@ type Setting struct {
 	FlameSecond     int    // 阅后即焚秒数
 	Remark          string // 群备注
 	Version         int64  // 版本
+	MsgAutoDelete   int64  // 消息自动删除时间
 	db.BaseModel
+}
+
+func newDefaultSetting() *Setting {
+	return &Setting{
+		RevokeRemind:  1,
+		Screenshot:    1,
+		Receipt:       1,
+		MsgAutoDelete: GroupMsgAutoDeleteNoSet,
+	}
 }

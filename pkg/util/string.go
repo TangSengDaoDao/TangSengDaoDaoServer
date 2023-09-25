@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -78,7 +79,7 @@ func GetRandomSalt() string {
 	return GetRandomString(8)
 }
 
-//GetRandomString 生成随机字符串
+// GetRandomString 生成随机字符串
 func GetRandomString(num int) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	bytes := []byte(str)
@@ -113,4 +114,23 @@ var names = []string{"独角王", "老鼋", "灵感大王", "如意真仙", "蝎
 // GetRandomName 获取随机的名字
 func GetRandomName() string {
 	return names[rand.Intn(len(names)-1)]
+}
+
+func FormatSecondToDisplayTime(second int64) string {
+	if second < 60 {
+		return fmt.Sprintf("%d秒", second)
+	}
+	if second < 60*60 {
+		return fmt.Sprintf("%d分钟", second/60)
+	}
+	if second < 60*60*24 {
+		return fmt.Sprintf("%d小时", second/60/60)
+	}
+	if second < 60*60*24*30 {
+		return fmt.Sprintf("%d天", second/60/60/24)
+	}
+	if second < 60*60*24*30*12 {
+		return fmt.Sprintf("%d月", second/60/60/24/30)
+	}
+	return fmt.Sprintf("%d年", second/60/60/24/30/12)
 }

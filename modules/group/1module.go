@@ -150,6 +150,9 @@ func newChannelRespWithGroupResp(groupResp *GroupResp) *model.ChannelResp {
 	if groupResp.ForbiddenExpirTime != 0 {
 		extraMap["forbidden_expir_time"] = groupResp.ForbiddenExpirTime
 	}
+	if groupResp.MsgAutoDelete > 0 {
+		extraMap["msg_auto_delete"] = groupResp.MsgAutoDelete
+	}
 
 	resp.Extra = extraMap
 

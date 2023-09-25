@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	sutil "github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
@@ -14,6 +15,7 @@ import (
 
 type settingContext struct {
 	loginUID     string
+	loginName    string
 	groupSetting *Setting
 	newSetting   bool
 	g            *Group
@@ -170,6 +172,38 @@ var settingActionMap = map[string]groupSettingActionFnc{
 	},
 	"flame_second": func(ctx *settingContext, value interface{}) error { // 阅后即焚时间
 		ctx.groupSetting.FlameSecond = int(value.(float64))
+		return ctx.updateSettingAndSendCMD()
+	},
+	"msg_auto_delete": func(ctx *settingContext, value interface{}) error { // 自动删除消息
+		ctx.groupSetting.MsgAutoDelete = int64(value.(float64))
+		msgAutoDelete := ctx.groupSetting.MsgAutoDelete
+		content := fmt.Sprintf("{0}设置消息在 %s 后自动删除", sutil.FormatSecondToDisplayTime(msgAutoDelete))
+		if msgAutoDelete == 0 {
+			content = "{0}关闭了消息自动删除"
+		}
+		payload := []byte(util.ToJson(map[string]interface{}{
+			"content": content,
+			"type":    common.Tip,
+			"extra": []config.UserBaseVo{
+				{
+					UID:  ctx.loginUID,
+					Name: ctx.loginName,
+				},
+			},
+		}))
+
+		err := ctx.g.ctx.SendMessage(&config.MsgSendReq{
+			FromUID:     ctx.loginUID,
+			ChannelID:   ctx.groupSetting.GroupNo,
+			ChannelType: uint8(common.ChannelTypeGroup),
+			Payload:     payload,
+			Header: config.MsgHeader{
+				RedDot: 1,
+			},
+		})
+		if err != nil {
+			return err
+		}
 		return ctx.updateSettingAndSendCMD()
 	},
 }

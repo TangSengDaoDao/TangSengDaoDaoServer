@@ -293,19 +293,37 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		return
 	}
 
+	loginUser, err := f.userDB.QueryByUID(loginUID)
+	if err != nil {
+		f.Error("查询用户信息失败！", zap.Error(err), zap.String("uid", loginUID))
+		c.ResponseError(errors.New("查询用户信息失败！"))
+		return
+	}
+	if loginUser == nil || loginUser.IsDestroy == 1 {
+		f.Error("当前用户不存在或已注销！", zap.String("uid", loginUID))
+		c.ResponseError(errors.New("当前用户不存在或已注销！"))
+		return
+	}
+
 	applyUID := valueMap["from_uid"].(string)
 	vercode := valueMap["vercode"].(string)
 	remark := ""
 	if valueMap["remark"] != nil {
 		remark = valueMap["remark"].(string)
 	}
+
+	applyUser, err := f.userDB.QueryByUID(applyUID)
+	if err != nil {
+		f.Error("查询申请人用户信息失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询申请人用户信息失败！"))
+		return
+	}
+	if applyUser == nil || applyUser.IsDestroy == 1 {
+		f.Error("申请人不存在或已注销！", zap.String("uid", applyUID))
+		c.ResponseError(errors.New("申请人不存在"))
+		return
+	}
 	if remark == "" {
-		applyUser, err := f.userDB.QueryByUID(applyUID)
-		if err != nil {
-			f.Error("查询申请人用户信息失败！", zap.Error(err))
-			c.ResponseError(errors.New("查询申请人用户信息失败！"))
-			return
-		}
 		if applyUser != nil {
 			remark = fmt.Sprintf("我是%s", applyUser.Name)
 		}
@@ -314,20 +332,8 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		c.ResponseError(errors.New("好友申请无效或已过期！"))
 		return
 	}
-	// 判断申请者是否已注销
-	userInfo, err := f.userDB.QueryByUID(applyUID)
-	if err != nil {
-		f.Error("查询申请者用户信息错误", zap.Error(err))
-		c.ResponseError(errors.New("查询申请者用户信息错误"))
-		return
-	}
-	if userInfo == nil || userInfo.IsDestroy == 1 {
-		c.ResponseError(errors.New("申请者不存在或已注销"))
-		return
-	}
 	// 是否是好友
 	applyFriendModel, err := f.db.queryWithUID(loginUID, applyUID)
-	//applyIsFriend, err := f.db.IsFriend(loginUID, applyUID)
 	if err != nil {
 		f.Error("查询是否是好友失败！", zap.Error(err), zap.String("uid", loginUID), zap.String("toUid", applyUID))
 		c.ResponseError(errors.New("查询是否是好友失败！"))
@@ -370,6 +376,32 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		if err != nil {
 			util.CheckErr(tx.Rollback())
 			c.ResponseError(errors.New("修改好友关系失败"))
+			return
+		}
+	}
+	if loginUser != nil && loginUser.MsgExpireSecond > 0 {
+		setting := newDefaultSettingModel()
+		setting.UID = loginUID
+		setting.ToUID = applyUID
+		setting.MsgAutoDelete = loginUser.MsgExpireSecond
+		err = f.settingDB.InsertOrUpdateSettingModelTx(setting, tx)
+		if err != nil {
+			f.Error("修改用户消息过期时间失败", zap.Error(err))
+			util.CheckErr(tx.Rollback())
+			c.ResponseError(errors.New("修改用户消息过期时间失败"))
+			return
+		}
+	}
+	if applyUser != nil && applyUser.MsgExpireSecond > 0 {
+		setting := newDefaultSettingModel()
+		setting.UID = applyUID
+		setting.ToUID = loginUID
+		setting.MsgAutoDelete = applyUser.MsgExpireSecond
+		err = f.settingDB.InsertOrUpdateSettingModelTx(setting, tx)
+		if err != nil {
+			f.Error("修改用户消息过期时间失败", zap.Error(err))
+			util.CheckErr(tx.Rollback())
+			c.ResponseError(errors.New("修改用户消息过期时间失败"))
 			return
 		}
 	}

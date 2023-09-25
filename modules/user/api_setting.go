@@ -1,9 +1,13 @@
 package user
 
 import (
+	"fmt"
+
+	sutil "github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -38,15 +42,12 @@ func (u *Setting) userSettingUpdate(c *wkhttp.Context) {
 		return
 	}
 	insert := false // 是否是插入操作
+	isUpdateMsgAutoDelete := false
 	if model == nil {
 		insert = true // 是否是插入操作
-		model = &SettingModel{
-			UID:          loginUID,
-			ToUID:        toUID,
-			Screenshot:   1,
-			RevokeRemind: 1,
-			Receipt:      1,
-		}
+		model = newDefaultSettingModel()
+		model.UID = loginUID
+		model.ToUID = toUID
 	}
 	for key, value := range settingMap {
 		switch key {
@@ -68,6 +69,9 @@ func (u *Setting) userSettingUpdate(c *wkhttp.Context) {
 			model.FlameSecond = int(value.(float64))
 		case "remark":
 			model.Remark = value.(string)
+		case "msg_auto_delete":
+			isUpdateMsgAutoDelete = true
+			model.MsgAutoDelete = int64(value.(float64))
 		}
 	}
 	version := u.ctx.GenSeq(common.UserSettingSeqKey)
@@ -84,6 +88,37 @@ func (u *Setting) userSettingUpdate(c *wkhttp.Context) {
 		if err != nil {
 			u.Error("修改设置失败！", zap.Error(err))
 			c.ResponseError(errors.New("修改设置失败！"))
+			return
+		}
+	}
+	if isUpdateMsgAutoDelete {
+		content := fmt.Sprintf("{0}设置消息在 %s 后自动删除", sutil.FormatSecondToDisplayTime(model.MsgAutoDelete))
+		if model.MsgAutoDelete == 0 {
+			content = "{0}关闭了消息自动删除"
+		}
+		payload := []byte(util.ToJson(map[string]interface{}{
+			"content": content,
+			"type":    common.Tip,
+			"extra": []config.UserBaseVo{
+				{
+					UID:  loginUID,
+					Name: c.GetLoginName(),
+				},
+			},
+		}))
+
+		err := u.ctx.SendMessage(&config.MsgSendReq{
+			FromUID:     loginUID,
+			ChannelID:   toUID,
+			ChannelType: common.ChannelTypePerson.Uint8(),
+			Payload:     payload,
+			Header: config.MsgHeader{
+				RedDot: 1,
+			},
+		})
+		if err != nil {
+			u.Error("发送消息失败！", zap.Error(err))
+			c.ResponseError(errors.New("发送消息失败！"))
 			return
 		}
 	}

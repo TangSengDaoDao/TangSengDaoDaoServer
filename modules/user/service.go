@@ -830,6 +830,7 @@ type UserDetailResp struct {
 	IsDestroy      int               `json:"is_destroy"`       // 是否注销0.否1.是
 	Flame          int               `json:"flame"`            // 是否开启阅后即焚
 	FlameSecond    int               `json:"flame_second"`     // 阅后即焚秒数
+	MsgAutoDelete  int64             `json:"msg_auto_delete"`  // 消息自动删除
 }
 
 func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, onLine int, lastOffline int, deviceFlag config.DeviceFlag, follow int, status int, beDeleted int, beBlacklist int, setting *SettingModel, vercode string) *UserDetailResp {
@@ -849,9 +850,12 @@ func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, on
 	}
 	var flame int
 	var flameSecond int
+	var msgAutoDelete int64
 	if setting != nil {
 		flame = setting.Flame
 		flameSecond = setting.FlameSecond
+		msgAutoDelete = setting.MsgAutoDelete
+
 	}
 
 	return &UserDetailResp{
@@ -885,5 +889,6 @@ func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, on
 		Flame:          flame,
 		FlameSecond:    flameSecond,
 		Vercode:        vercode,
+		MsgAutoDelete:  msgAutoDelete,
 	}
 }

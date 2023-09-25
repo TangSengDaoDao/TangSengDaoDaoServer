@@ -40,6 +40,5 @@ type channelSettingModel struct {
 	ChannelType       uint8
 	ParentChannelID   string
 	ParentChannelType uint8
-	MsgAutoDelete     int64
 	db.BaseModel
 }

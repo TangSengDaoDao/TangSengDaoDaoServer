@@ -343,6 +343,18 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		return
 	}
 
+	creatorUser, err := g.userDB.QueryByUID(creator)
+	if err != nil {
+		g.Error("查询创建者信息失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询创建者信息失败！"))
+		return
+	}
+	if creatorUser == nil {
+		g.Error("创建者不存在！", zap.String("creator", creator))
+		c.ResponseError(errors.New("创建者不存在！"))
+		return
+	}
+
 	req.Members = util.RemoveRepeatedElement(append(req.Members, creator)) // 将创建者也加入成员内
 
 	// 查询成员用户信息
@@ -476,6 +488,19 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			return
 		}
 	}
+
+	if creatorUser.MsgExpireSecond > 0 {
+		settingM := newDefaultSetting()
+		settingM.MsgAutoDelete = creatorUser.MsgExpireSecond
+		err = g.settingDB.InsertSettingTx(settingM, tx)
+		if err != nil {
+			tx.RollbackUnlessCommitted()
+			g.Error("添加群设置失败！", zap.Error(err))
+			c.ResponseError(errors.New("添加群设置失败！"))
+			return
+		}
+	}
+
 	groupAvatarEventID, err := g.ctx.EventBegin(&wkevent.Data{
 		Event: event.GroupAvatarUpdate,
 		Type:  wkevent.CMD,
@@ -1916,13 +1941,10 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 		version := g.ctx.GenSeq(common.GroupSettingSeqKey)
 		if setting == nil { // 不存在设置信息
 			insert = true
-			setting = &Setting{}
+			setting = newDefaultSetting()
 			setting.GroupNo = groupNo
 			setting.UID = loginUID
 			setting.Version = version
-			setting.RevokeRemind = 1
-			setting.Screenshot = 1
-			setting.Receipt = 1
 		} else {
 			setting.Version = version
 		}
@@ -1943,7 +1965,6 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 	}
 
 	for key, value := range resultMap {
-		fmt.Println("key-->", key, " value---->", value)
 		settingActionFnc := settingActionMap[key]
 		if settingActionFnc != nil {
 			setting, newSetting, err := getSettingFnc()
@@ -1954,6 +1975,7 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 			}
 			ctx := &settingContext{
 				loginUID:     loginUID,
+				loginName:    c.GetLoginName(),
 				groupSetting: setting,
 				newSetting:   newSetting,
 				g:            g,
