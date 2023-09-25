@@ -468,7 +468,6 @@ type DetailModel struct {
 	Flame           int    // 是否开启阅后即焚
 	FlameSecond     int    // 阅后即焚秒数
 	Remark          string // 群备注
-	MsgAutoDelete   int64  // 消息自动删除
 }
 
 // Model 群db model

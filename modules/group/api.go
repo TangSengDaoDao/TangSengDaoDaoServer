@@ -488,21 +488,6 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			return
 		}
 	}
-
-	if creatorUser.MsgExpireSecond > 0 {
-		settingM := newDefaultSetting()
-		settingM.UID = creator
-		settingM.GroupNo = groupNo
-		settingM.MsgAutoDelete = creatorUser.MsgExpireSecond
-		err = g.settingDB.InsertSettingTx(settingM, tx)
-		if err != nil {
-			tx.RollbackUnlessCommitted()
-			g.Error("添加群设置失败！", zap.Error(err))
-			c.ResponseError(errors.New("添加群设置失败！"))
-			return
-		}
-	}
-
 	groupAvatarEventID, err := g.ctx.EventBegin(&wkevent.Data{
 		Event: event.GroupAvatarUpdate,
 		Type:  wkevent.CMD,

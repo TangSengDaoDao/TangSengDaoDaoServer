@@ -451,7 +451,6 @@ type GroupResp struct {
 	CreatedAt           string    `json:"created_at"`
 	UpdatedAt           string    `json:"updated_at"`
 	Version             int64     `json:"version"` // 群数据版本
-	MsgAutoDelete       int64     `json:"msg_auto_delete"`
 }
 
 func (g *GroupResp) from(model *DetailModel) *GroupResp {
@@ -478,7 +477,6 @@ func (g *GroupResp) from(model *DetailModel) *GroupResp {
 		FlameSecond:         model.FlameSecond,
 		Status:              model.Status,
 		AllowViewHistoryMsg: model.AllowViewHistoryMsg,
-		MsgAutoDelete:       model.MsgAutoDelete,
 		CreatedAt:           model.CreatedAt.String(),
 		UpdatedAt:           model.UpdatedAt.String(),
 	}
