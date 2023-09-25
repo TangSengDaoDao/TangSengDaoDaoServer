@@ -491,6 +491,8 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 
 	if creatorUser.MsgExpireSecond > 0 {
 		settingM := newDefaultSetting()
+		settingM.UID = creator
+		settingM.GroupNo = groupNo
 		settingM.MsgAutoDelete = creatorUser.MsgExpireSecond
 		err = g.settingDB.InsertSettingTx(settingM, tx)
 		if err != nil {
