@@ -2,7 +2,6 @@ package channel
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"go.uber.org/zap"
 )
@@ -41,8 +39,7 @@ func (ch *Channel) Route(r *wkhttp.WKHttp) {
 	auth := r.Group("/v1", ch.ctx.AuthMiddleware(r))
 	{
 		auth.GET("/channel/state", ch.state)
-		auth.GET("/channels/:channel_id/:channel_type", ch.channelGet)                                  // 获取频道信息
-		auth.POST("/channels/:channel_id/:channel_type/message/autodelete", ch.setAutoDeleteForMessage) // 设置消息定时删除时间
+		auth.GET("/channels/:channel_id/:channel_type", ch.channelGet) // 获取频道信息
 	}
 }
 
@@ -143,117 +140,6 @@ func (ch *Channel) state(c *wkhttp.Context) {
 		OnlineCount: onlineCount,
 	})
 
-}
-
-func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
-	channelID := c.Param("channel_id")
-	channelTypeI64, _ := strconv.ParseInt(c.Param("channel_type"), 10, 64)
-	channelType := uint8(channelTypeI64)
-
-	var req struct {
-		MsgAutoDelete int64 `json:"msg_auto_delete"` // 单位秒
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.ResponseError(errors.New("参数错误"))
-		ch.Error("参数错误", zap.Error(err))
-		return
-	}
-
-	loginUID := c.GetLoginUID()
-	fakeChannelID := channelID
-	isSelf := false
-	if channelType == common.ChannelTypePerson.Uint8() {
-		fakeChannelID = common.GetFakeChannelIDWith(loginUID, channelID)
-		if channelID == loginUID {
-			isSelf = true
-		}
-	} else {
-		isCreatorOrManager, err := ch.groupService.IsCreatorOrManager(channelID, loginUID)
-		if err != nil {
-			c.ResponseError(errors.New("查询群的创建者或管理员错误"))
-			ch.Error("查询群的创建者或管理员错误", zap.Error(err))
-			return
-		}
-		if !isCreatorOrManager {
-			c.ResponseError(errors.New("没有权限设置"))
-			ch.Error("没有权限设置")
-			return
-		}
-	}
-
-	if !isSelf {
-		if err := ch.channelSettingDB.insertOrAddMsgAutoDelete(fakeChannelID, channelType, req.MsgAutoDelete); err != nil {
-			c.ResponseError(errors.New("设置失败"))
-			ch.Error("设置失败", zap.Error(err))
-			return
-		}
-		if req.MsgAutoDelete > 0 {
-			payload := []byte(util.ToJson(map[string]interface{}{
-				"content": fmt.Sprintf("{0}设置消息在 %s 后自动删除", formatSecondToDisplayTime(req.MsgAutoDelete)),
-				"type":    common.Tip,
-				"data": map[string]interface{}{
-					"msg_auto_delete": req.MsgAutoDelete,
-					"data_type":       "autoDeleteForMessage",
-				},
-				"extra": []config.UserBaseVo{
-					{
-						UID:  loginUID,
-						Name: c.GetLoginName(),
-					},
-				},
-			}))
-
-			err := ch.ctx.SendMessage(&config.MsgSendReq{
-				FromUID:     loginUID,
-				ChannelID:   channelID,
-				ChannelType: channelType,
-				Payload:     payload,
-				Header: config.MsgHeader{
-					RedDot: 1,
-				},
-			})
-			if err != nil {
-				ch.Error("发送消息失败！", zap.Error(err))
-				c.ResponseError(errors.New("发送消息失败！"))
-				return
-			}
-		}
-		channelReq := config.ChannelReq{
-			ChannelID:   channelID,
-			ChannelType: channelType,
-		}
-		err := ch.ctx.SendChannelUpdateWithFromUID(channelReq, channelReq, loginUID)
-		if err != nil {
-			ch.Warn("发送频道更新命令失败！", zap.Error(err))
-		}
-	} else {
-		err := ch.userService.UpdateUserMsgExpireSecond(loginUID, req.MsgAutoDelete)
-		if err != nil {
-			ch.Error("设置消息自动删除时间失败！", zap.Error(err))
-			c.ResponseError(errors.New("设置消息自动删除时间失败！"))
-			return
-		}
-	}
-	c.ResponseOK()
-}
-
-func formatSecondToDisplayTime(second int64) string {
-	if second < 60 {
-		return fmt.Sprintf("%d秒", second)
-	}
-	if second < 60*60 {
-		return fmt.Sprintf("%d分钟", second/60)
-	}
-	if second < 60*60*24 {
-		return fmt.Sprintf("%d小时", second/60/60)
-	}
-	if second < 60*60*24*30 {
-		return fmt.Sprintf("%d天", second/60/60/24)
-	}
-	if second < 60*60*24*30*12 {
-		return fmt.Sprintf("%d月", second/60/60/24/30)
-	}
-	return fmt.Sprintf("%d年", second/60/60/24/30/12)
 }
 
 type stateResp struct {

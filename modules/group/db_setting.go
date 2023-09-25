@@ -76,6 +76,7 @@ func (s *settingDB) UpdateSetting(setting *Setting) error {
 		"flame":             setting.Flame,
 		"flame_second":      setting.FlameSecond,
 		"remark":            setting.Remark,
+		"msg_auto_delete":   setting.MsgAutoDelete,
 	}).Where("id=?", setting.Id).Exec()
 	return err
 }
