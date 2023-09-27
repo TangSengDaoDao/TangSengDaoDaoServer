@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	chservice "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/channel/service"
 	common2 "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/file"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/source"
@@ -18,6 +19,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -382,7 +384,22 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		groupName = string(nameRuns[:20])
 	}
 
+	groupNo := util.GenerUUID()
+
 	version := g.ctx.GenSeq(common.GroupSeqKey)
+	channelServiceObj := register.GetService(ChannelServiceName)
+	var channelService chservice.IService
+	if channelServiceObj != nil {
+		channelService = channelServiceObj.(chservice.IService)
+	}
+	if channelService != nil {
+		if creatorUser != nil && creatorUser.MsgExpireSecond > 0 {
+			err = channelService.CreateOrUpdateMsgAutoDelete(groupNo, common.ChannelTypeGroup.Uint8(), creatorUser.MsgExpireSecond)
+			if err != nil {
+				g.Warn("更新消息自动删除失败！", zap.Error(err))
+			}
+		}
+	}
 
 	tx, err := g.ctx.DB().Begin()
 	util.CheckErr(err)
@@ -392,7 +409,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
-	groupNo := util.GenerUUID()
+
 	err = g.db.InsertTx(&Model{
 		GroupNo:             groupNo,
 		Name:                groupName,

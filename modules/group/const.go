@@ -32,3 +32,7 @@ const (
 	GroupTypeCommon GroupType = iota // 普通群
 	GroupTypeSuper                   // 超大群
 )
+
+const (
+	ChannelServiceName = "channel"
+)

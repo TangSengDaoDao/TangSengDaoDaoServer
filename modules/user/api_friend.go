@@ -7,10 +7,12 @@ import (
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	chservice "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/channel/service"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/source"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -331,6 +333,19 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 	if strings.TrimSpace(applyUID) == "" || strings.TrimSpace(vercode) == "" {
 		c.ResponseError(errors.New("好友申请无效或已过期！"))
 		return
+	}
+	channelServiceObj := register.GetService(ChannelServiceName)
+	var channelService chservice.IService
+	if channelServiceObj != nil {
+		channelService = channelServiceObj.(chservice.IService)
+	}
+	if channelService != nil {
+		if applyUser.MsgExpireSecond > 0 {
+			err = channelService.CreateOrUpdateMsgAutoDelete(applyUID, common.ChannelTypePerson.Uint8(), applyUser.MsgExpireSecond)
+			if err != nil {
+				f.Warn("设置消息自动删除失败", zap.Error(err))
+			}
+		}
 	}
 	// 是否是好友
 	applyFriendModel, err := f.db.queryWithUID(loginUID, applyUID)

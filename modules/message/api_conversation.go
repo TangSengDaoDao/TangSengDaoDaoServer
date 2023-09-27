@@ -10,6 +10,7 @@ import (
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/channel"
+	chservice "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/channel/service"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/group"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
@@ -36,7 +37,7 @@ type Conversation struct {
 	userService         user.IService
 	groupService        group.IService
 	service             IService
-	channelService      channel.IService
+	channelService      chservice.IService
 	conversationExtraDB *conversationExtraDB
 
 	syncConversationResultCacheMap  map[string][]string
