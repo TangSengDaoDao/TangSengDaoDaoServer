@@ -43,7 +43,7 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #aliyunSMS:
 #  accessKeyID: "" # 阿里云短信accessKeyID
 #  accessSecret: "" # 阿里云短信accessSecret
-#  templateCode: "" # 阿里云短信模板code
+#  templateCode: "" # 阿里云短信模板code 验证码变量名为code
 #  signName: "" # 阿里云短信签名
 #aliyunInternationalSMS: # 阿里云国际短信，如果配置了该项，遇到国际区号的手机号，将使用该配置发送短信
 #  accessKeyID: "" # 阿里云国际短信accessKeyID
@@ -51,6 +51,8 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #uniSMS:
 #  accessKeyID: "" # unisms accessKeyID
 #  signature: "" # unisms signature
+#  accessKeySecret: "" # unisms accessKeySecret 简易模式可以为空
+#  templateId: "" # unisms TemplateId 验证码变量名为code
 
 ##################### 文件服务 ####################
 #fileService: "minio" # 文件服务 minio or aliyunOSS or seaweedFS

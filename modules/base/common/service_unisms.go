@@ -3,14 +3,11 @@ package common
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/network"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
+	unisms "github.com/apistd/uni-go-sdk/sms"
 	"go.uber.org/zap"
 )
 
@@ -34,37 +31,25 @@ func (u *UnismsProvider) SendSMS(ctx context.Context, zone, phone string, code s
 			ph = strings.Replace(zone, "00", "", 1) + phone
 		}
 	}
-	resp, err := network.Post(fmt.Sprintf("https://uni.apistd.com/?action=sms.message.send&accessKeyId=%s", u.ctx.GetConfig().UniSMS.AccessKeyID), []byte(util.ToJson(map[string]interface{}{
-		"to":         ph,
-		"signature":  u.ctx.GetConfig().UniSMS.Signature,
-		"templateId": "pub_verif_ttl2",
-		"templateData": map[string]interface{}{
-			"code": code,
-			"ttl":  "10",
-		},
-	})), nil)
+
+	cli := unisms.NewClient(u.ctx.GetConfig().UniSMS.AccessKeyID, u.ctx.GetConfig().UniSMS.AccessKeySecret)
+
+	// 构建信息
+	message := unisms.BuildMessage()
+	message.SetTo(ph)
+	message.SetSignature(u.ctx.GetConfig().UniSMS.Signature)
+	message.SetTemplateId(u.ctx.GetConfig().UniSMS.TemplateId)
+	message.SetTemplateData(map[string]string{"code": code}) // 设置自定义参数 (变量短信)
+
+	// 发送短信
+	res, err := cli.Send(message)
 	if err != nil {
 		u.Error("发送短信失败！", zap.Error(err))
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		if resp.StatusCode == http.StatusBadRequest {
-			var resultMap map[string]interface{}
-			util.ReadJsonByByte([]byte(resp.Body), &resultMap)
-			u.Error("短信提供商返回错误！", zap.String("message", resultMap["message"].(string)))
-			return errors.New(resultMap["message"].(string))
-		}
-		u.Error("发送短信返回状态码失败！", zap.Int("httpCode", resp.StatusCode))
-		return errors.New("发送短信返回状态码失败！")
+	if res.Code != "0" {
+		u.Error("发送短信失败！", zap.String("message", res.Message))
+		return errors.New(res.Message)
 	}
-	if resp.StatusCode == http.StatusOK {
-		var resultMap map[string]interface{}
-		util.ReadJsonByByte([]byte(resp.Body), &resultMap)
-		if resultMap["code"] != "0" {
-			return errors.New(resultMap["message"].(string))
-		}
-		return nil
-	}
-
 	return nil
 }
