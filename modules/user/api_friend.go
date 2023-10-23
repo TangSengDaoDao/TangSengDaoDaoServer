@@ -341,7 +341,7 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 	}
 	if channelService != nil {
 		if applyUser.MsgExpireSecond > 0 {
-			err = channelService.CreateOrUpdateMsgAutoDelete(applyUID, common.ChannelTypePerson.Uint8(), applyUser.MsgExpireSecond)
+			err = channelService.CreateOrUpdateMsgAutoDelete(common.GetFakeChannelIDWith(applyUID, loginUID), common.ChannelTypePerson.Uint8(), applyUser.MsgExpireSecond)
 			if err != nil {
 				f.Warn("设置消息自动删除失败", zap.Error(err))
 			}
