@@ -36,18 +36,18 @@
 
 ||||
 |:---:|:---:|:--:|
-|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/conversationlist2.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/messages3.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/robot2.webp)|
+|![](./docs/screenshot/conversationlist.webp)|![](./docs/screenshot/messages.webp)|![](./docs/screenshot/robot.webp)|
 
 
 |||          |
 |:---:|:---:|:-------------------:|
-|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/weblogin2.webp)|![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/apm2.webp)| ![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/others2.webp) |
+|![](./docs/screenshot/weblogin.webp)|![](./docs/screenshot/apm.webp)| ![](./docs/screenshot/others.webp) |
 
-![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/pc1-1.png)
+![](./docs/screenshot/pc11.png)
 
-![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/pc1-2.png)
+![](./docs/screenshot/pc22.png)
 
-![](https://tangsengdaodao.oss-cn-shanghai.aliyuncs.com/screenshot/pc1-3.png)
+![](./docs/screenshot/pc33.png)
 
 演示地址
 ------------
