@@ -6,6 +6,7 @@ ENV GO111MODULE on
 
 WORKDIR /go/cache
 
+
 ADD go.mod .
 ADD go.sum .
 RUN go mod download
@@ -19,7 +20,7 @@ WORKDIR /go/release
 
 ADD . .
 
-# RUN CGO_ENABLED=1 GOOS=linux go build -ldflags='-w -extldflags "-static"' -installsuffix cgo -o app ./main.go
+# RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-w -extldflags "-static"' -installsuffix cgo -o app ./main.go
 
 RUN GIT_COMMIT=$(git rev-parse HEAD) && \
     GIT_COMMIT_DATE=$(git log --date=iso8601-strict -1 --pretty=%ct) && \

@@ -1,5 +1,6 @@
 # #################### 基础配置 ####################
 mode: "debug" #   运行模式 debug or release
+# adminpwd: "123456" # 管理员密码
 #addr: ":8090" # api监听地址
 #grpcAddr: "0.0.0.0:6979" # webhook grpc监听地址 给悟空IM提供的
 #appName: "唐僧叨叨" # 项目名称
