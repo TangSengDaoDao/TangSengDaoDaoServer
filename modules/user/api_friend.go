@@ -7,10 +7,12 @@ import (
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	chservice "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/channel/service"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/source"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -293,19 +295,37 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		return
 	}
 
+	loginUser, err := f.userDB.QueryByUID(loginUID)
+	if err != nil {
+		f.Error("查询用户信息失败！", zap.Error(err), zap.String("uid", loginUID))
+		c.ResponseError(errors.New("查询用户信息失败！"))
+		return
+	}
+	if loginUser == nil || loginUser.IsDestroy == 1 {
+		f.Error("当前用户不存在或已注销！", zap.String("uid", loginUID))
+		c.ResponseError(errors.New("当前用户不存在或已注销！"))
+		return
+	}
+
 	applyUID := valueMap["from_uid"].(string)
 	vercode := valueMap["vercode"].(string)
 	remark := ""
 	if valueMap["remark"] != nil {
 		remark = valueMap["remark"].(string)
 	}
+
+	applyUser, err := f.userDB.QueryByUID(applyUID)
+	if err != nil {
+		f.Error("查询申请人用户信息失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询申请人用户信息失败！"))
+		return
+	}
+	if applyUser == nil || applyUser.IsDestroy == 1 {
+		f.Error("申请人不存在或已注销！", zap.String("uid", applyUID))
+		c.ResponseError(errors.New("申请人不存在"))
+		return
+	}
 	if remark == "" {
-		applyUser, err := f.userDB.QueryByUID(applyUID)
-		if err != nil {
-			f.Error("查询申请人用户信息失败！", zap.Error(err))
-			c.ResponseError(errors.New("查询申请人用户信息失败！"))
-			return
-		}
 		if applyUser != nil {
 			remark = fmt.Sprintf("我是%s", applyUser.Name)
 		}
@@ -314,20 +334,21 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		c.ResponseError(errors.New("好友申请无效或已过期！"))
 		return
 	}
-	// 判断申请者是否已注销
-	userInfo, err := f.userDB.QueryByUID(applyUID)
-	if err != nil {
-		f.Error("查询申请者用户信息错误", zap.Error(err))
-		c.ResponseError(errors.New("查询申请者用户信息错误"))
-		return
+	channelServiceObj := register.GetService(ChannelServiceName)
+	var channelService chservice.IService
+	if channelServiceObj != nil {
+		channelService = channelServiceObj.(chservice.IService)
 	}
-	if userInfo == nil || userInfo.IsDestroy == 1 {
-		c.ResponseError(errors.New("申请者不存在或已注销"))
-		return
+	if channelService != nil {
+		if applyUser.MsgExpireSecond > 0 {
+			err = channelService.CreateOrUpdateMsgAutoDelete(common.GetFakeChannelIDWith(applyUID, loginUID), common.ChannelTypePerson.Uint8(), applyUser.MsgExpireSecond)
+			if err != nil {
+				f.Warn("设置消息自动删除失败", zap.Error(err))
+			}
+		}
 	}
 	// 是否是好友
 	applyFriendModel, err := f.db.queryWithUID(loginUID, applyUID)
-	//applyIsFriend, err := f.db.IsFriend(loginUID, applyUID)
 	if err != nil {
 		f.Error("查询是否是好友失败！", zap.Error(err), zap.String("uid", loginUID), zap.String("toUid", applyUID))
 		c.ResponseError(errors.New("查询是否是好友失败！"))
@@ -373,7 +394,6 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 			return
 		}
 	}
-
 	// 是否是好友
 	loginFriendModel, err := f.db.queryWithUID(applyUID, loginUID)
 	//loginIsFriend, err := f.db.IsFriend(applyUID, loginUID)

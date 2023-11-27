@@ -24,6 +24,12 @@ func (d *SettingDB) InsertUserSettingModel(setting *SettingModel) error {
 	return err
 }
 
+// InsertUserSettingModelTx 插入用户设置
+func (d *SettingDB) InsertUserSettingModelTx(setting *SettingModel, tx *dbr.Tx) error {
+	_, err := tx.InsertInto("user_setting").Columns(util.AttrToUnderscore(setting)...).Record(setting).Exec()
+	return err
+}
+
 // QueryUserSettingModel 查询用户设置
 func (d *SettingDB) QueryUserSettingModel(uid, loginUID string) (*SettingModel, error) {
 	var model *SettingModel
@@ -117,4 +123,12 @@ type SettingModel struct {
 	Version      int64  // 版本
 	Remark       string // 备注
 	db.BaseModel
+}
+
+func newDefaultSettingModel() *SettingModel {
+	return &SettingModel{
+		Screenshot:   1,
+		RevokeRemind: 1,
+		Receipt:      1,
+	}
 }

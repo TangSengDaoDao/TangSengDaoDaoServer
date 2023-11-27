@@ -14,6 +14,7 @@ import (
 
 type settingContext struct {
 	loginUID     string
+	loginName    string
 	groupSetting *Setting
 	newSetting   bool
 	g            *Group

@@ -852,6 +852,7 @@ func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, on
 	if setting != nil {
 		flame = setting.Flame
 		flameSecond = setting.FlameSecond
+
 	}
 
 	return &UserDetailResp{

@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"path/filepath"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -37,5 +38,6 @@ func (s *SeaweedFS) UploadFile(filePath string, contentType string, copyFileWrit
 
 func (s *SeaweedFS) DownloadURL(path string, filename string) (string, error) {
 	seaweedConfig := s.ctx.GetConfig().Seaweed
-	return fmt.Sprintf("%s%s", seaweedConfig.URL, path), nil
+	rpath, _ := url.JoinPath(seaweedConfig.URL, path)
+	return rpath, nil
 }

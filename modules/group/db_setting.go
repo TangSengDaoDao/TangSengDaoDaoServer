@@ -50,6 +50,12 @@ func (s *settingDB) InsertSetting(setting *Setting) error {
 	return err
 }
 
+// InsertSettingTx 添加设置
+func (s *settingDB) InsertSettingTx(setting *Setting, tx *dbr.Tx) error {
+	_, err := tx.InsertInto("group_setting").Columns(util.AttrToUnderscore(setting)...).Record(setting).Exec()
+	return err
+}
+
 // UpdateSetting 更新设置
 func (s *settingDB) UpdateSetting(setting *Setting) error {
 	_, err := s.session.Update("group_setting").SetMap(map[string]interface{}{
@@ -112,4 +118,12 @@ type Setting struct {
 	Remark          string // 群备注
 	Version         int64  // 版本
 	db.BaseModel
+}
+
+func newDefaultSetting() *Setting {
+	return &Setting{
+		RevokeRemind: 1,
+		Screenshot:   1,
+		Receipt:      1,
+	}
 }

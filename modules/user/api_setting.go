@@ -40,13 +40,9 @@ func (u *Setting) userSettingUpdate(c *wkhttp.Context) {
 	insert := false // 是否是插入操作
 	if model == nil {
 		insert = true // 是否是插入操作
-		model = &SettingModel{
-			UID:          loginUID,
-			ToUID:        toUID,
-			Screenshot:   1,
-			RevokeRemind: 1,
-			Receipt:      1,
-		}
+		model = newDefaultSettingModel()
+		model.UID = loginUID
+		model.ToUID = toUID
 	}
 	for key, value := range settingMap {
 		switch key {

@@ -100,20 +100,6 @@ func (ch *Channel) channelGet(c *wkhttp.Context) {
 		}
 	}
 
-	if channelResp.Extra["msg_auto_delete"] == nil {
-		loginUser, err := ch.userService.GetUser(loginUID)
-		if err != nil {
-			ch.Error("查询用户失败！", zap.Error(err))
-			c.ResponseError(errors.New("查询用户失败！"))
-			return
-		}
-		if loginUser != nil {
-			if loginUser.MsgExpireSecond > 0 {
-				channelResp.Extra["msg_auto_delete"] = loginUser.MsgExpireSecond
-			}
-		}
-	}
-
 	c.JSON(http.StatusOK, channelResp)
 
 }
@@ -178,12 +164,8 @@ func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
 
 	loginUID := c.GetLoginUID()
 	fakeChannelID := channelID
-	isSelf := false
 	if channelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(loginUID, channelID)
-		if channelID == loginUID {
-			isSelf = true
-		}
 	} else {
 		isCreatorOrManager, err := ch.groupService.IsCreatorOrManager(channelID, loginUID)
 		if err != nil {
@@ -198,58 +180,48 @@ func (ch *Channel) setAutoDeleteForMessage(c *wkhttp.Context) {
 		}
 	}
 
-	if !isSelf {
-		if err := ch.channelSettingDB.insertOrAddMsgAutoDelete(fakeChannelID, channelType, req.MsgAutoDelete); err != nil {
-			c.ResponseError(errors.New("设置失败"))
-			ch.Error("设置失败", zap.Error(err))
-			return
-		}
-		if req.MsgAutoDelete > 0 {
-			payload := []byte(util.ToJson(map[string]interface{}{
-				"content": fmt.Sprintf("{0}设置消息在 %s 后自动删除", formatSecondToDisplayTime(req.MsgAutoDelete)),
-				"type":    common.Tip,
-				"data": map[string]interface{}{
-					"msg_auto_delete": req.MsgAutoDelete,
-					"data_type":       "autoDeleteForMessage",
+	if err := ch.channelSettingDB.insertOrAddMsgAutoDelete(fakeChannelID, channelType, req.MsgAutoDelete); err != nil {
+		c.ResponseError(errors.New("设置失败"))
+		ch.Error("设置失败", zap.Error(err))
+		return
+	}
+	if req.MsgAutoDelete > 0 {
+		payload := []byte(util.ToJson(map[string]interface{}{
+			"content": fmt.Sprintf("{0}设置消息在 %s 后自动删除", formatSecondToDisplayTime(req.MsgAutoDelete)),
+			"type":    common.Tip,
+			"data": map[string]interface{}{
+				"msg_auto_delete": req.MsgAutoDelete,
+				"data_type":       "autoDeleteForMessage",
+			},
+			"extra": []config.UserBaseVo{
+				{
+					UID:  loginUID,
+					Name: c.GetLoginName(),
 				},
-				"extra": []config.UserBaseVo{
-					{
-						UID:  loginUID,
-						Name: c.GetLoginName(),
-					},
-				},
-			}))
-
-			err := ch.ctx.SendMessage(&config.MsgSendReq{
-				FromUID:     loginUID,
-				ChannelID:   channelID,
-				ChannelType: channelType,
-				Payload:     payload,
-				Header: config.MsgHeader{
-					RedDot: 1,
-				},
-			})
-			if err != nil {
-				ch.Error("发送消息失败！", zap.Error(err))
-				c.ResponseError(errors.New("发送消息失败！"))
-				return
-			}
-		}
-		channelReq := config.ChannelReq{
+			},
+		}))
+		err := ch.ctx.SendMessage(&config.MsgSendReq{
+			FromUID:     loginUID,
 			ChannelID:   channelID,
 			ChannelType: channelType,
-		}
-		err := ch.ctx.SendChannelUpdateWithFromUID(channelReq, channelReq, loginUID)
+			Payload:     payload,
+			Header: config.MsgHeader{
+				RedDot: 1,
+			},
+		})
 		if err != nil {
-			ch.Warn("发送频道更新命令失败！", zap.Error(err))
-		}
-	} else {
-		err := ch.userService.UpdateUserMsgExpireSecond(loginUID, req.MsgAutoDelete)
-		if err != nil {
-			ch.Error("设置消息自动删除时间失败！", zap.Error(err))
-			c.ResponseError(errors.New("设置消息自动删除时间失败！"))
+			ch.Error("发送消息失败！", zap.Error(err))
+			c.ResponseError(errors.New("发送消息失败！"))
 			return
 		}
+	}
+	channelReq := config.ChannelReq{
+		ChannelID:   channelID,
+		ChannelType: channelType,
+	}
+	err := ch.ctx.SendChannelUpdateWithFromUID(channelReq, channelReq, loginUID)
+	if err != nil {
+		ch.Warn("发送频道更新命令失败！", zap.Error(err))
 	}
 	c.ResponseOK()
 }

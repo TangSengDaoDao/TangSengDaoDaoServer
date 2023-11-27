@@ -2210,7 +2210,7 @@ func (u *User) getForgetPwdSMS(c *wkhttp.Context) {
 
 // 是否允许更新
 func allowUpdateUserField(field string) bool {
-	allowfields := []string{"sex", "short_no", "name", "search_by_phone", "search_by_short", "new_msg_notice", "msg_show_detail", "voice_on", "shock_on"}
+	allowfields := []string{"sex", "short_no", "name", "search_by_phone", "search_by_short", "new_msg_notice", "msg_show_detail", "voice_on", "shock_on", "msg_expire_second"}
 	for _, allowFiled := range allowfields {
 		if field == allowFiled {
 			return true

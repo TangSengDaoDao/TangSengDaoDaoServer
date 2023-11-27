@@ -22,6 +22,7 @@ func init() {
 			},
 			SQLDir:  register.NewSQLFS(sqlFS),
 			Swagger: swaggerContent,
+			Service: NewService(ctx.(*config.Context)),
 		}
 	})
 }

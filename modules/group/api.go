@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	chservice "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/channel/service"
 	common2 "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/file"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/source"
@@ -18,6 +19,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -370,6 +372,18 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		return
 	}
 
+	creatorUser, err := g.userDB.QueryByUID(creator)
+	if err != nil {
+		g.Error("查询创建者信息失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询创建者信息失败！"))
+		return
+	}
+	if creatorUser == nil {
+		g.Error("创建者不存在！", zap.String("creator", creator))
+		c.ResponseError(errors.New("创建者不存在！"))
+		return
+	}
+
 	req.Members = util.RemoveRepeatedElement(append(req.Members, creator)) // 将创建者也加入成员内
 
 	// 查询成员用户信息
@@ -397,7 +411,22 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		groupName = string(nameRuns[:20])
 	}
 
+	groupNo := util.GenerUUID()
+
 	version := g.ctx.GenSeq(common.GroupSeqKey)
+	channelServiceObj := register.GetService(ChannelServiceName)
+	var channelService chservice.IService
+	if channelServiceObj != nil {
+		channelService = channelServiceObj.(chservice.IService)
+	}
+	if channelService != nil {
+		if creatorUser != nil && creatorUser.MsgExpireSecond > 0 {
+			err = channelService.CreateOrUpdateMsgAutoDelete(groupNo, common.ChannelTypeGroup.Uint8(), creatorUser.MsgExpireSecond)
+			if err != nil {
+				g.Warn("更新消息自动删除失败！", zap.Error(err))
+			}
+		}
+	}
 
 	tx, err := g.ctx.DB().Begin()
 	util.CheckErr(err)
@@ -407,7 +436,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
-	groupNo := util.GenerUUID()
+
 	err = g.db.InsertTx(&Model{
 		GroupNo:             groupNo,
 		Name:                groupName,
@@ -1943,13 +1972,10 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 		version := g.ctx.GenSeq(common.GroupSettingSeqKey)
 		if setting == nil { // 不存在设置信息
 			insert = true
-			setting = &Setting{}
+			setting = newDefaultSetting()
 			setting.GroupNo = groupNo
 			setting.UID = loginUID
 			setting.Version = version
-			setting.RevokeRemind = 1
-			setting.Screenshot = 1
-			setting.Receipt = 1
 		} else {
 			setting.Version = version
 		}
@@ -1970,7 +1996,6 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 	}
 
 	for key, value := range resultMap {
-		fmt.Println("key-->", key, " value---->", value)
 		settingActionFnc := settingActionMap[key]
 		if settingActionFnc != nil {
 			setting, newSetting, err := getSettingFnc()
@@ -1981,6 +2006,7 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 			}
 			ctx := &settingContext{
 				loginUID:     loginUID,
+				loginName:    c.GetLoginName(),
 				groupSetting: setting,
 				newSetting:   newSetting,
 				g:            g,
