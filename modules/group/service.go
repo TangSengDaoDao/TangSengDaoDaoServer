@@ -58,6 +58,8 @@ type IService interface {
 	GetGroupMemberMaxVersion(groupNo string) (int64, error)
 	// 获取用户所有超级群信息
 	GetUserSupers(uid string) ([]*InfoResp, error)
+	// 新增群成员
+	AddMember(model *AddMemberReq) error
 }
 
 // Service Service
@@ -237,6 +239,13 @@ func (s *Service) GetUserSupers(uid string) ([]*InfoResp, error) {
 	return infoResps, nil
 }
 
+func (s *Service) AddMember(model *AddMemberReq) error {
+	err := s.db.InsertMember(&MemberModel{
+		GroupNo: model.GroupNo,
+		UID:     model.MemberUID,
+	})
+	return err
+}
 func (s *Service) GetGroupMemberMaxVersion(groupNo string) (int64, error) {
 	version, err := s.db.queryGroupMemberMaxVersion(groupNo)
 	return version, err
@@ -327,6 +336,12 @@ func (s *Service) GetSettingsWithUIDs(groupNo string, uids []string) ([]*Setting
 type AddGroupReq struct {
 	GroupNo string
 	Name    string
+}
+
+// AddMemberReq 添加群成员
+type AddMemberReq struct {
+	GroupNo   string
+	MemberUID string
 }
 
 // InfoResp 群信息
@@ -424,6 +439,7 @@ func toSettingResp(m *Setting) *SettingResp {
 type GroupResp struct {
 	GroupNo             string    `json:"group_no"`               // 群编号
 	GroupType           GroupType `json:"group_type"`             // 群类型
+	Category            string    `json:"category"`               // 群分类
 	Name                string    `json:"name"`                   // 群名称
 	Remark              string    `json:"remark"`                 // 群备注
 	Notice              string    `json:"notice"`                 // 群公告
@@ -457,6 +473,7 @@ func (g *GroupResp) from(model *DetailModel) *GroupResp {
 	return &GroupResp{
 		GroupNo:             model.GroupNo,
 		GroupType:           GroupType(model.GroupType),
+		Category:            model.Category,
 		Name:                model.Name,
 		Notice:              model.Notice,
 		Mute:                model.Mute,

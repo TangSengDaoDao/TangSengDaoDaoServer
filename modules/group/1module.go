@@ -126,6 +126,7 @@ func newChannelRespWithGroupResp(groupResp *GroupResp) *model.ChannelResp {
 	resp.Remark = groupResp.Remark
 	resp.Flame = groupResp.Flame
 	resp.FlameSecond = groupResp.FlameSecond
+	resp.Category = groupResp.Category
 	extraMap := make(map[string]interface{})
 	extraMap["forbidden_add_friend"] = groupResp.ForbiddenAddFriend
 	extraMap["screenshot"] = groupResp.Screenshot
