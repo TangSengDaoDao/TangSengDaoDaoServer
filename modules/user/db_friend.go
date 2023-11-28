@@ -230,6 +230,45 @@ func (d *friendDB) existBlacklist(uid string, toUID string) (bool, error) {
 	_, err := d.session.Select("count(*)").From("user_setting").Where("((uid=? and to_uid=?) or (uid=? and to_uid=?)) and blacklist=1", uid, toUID, toUID, uid).Load(&cn)
 	return cn > 0, err
 }
+func (d *friendDB) insertApplyTx(m *FriendApplyModel, tx *dbr.Tx) error {
+	_, err := tx.InsertInto("friend_apply_record").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	return err
+}
+
+func (d *friendDB) insertApply(m *FriendApplyModel) error {
+	_, err := d.session.InsertInto("friend_apply_record").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	return err
+}
+
+func (d *friendDB) queryApplysWithPage(uid string, pageSize, page uint64) ([]*FriendApplyModel, error) {
+	var list []*FriendApplyModel
+	_, err := d.session.Select("*").From("friend_apply_record").Where("uid=?", uid).Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&list)
+	return list, err
+}
+
+func (d *friendDB) deleteApplyWithUidAndToUid(uid, toUid string) error {
+	_, err := d.session.DeleteFrom("friend_apply_record").Where("uid=? and to_uid=?", uid, toUid).Exec()
+	return err
+}
+func (d *friendDB) queryApplyWithUidAndToUid(uid, toUid string) (*FriendApplyModel, error) {
+	var apply *FriendApplyModel
+	_, err := d.session.Select("*").From("friend_apply_record").Where("uid=? and to_uid=?", uid, toUid).Load(&apply)
+	return apply, err
+}
+
+func (d *friendDB) updateApply(apply *FriendApplyModel) error {
+	_, err := d.session.Update("friend_apply_record").SetMap(map[string]interface{}{
+		"status": apply.Status,
+	}).Where("id=?", apply.Id).Exec()
+	return err
+}
+
+func (d *friendDB) updateApplyTx(apply *FriendApplyModel, tx *dbr.Tx) error {
+	_, err := tx.Update("friend_apply_record").SetMap(map[string]interface{}{
+		"status": apply.Status,
+	}).Where("id=?", apply.Id).Exec()
+	return err
+}
 
 // DetailModel 好友详情
 type DetailModel struct {
@@ -270,4 +309,14 @@ type FriendDetailModel struct {
 	FriendModel
 	Name   string // 用户名称
 	ToName string //对方用户名称
+}
+
+// FriendApplyModel 好友申请记录
+type FriendApplyModel struct {
+	UID    string
+	ToUID  string
+	Remark string
+	Token  string
+	Status int // 状态 0.未处理 1.通过 2.拒绝
+	db.BaseModel
 }

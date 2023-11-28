@@ -51,16 +51,95 @@ func NewFriend(ctx *config.Context) *Friend {
 func (f *Friend) Route(r *wkhttp.WKHttp) {
 	friend := r.Group("/v1/friend", f.ctx.AuthMiddleware(r))
 	{
-		friend.POST("/apply", f.friendApply)  // 好友申请
-		friend.POST("/sure", f.friendSure)    // 好友确认
-		friend.GET("/sync", f.friendSync)     // 同步好友
-		friend.GET("/search", f.friendSearch) // 查询好友
-		friend.PUT("/remark", f.remark)       //好友备注
+		friend.POST("/apply", f.friendApply)           // 好友申请
+		friend.GET("/apply", f.apply)                  // 好友申请列表
+		friend.DELETE("/apply/:to_uid", f.deleteApply) // 删除好友申请
+		friend.PUT("/refuse", f.refuseApply)           // 拒绝申请
+		friend.POST("/sure", f.friendSure)             // 好友确认
+		friend.GET("/sync", f.friendSync)              // 同步好友
+		friend.GET("/search", f.friendSearch)          // 查询好友
+		friend.PUT("/remark", f.remark)                //好友备注
 	}
 	friends := r.Group("/v1/friends", f.ctx.AuthMiddleware(r))
 	{
 		friends.DELETE("/:uid", f.delete) //删除好友
 	}
+}
+
+// 通过或拒绝申请
+func (f *Friend) refuseApply(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	toUid := c.Param("to_uid")
+	if toUid == "" {
+		c.ResponseError(errors.New("好友ID不能为空"))
+		return
+	}
+
+	apply, err := f.db.queryApplyWithUidAndToUid(loginUID, toUid)
+	if err != nil {
+		f.Error("查询申请记录错误", zap.Error(err))
+		c.ResponseError(errors.New("查询申请记录错误"))
+		return
+	}
+	if apply == nil || apply.UID != loginUID {
+		c.ResponseError(errors.New("申请记录不存在"))
+		return
+	}
+	apply.Status = 2
+	err = f.db.updateApply(apply)
+	if err != nil {
+		f.Error("修改申请记录错误", zap.Error(err))
+		c.ResponseError(errors.New("修改申请记录错误"))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 删除好友申请记录
+func (f *Friend) deleteApply(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	toUid := c.Param("to_uid")
+	if toUid == "" {
+		c.ResponseError(errors.New("id不能为空"))
+		return
+	}
+	err := f.db.deleteApplyWithUidAndToUid(loginUID, toUid)
+	if err != nil {
+		f.Error("删除申请记录错误", zap.Error(err))
+		c.ResponseError(errors.New("删除申请记录错误"))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 好友申请列表
+func (f *Friend) apply(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	page := c.Query("page_index")
+	size := c.Query("page_size")
+	pageIndex, _ := strconv.Atoi(page)
+	pageSize, _ := strconv.Atoi(size)
+	applys, err := f.db.queryApplysWithPage(loginUID, uint64(pageSize), uint64(pageIndex))
+	if err != nil {
+		f.Error("查询好友申请列表错误", zap.Error(err))
+		c.ResponseError(errors.New("查询好友申请列表错误"))
+		return
+	}
+	list := make([]*friendApplyResp, 0)
+	if len(applys) > 0 {
+		for _, apply := range applys {
+			list = append(list, &friendApplyResp{
+				Id:        apply.Id,
+				UID:       apply.UID,
+				ToUID:     apply.ToUID,
+				Remark:    apply.Remark,
+				Status:    apply.Status,
+				Token:     apply.Token,
+				CreatedAt: apply.CreatedAt.String(),
+			})
+		}
+	}
+	c.Response(list)
 }
 
 // 删除好友
@@ -227,6 +306,7 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 		}
 		req.Vercode = friend.SourceVercode
 	}
+
 	//验证code是否有效
 	err = source.CheckRequestAddFriendCode(req.Vercode, fromUID)
 	if err != nil {
@@ -244,6 +324,81 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 	if err != nil {
 		f.Error("设置申请token失败！", zap.Error(err))
 		c.ResponseError(errors.New("设置申请token失败！"))
+		return
+	}
+	// 查询好友申请记录
+	apply, err := f.db.queryApplyWithUidAndToUid(req.ToUID, fromUID)
+	if err != nil {
+		f.Error("查询好友申请记录错误", zap.String("to_uid", req.ToUID))
+		c.ResponseError(errors.New("查询好友申请记录错误"))
+		return
+	}
+	// 查询用户红点
+	userRedDot, err := f.userDB.queryUserRedDot(req.ToUID, UserRedDotCategoryFriendApply)
+	if err != nil {
+		f.Error("查询用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
+		c.ResponseError(errors.New("查询用户通讯录红点信息错误"))
+		return
+	}
+	tx, _ := f.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
+	if apply == nil {
+		err = f.db.insertApplyTx(&FriendApplyModel{
+			Status: 0,
+			UID:    req.ToUID,
+			ToUID:  fromUID,
+			Remark: req.Remark,
+			Token:  token,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			f.Error("新增好友申请记录错误", zap.String("to_uid", req.ToUID))
+			c.ResponseError(errors.New("新增好友申请记录错误"))
+			return
+		}
+	} else {
+		apply.Status = 0
+		err = f.db.updateApplyTx(apply, tx)
+		if err != nil {
+			tx.Rollback()
+			f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
+			c.ResponseError(errors.New("修改好友申请记录错误"))
+			return
+		}
+	}
+	// 新增红点
+	if userRedDot == nil {
+		err = f.userDB.insertUserRedDotTx(&userRedDotModel{
+			UID:      req.ToUID,
+			Count:    1,
+			IsDot:    0,
+			Category: UserRedDotCategoryFriendApply,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			f.Error("新增用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
+			c.ResponseError(errors.New("新增用户通讯录红点信息错误"))
+			return
+		}
+	} else {
+		userRedDot.Count++
+		err = f.userDB.updateUserRedDotTx(userRedDot, tx)
+		if err != nil {
+			tx.Rollback()
+			f.Error("修改用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
+			c.ResponseError(errors.New("修改用户通讯录红点信息错误"))
+			return
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		tx.Rollback()
+		f.Error("提交事物错误", zap.Error(err))
+		c.ResponseError(errors.New("提交事物错误"))
 		return
 	}
 	// 发送消息
@@ -441,7 +596,24 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		c.ResponseError(errors.New("发送好友确认事件失败"))
 		return
 	}
-
+	// 查询好友申请记录
+	apply, err := f.db.queryApplyWithUidAndToUid(loginUID, applyUID)
+	if err != nil {
+		f.Error("查询好友申请记录错误", zap.Error(err))
+		tx.Rollback()
+		c.ResponseError(errors.New("查询好友申请记录错误"))
+		return
+	}
+	if apply != nil {
+		apply.Status = 1
+		err = f.db.updateApplyTx(apply, tx)
+		if err != nil {
+			f.Error("修改好友申请记录错误", zap.Error(err))
+			tx.Rollback()
+			c.ResponseError(errors.New("修改好友申请记录错误"))
+			return
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		f.Error("提交事务失败！", zap.Error(err))
 		c.ResponseError(errors.New("提交事务失败！"))
@@ -704,6 +876,16 @@ type friendResp struct {
 	UpdatedAt string `json:"updated_at"`
 	IsDeleted int    `json:"is_deleted"`
 	Version   int64  `json:"version"`
+}
+
+type friendApplyResp struct {
+	Id        int64  `json:"id"`
+	UID       string `json:"uid"`
+	ToUID     string `json:"to_uid"`
+	Remark    string `json:"remark"`
+	Status    int    `json:"status"` // 状态 0.未处理 1.通过 2.拒绝
+	Token     string `json:"token"`
+	CreatedAt string `json:"created_at"`
 }
 
 func (f *friendResp) From(m *DetailModel, blacklist int, beBlacklist int) {
