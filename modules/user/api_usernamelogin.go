@@ -143,8 +143,8 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()
-			u.Error("数据库事物提交失败", zap.Error(err))
-			c.ResponseError(errors.New("数据库事物提交失败"))
+			u.Error("数据库事务提交失败", zap.Error(err))
+			c.ResponseError(errors.New("数据库事务提交失败"))
 			return nil
 		}
 		return nil
