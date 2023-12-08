@@ -484,6 +484,7 @@ type Model struct {
 	Invite              int    // 是否开启邀请确认 0.否 1.是
 	ForbiddenAddFriend  int    //群内禁止加好友
 	AllowViewHistoryMsg int    // 是否允许新成员查看历史消息
+	Category            string // 群分类
 	db.BaseModel
 }
 

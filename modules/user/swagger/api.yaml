@@ -2045,7 +2045,68 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-
+  /user/reddot/{category}:
+    get:
+      tags:
+        - "user"
+      summary: "获取用户红点"
+      description: "获取用户红点"
+      operationId: "get user red dot"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category"
+          type: string
+          description: "红点分类 ‘friendApply’ 申请加好友红点"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              count:
+                type: integer
+                description: "红点数量"
+              is_dot:
+                type: integer
+                description: "是否显示红点 1.是"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete:
+      tags:
+        - "user"
+      summary: "删除用户红点"
+      description: "删除用户红点"
+      operationId: "delete user red dot"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category"
+          type: string
+          description: "红点分类 ‘friendApply’ 申请加好友红点"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /users/{uid}/avatar:
     post:
       tags:

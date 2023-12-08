@@ -47,7 +47,7 @@ func (sm *ServiceMinio) UploadFile(filePath string, contentType string, copyFile
 	minioConfig := sm.ctx.GetConfig().Minio
 
 	ctx := context.Background()
-	uploadUl, _ := url.Parse(minioConfig.URL)
+	uploadUl, _ := url.Parse(minioConfig.UploadURL)
 	endpoint := uploadUl.Host
 	accessKeyID := minioConfig.AccessKeyID
 	secretAccessKey := minioConfig.SecretAccessKey
@@ -123,6 +123,6 @@ func (sm *ServiceMinio) DownloadURL(ph string, filename string) (string, error) 
 	minioConfig := sm.ctx.GetConfig().Minio
 	vals := url.Values{}
 	vals.Set("response-content-disposition", fmt.Sprintf("inline; filename=\"%s\"", filename))
-	result, _ := url.JoinPath(minioConfig.URL, ph)
+	result, _ := url.JoinPath(minioConfig.DownloadURL, ph)
 	return fmt.Sprintf("%s?%s", result, vals.Encode()), nil
 }

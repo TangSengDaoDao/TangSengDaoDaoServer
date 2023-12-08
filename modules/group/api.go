@@ -55,6 +55,9 @@ func New(ctx *config.Context) *Group {
 	}
 	g.ctx.AddEventListener(event.EventUserRegister, g.handleRegisterUserEvent)
 	g.ctx.AddEventListener(event.GroupMemberAdd, g.handleGroupMemberAddEvent)
+	g.ctx.AddEventListener(event.OrgOrDeptCreate, g.handleOrgOrDeptCreateEvent)
+	g.ctx.AddEventListener(event.OrgOrDeptEmployeeUpdate, g.handleOrgOrDeptEmployeeUpdate)
+	g.ctx.AddEventListener(event.OrgEmployeeExit, g.handleOrgEmployeeExit)
 	source.SetGroupMemberProvider(g)
 	return g
 }
@@ -145,6 +148,30 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 	if groupNo == g.ctx.GetConfig().Account.SystemGroupID {
 		c.Header("Content-Type", "image/jpeg")
 		avatarBytes, err := ioutil.ReadFile("assets/assets/g_avatar.jpeg")
+		if err != nil {
+			g.Error("头像读取失败！", zap.Error(err))
+			c.Writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+		c.Writer.Write(avatarBytes)
+		return
+	}
+	// 组织群
+	if strings.HasPrefix(groupNo, "org_") {
+		c.Header("Content-Type", "image/jpeg")
+		avatarBytes, err := ioutil.ReadFile("assets/assets/org_avatar.jpeg")
+		if err != nil {
+			g.Error("头像读取失败！", zap.Error(err))
+			c.Writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+		c.Writer.Write(avatarBytes)
+		return
+	}
+	// 部门群
+	if strings.HasPrefix(groupNo, "dept_") {
+		c.Header("Content-Type", "image/jpeg")
+		avatarBytes, err := ioutil.ReadFile("assets/assets/dept_avatar.jpeg")
 		if err != nil {
 			g.Error("头像读取失败！", zap.Error(err))
 			c.Writer.WriteHeader(http.StatusNotFound)

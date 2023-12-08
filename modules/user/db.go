@@ -248,6 +248,35 @@ func (d *DB) updateUserMsgExpireSecond(uid string, msgExpireSecond int64) error 
 	_, err := d.session.Update("user").Set("msg_expire_second", msgExpireSecond).Where("uid=?", uid).Exec()
 	return err
 }
+func (d *DB) queryUserRedDot(uid, category string) (*userRedDotModel, error) {
+	var model *userRedDotModel
+	_, err := d.session.Select("*").From("user_red_dot").Where("uid=? and category=?", uid, category).Load(&model)
+	return model, err
+}
+func (d *DB) insertUserRedDotTx(m *userRedDotModel, tx *dbr.Tx) error {
+	_, err := tx.InsertInto("user_red_dot").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	return err
+}
+
+func (d *DB) insertUserRedDot(m *userRedDotModel) error {
+	_, err := d.session.InsertInto("user_red_dot").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	return err
+}
+func (d *DB) updateUserRedDot(m *userRedDotModel) error {
+	_, err := d.session.Update("user_red_dot").SetMap(map[string]interface{}{
+		"count":  m.Count,
+		"is_dot": m.IsDot,
+	}).Where("uid=? and category=?", m.UID, m.Category).Exec()
+	return err
+}
+
+func (d *DB) updateUserRedDotTx(m *userRedDotModel, tx *dbr.Tx) error {
+	_, err := tx.Update("user_red_dot").SetMap(map[string]interface{}{
+		"count":  m.Count,
+		"is_dot": m.IsDot,
+	}).Where("uid=? and category=?", m.UID, m.Category).Exec()
+	return err
+}
 
 // ------------ model ------------
 
@@ -325,3 +354,11 @@ type Model struct {
 // 	RevokeRemind int //撤回提醒
 // 	Receipt      int //消息回执
 // }
+
+type userRedDotModel struct {
+	UID      string
+	Count    int    // 未读数量
+	IsDot    int    // 是否显示红点 1.是 0.否
+	Category string // 红点分类
+	db.BaseModel
+}

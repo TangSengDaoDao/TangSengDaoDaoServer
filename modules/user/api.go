@@ -155,6 +155,9 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		user.POST("/maillist", u.addMaillist)
 		user.GET("/maillist", u.getMailList)
 
+		// #################### 用户红点 ####################
+		user.GET("/reddot/:category", u.getRedDot)      // 获取用户红点
+		user.DELETE("/reddot/:category", u.clearRedDot) // 清除红点
 	}
 	v := r.Group("/v1")
 	{
@@ -196,6 +199,58 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 	u.ctx.AddOnlineStatusListener(u.handleOnlineStatus)               // 需要放在listenOnlineStatus之后
 	u.ctx.Schedule(time.Minute*5, u.onlineStatusCheck)                // 在线状态定时检查
 
+}
+
+// 清除红点
+func (u *User) clearRedDot(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	category := c.Param("category")
+	if category == "" {
+		c.ResponseError(errors.New("分类不能为空"))
+		return
+	}
+	userRedDot, err := u.db.queryUserRedDot(loginUID, category)
+	if err != nil {
+		u.Error("查询用户红点错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户红点错误"))
+		return
+	}
+	if userRedDot != nil {
+		userRedDot.Count = 0
+		err = u.db.updateUserRedDot(userRedDot)
+		if err != nil {
+			u.Error("修改用户红点错误", zap.Error(err))
+			c.ResponseError(errors.New("查询用户红点错误"))
+			return
+		}
+	}
+	c.ResponseOK()
+}
+
+// 获取用户红点
+func (u *User) getRedDot(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	category := c.Param("category")
+	if category == "" {
+		c.ResponseError(errors.New("分类不能为空"))
+		return
+	}
+	userRedDot, err := u.db.queryUserRedDot(loginUID, UserRedDotCategoryFriendApply)
+	if err != nil {
+		u.Error("查询用户红点错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户红点错误"))
+		return
+	}
+	count := 0
+	isDot := 0
+	if userRedDot != nil {
+		count = userRedDot.Count
+		isDot = userRedDot.IsDot
+	}
+	c.Response(map[string]interface{}{
+		"count":  count,
+		"is_dot": isDot,
+	})
 }
 
 // updateSystemUserToken 更新系统账号token

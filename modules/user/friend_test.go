@@ -16,9 +16,9 @@ import (
 func TestFriendSureSearch(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	u := New(ctx)
-	u.Route(s.GetRoute())
+	//u.Route(s.GetRoute())
 	f := NewFriend(ctx)
-	f.Route(s.GetRoute())
+	//f.Route(s.GetRoute())
 	//清除数据
 	err := testutil.CleanAllTables(ctx)
 	assert.NoError(t, err)
@@ -29,6 +29,7 @@ func TestFriendSureSearch(t *testing.T) {
 		Name:     "111",
 		Username: "111",
 		Vercode:  vercode,
+		ShortNo:  "1111111",
 	})
 	assert.NoError(t, err)
 	vercode = "222@1"
@@ -37,12 +38,20 @@ func TestFriendSureSearch(t *testing.T) {
 		Name:     "222",
 		Username: "222",
 		Vercode:  vercode,
+		ShortNo:  "121",
+	})
+	assert.NoError(t, err)
+	err = f.db.insertApply(&FriendApplyModel{
+		UID:    testutil.UID,
+		ToUID:  "222",
+		Remark: "我是备注",
+		Status: 0,
 	})
 	assert.NoError(t, err)
 	token := util.GenerUUID()
 	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.FriendApplyTokenCachePrefix+token+testutil.UID, util.ToJson(map[string]interface{}{
 		"from_uid": "222",
-		"code":     vercode,
+		"vercode":  vercode,
 	}), u.ctx.GetConfig().Cache.FriendApplyExpire)
 	assert.NoError(t, err)
 
@@ -52,7 +61,8 @@ func TestFriendSureSearch(t *testing.T) {
 	}))))
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
+	// assert.Equal(t, http.StatusOK, w.Code)
+	panic(w.Body)
 }
 
 func TestFriendSureQr(t *testing.T) {
@@ -317,4 +327,57 @@ func TestRemark(t *testing.T) {
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	panic(w.Body)
+}
+func TestApply(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := NewFriend(ctx)
+	//u.Route(s.GetRoute())
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+
+	err = u.userDB.Insert(&Model{
+		UID:     testutil.UID,
+		ShortNo: "u1",
+		Name:    "u1",
+	})
+	assert.NoError(t, err)
+
+	err = u.userDB.Insert(&Model{
+		UID:     "111",
+		ShortNo: "111",
+		Name:    "111",
+	})
+	assert.NoError(t, err)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/v1/friend/apply", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"remark":  "这是备注",
+		"to_uid":  "111",
+		"vercode": "ssd",
+	}))))
+	req.Header.Set("token", token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+func TestDeleteApply(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := NewFriend(ctx)
+	//u.Route(s.GetRoute())
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+
+	err = u.db.insertApply(&FriendApplyModel{
+		UID:    testutil.UID,
+		ToUID:  "123",
+		Remark: "我备注",
+		Status: 1,
+	})
+	assert.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/v1/friend/apply/123", nil)
+	req.Header.Set("token", token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
 }

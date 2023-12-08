@@ -691,8 +691,8 @@ func (m *Manager) liftBanUser(c *wkhttp.Context) {
 	_, err = m.ctx.UpdateIMToken(config.UpdateIMTokenReq{
 		UID:         userInfo.UID,
 		Token:       token,
-		DeviceFlag:  config.PC,
-		DeviceLevel: config.DeviceLevelSlave,
+		DeviceFlag:  config.APP,
+		DeviceLevel: config.DeviceLevelMaster,
 	})
 	if err != nil {
 		m.Error("更新用户的ban状态失败！", zap.Error(err), zap.String("uid", uid))

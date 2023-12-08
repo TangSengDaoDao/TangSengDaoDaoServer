@@ -50,6 +50,12 @@ const (
 	FriendSure string = "friend.sure"
 	// FriendDelete 好友删除
 	FriendDelete string = "friend.delete"
+	// OrgOrDeptCreate 组织货部门创建
+	OrgOrDeptCreate string = "organization_department.create"
+	// OrgOrDeptEmployeeUpdate 组织或部门员工更改
+	OrgOrDeptEmployeeUpdate string = "organization_department.employee.update"
+	// OrgEmployeeExit 组织成员退出
+	OrgEmployeeExit string = "organization.employee.exit"
 )
 
 // Event 事件

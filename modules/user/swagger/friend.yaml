@@ -51,6 +51,90 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+    get: 
+      tags:
+        - "friend"
+      summary: "申请加好友列表"
+      description: "申请加好友列表"
+      operationId: "apply friend list"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true 
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true 
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              properties: 
+                id:
+                  type: integer
+                  format: int
+                  description: "id"
+                uid:
+                  type: string
+                  description: ""
+                to_uid:
+                  type: string
+                  description: "申请用户UID"
+                remark: 
+                  type: string
+                  description: "备注"
+                status:
+                  type: integer
+                  description: "0.带处理 1.通过 2.拒绝"
+                token: 
+                  type: string
+                  description: "通过验证所需校验token"
+                created_at:
+                  type: string
+                  description: "申请时间"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+          - token: []
+  /friend/apply/{to_uid}:
+    delete:
+      tags:
+        - "friend"
+      summary: "删除申请记录"
+      description: "删除申请记录"
+      operationId: "delete friend apply"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "to_uid"
+          type: string
+          description: "申请人uid"
+          required: true 
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+          - token: []
   /friend/sure:
     post:
       tags:

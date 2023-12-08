@@ -56,3 +56,7 @@ var Names = []string{"龚都", "黄祖", "黄祖", "黄皓", "黄琬", "黄歇",
 const (
 	ChannelServiceName = "channel"
 )
+
+const (
+	UserRedDotCategoryFriendApply = "friendApply"
+)

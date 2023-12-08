@@ -631,3 +631,48 @@ func TestUploadAvatar(t *testing.T) {
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
+
+func TestGetUserRedDot(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	//u.Route(s.GetRoute())
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+
+	err = u.db.insertUserRedDot(&userRedDotModel{
+		UID:      testutil.UID,
+		Count:    1,
+		IsDot:    0,
+		Category: UserRedDotCategoryFriendApply,
+	})
+	assert.NoError(t, err)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/user/reddot/%s", UserRedDotCategoryFriendApply), nil)
+	req.Header.Set("token", token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, true, strings.Contains(w.Body.String(), `"count":1`))
+	// assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestDeleteUserRedDot(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	u := New(ctx)
+	//u.Route(s.GetRoute())
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+
+	err = u.db.insertUserRedDot(&userRedDotModel{
+		UID:      testutil.UID,
+		Count:    1,
+		IsDot:    0,
+		Category: UserRedDotCategoryFriendApply,
+	})
+	assert.NoError(t, err)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/user/reddot/%s", UserRedDotCategoryFriendApply), nil)
+	req.Header.Set("token", token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
