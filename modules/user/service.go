@@ -648,6 +648,9 @@ func (s *Service) UpdateLoginPassword(req UpdateLoginPasswordReq) error {
 }
 
 func (s *Service) GetUserSettings(uids []string, loginUID string) ([]*SettingResp, error) {
+	if len(uids) == 0 || loginUID == "" {
+		return nil, nil
+	}
 	settingModels, err := s.settingDB.QueryUserSettings(uids, loginUID)
 	if err != nil {
 		return nil, err

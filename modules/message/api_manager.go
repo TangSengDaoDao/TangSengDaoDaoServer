@@ -160,11 +160,14 @@ func (m *Manager) delete(c *wkhttp.Context) {
 		return
 	}
 	err = m.ctx.SendCMD(config.MsgCMDReq{
-		NoPersist:   true,
+		NoPersist:   false,
 		ChannelID:   req.ChannelID,
 		ChannelType: req.ChannelType,
-		FromUID:     c.GetLoginUID(),
 		CMD:         common.CMDSyncMessageExtra,
+		Param: map[string]interface{}{
+			"channel_id":   req.ChannelID,
+			"channel_type": req.ChannelType,
+		},
 	})
 
 	if err != nil {
