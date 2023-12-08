@@ -97,7 +97,12 @@ func runAPI(ctx *config.Context) {
 	//开始定时处理事件
 	cn := cron.New()
 	//定时发布事件 每59秒执行一次
-	cn.AddFunc("0/59 * * * * ?", ctx.Event.(*event.Event).EventTimerPush)
+	err = cn.AddFunc("0/59 * * * * ?", func() {
+		ctx.Event.(*event.Event).EventTimerPush()
+	})
+	if err != nil {
+		panic(err)
+	}
 	cn.Start()
 
 	// 打印服务器信息
