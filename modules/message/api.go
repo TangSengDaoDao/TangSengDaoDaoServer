@@ -1615,8 +1615,8 @@ func (m *MsgSyncResp) from(msgResp *config.MessageResp, loginUID string, message
 	m.Expire = msgResp.Expire
 	m.Timestamp = msgResp.Timestamp
 	if messageExtraM != nil {
-
 		// TODO: 后续这些字段可以废除了 都放MessageExtra对象里了
+		m.IsDeleted = messageExtraM.IsDeleted
 		m.Revoke = messageExtraM.Revoke
 		m.Revoker = messageExtraM.Revoker
 		m.ReadedCount = messageExtraM.ReadedCount
@@ -1659,7 +1659,9 @@ func (m *MsgSyncResp) from(msgResp *config.MessageResp, loginUID string, message
 	}
 
 	if messageUserExtraM != nil {
-		m.IsDeleted = messageUserExtraM.MessageIsDeleted
+		if m.IsDeleted == 0 {
+			m.IsDeleted = messageUserExtraM.MessageIsDeleted
+		}
 		m.VoiceStatus = messageUserExtraM.VoiceReaded
 	}
 
