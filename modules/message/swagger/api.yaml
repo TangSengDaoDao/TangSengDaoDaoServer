@@ -169,9 +169,9 @@ paths:
     delete:
       tags:
         - "messageManager"
-      summary: "删除代发消息记录"
-      description: "删除代发消息记录"
-      operationId: "sendfriends message delete"
+      summary: "删除消息"
+      description: "删除消息"
+      operationId: "manager message delete"
       consumes:
         - "application/json"
       produces:
@@ -187,6 +187,9 @@ paths:
               channel_id:
                 type: string
                 description: "频道ID"
+              from_uid: 
+                type: string
+                description: "发送者 群聊为空 单聊则为消息发送者uid，注意channel_id和from_uid不能相同"
               channel_type:
                 type: integer
                 description: "频道类型"

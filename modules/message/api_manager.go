@@ -117,6 +117,7 @@ func (m *Manager) delete(c *wkhttp.Context) {
 	type reqVO struct {
 		List        []*msgVO `json:"list"`
 		ChannelID   string   `json:"channel_id"`
+		FromUID     string   `json:"from_uid"`
 		ChannelType uint8    `json:"channel_type"`
 	}
 	var req reqVO
@@ -129,6 +130,14 @@ func (m *Manager) delete(c *wkhttp.Context) {
 		c.ResponseError(errors.New("删除的msgIds不能为空"))
 		return
 	}
+	if req.ChannelType == uint8(common.ChannelTypePerson) && (req.FromUID == "" || req.ChannelID == req.FromUID) {
+		c.ResponseError(errors.New("单聊fromuid不能为空且不能和channelId一致"))
+		return
+	}
+	fakeChannelID := req.ChannelID
+	if req.ChannelType == common.ChannelTypePerson.Uint8() {
+		fakeChannelID = common.GetFakeChannelIDWith(req.ChannelID, req.FromUID)
+	}
 	tx, _ := m.ctx.DB().Begin()
 	defer func() {
 		if err := recover(); err != nil {
@@ -137,9 +146,9 @@ func (m *Manager) delete(c *wkhttp.Context) {
 		}
 	}()
 	for _, msg := range req.List {
-		version := m.genMessageExtraSeq(req.ChannelID)
+		version := m.genMessageExtraSeq(fakeChannelID)
 		err := m.managerDB.updateMsgExtraVersionAndDeletedTx(&messageExtraModel{
-			ChannelID:   req.ChannelID,
+			ChannelID:   fakeChannelID,
 			ChannelType: req.ChannelType,
 			MessageID:   msg.MessageID,
 			MessageSeq:  msg.MessageSeq,
@@ -159,13 +168,30 @@ func (m *Manager) delete(c *wkhttp.Context) {
 		c.ResponseError(errors.New("提交事务失败！"))
 		return
 	}
-	err = m.ctx.SendCMD(config.MsgCMDReq{
-		NoPersist:   true,
-		ChannelID:   req.ChannelID,
-		ChannelType: req.ChannelType,
-		FromUID:     c.GetLoginUID(),
-		CMD:         common.CMDSyncMessageExtra,
-	})
+	if req.ChannelType == common.ChannelTypePerson.Uint8() {
+		err = m.ctx.SendCMD(config.MsgCMDReq{
+			NoPersist:   false,
+			ChannelID:   req.ChannelID,
+			ChannelType: req.ChannelType,
+			CMD:         common.CMDSyncMessageExtra,
+			FromUID:     req.FromUID,
+			Param: map[string]interface{}{
+				"channel_id":   req.ChannelID,
+				"channel_type": req.ChannelType,
+			},
+		})
+	} else {
+		err = m.ctx.SendCMD(config.MsgCMDReq{
+			NoPersist:   false,
+			ChannelID:   req.ChannelID,
+			ChannelType: req.ChannelType,
+			CMD:         common.CMDSyncMessageExtra,
+			Param: map[string]interface{}{
+				"channel_id":   req.ChannelID,
+				"channel_type": req.ChannelType,
+			},
+		})
+	}
 
 	if err != nil {
 		m.Error("发送cmd失败！", zap.Error(err))
