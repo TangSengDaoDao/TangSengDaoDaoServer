@@ -159,7 +159,7 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 	// 组织群
 	if strings.HasPrefix(groupNo, "org_") {
 		c.Header("Content-Type", "image/jpeg")
-		avatarBytes, err := ioutil.ReadFile("assets/assets/org_avatar.jpeg")
+		avatarBytes, err := ioutil.ReadFile("assets/assets/org_avatar.png")
 		if err != nil {
 			g.Error("头像读取失败！", zap.Error(err))
 			c.Writer.WriteHeader(http.StatusNotFound)
@@ -171,7 +171,7 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 	// 部门群
 	if strings.HasPrefix(groupNo, "dept_") {
 		c.Header("Content-Type", "image/jpeg")
-		avatarBytes, err := ioutil.ReadFile("assets/assets/dept_avatar.jpeg")
+		avatarBytes, err := ioutil.ReadFile("assets/assets/dept_avatar.png")
 		if err != nil {
 			g.Error("头像读取失败！", zap.Error(err))
 			c.Writer.WriteHeader(http.StatusNotFound)
