@@ -186,6 +186,7 @@ func (g *Group) handleOrgOrDeptCreateEvent(data []byte, commit config.EventCommi
 			commit(err)
 			return
 		}
+
 		//添加创建者
 		memberVersion := g.ctx.GenSeq(common.GroupMemberSeqKey)
 		err = g.db.InsertMemberTx(&MemberModel{
@@ -197,12 +198,33 @@ func (g *Group) handleOrgOrDeptCreateEvent(data []byte, commit config.EventCommi
 			Vercode: fmt.Sprintf("%s@%d", util.GenerUUID(), common.GroupMember),
 		}, tx)
 		if err != nil {
-			g.Error("设置系统群创建者失败")
+			g.Error("设置群创建者失败")
 			tx.Rollback()
 			commit(err)
 			return
 		}
 		realMemberUids := make([]string, 0)
+		if len(req.Members) > 0 {
+			for _, member := range req.Members {
+				realMemberUids = append(realMemberUids, member.EmployeeUid)
+				memberVersion := g.ctx.GenSeq(common.GroupMemberSeqKey)
+				err = g.db.InsertMemberTx(&MemberModel{
+					GroupNo: req.GroupNo,
+					UID:     member.EmployeeUid,
+					Role:    MemberRoleCommon,
+					Status:  int(common.GroupMemberStatusNormal),
+					Version: memberVersion,
+					Vercode: fmt.Sprintf("%s@%d", util.GenerUUID(), common.GroupMember),
+				}, tx)
+				if err != nil {
+					g.Error("添加群成员错误")
+					tx.Rollback()
+					commit(err)
+					return
+				}
+			}
+		}
+
 		realMemberUids = append(realMemberUids, req.Operator)
 		// 创建IM频道
 		err = g.ctx.IMCreateOrUpdateChannel(&config.ChannelCreateReq{
