@@ -437,21 +437,21 @@ func (g *Group) handleOrgOrDeptEmployeeUpdate(data []byte, commit config.EventCo
 				break
 			}
 		}
-		//userBaseVos := make([]*config.UserBaseVo, 0)
-		members := make([]string, 0)
+		uids := make([]string, 0)
+		members := make([]*config.UserBaseVo, 0)
 		params := make([]string, 0, len(m.Members))
 		for index := range m.Members {
 			params = append(params, fmt.Sprintf("{%d}", index))
-			members = append(members, m.Members[index].EmployeeUid)
-			// userBaseVos = append(userBaseVos, &config.UserBaseVo{
-			// 	UID:  m.Members[index].EmployeeUid,
-			// 	Name: m.Members[index].EmployeeName,
-			// })
+			members = append(members, &config.UserBaseVo{
+				UID:  m.Members[index].EmployeeUid,
+				Name: m.Members[index].EmployeeName,
+			})
+			uids = append(uids, m.Members[index].EmployeeUid)
 		}
 		err = g.ctx.IMAddSubscriber(&config.SubscriberAddReq{
 			ChannelID:   m.GroupNo,
 			ChannelType: common.ChannelTypeGroup.Uint8(),
-			Subscribers: members,
+			Subscribers: uids,
 		})
 		if err != nil {
 			g.Error("调用IM的订阅接口失败！", zap.Error(err))
@@ -459,23 +459,6 @@ func (g *Group) handleOrgOrDeptEmployeeUpdate(data []byte, commit config.EventCo
 			commit(err)
 			return
 		}
-
-		// eventID, err := g.ctx.EventBegin(&wkevent.Data{
-		// 	Event: event.OrgOrDeptEmployeeAddMsg,
-		// 	Type:  wkevent.None,
-		// 	Data: &config.MsgOrgOrDeptEmployeeAddReq{
-		// 		GroupNo: m.GroupNo,
-		// 		Name:    groupName,
-		// 		Members: userBaseVos,
-		// 	},
-		// }, tx)
-		// if err != nil {
-		// 	tx.RollbackUnlessCommitted()
-		// 	g.Error("开启事件失败！", zap.Error(err))
-		// 	commit(err)
-		// 	return
-		// }
-		// g.ctx.EventCommit(eventID)
 		content := fmt.Sprintf("欢迎%s 加入 %s，新成员入群可查看所有历史消息", strings.Join(params, ","), groupName)
 		err = g.ctx.SendMessage(&config.MsgSendReq{
 			Header: config.MsgHeader{
