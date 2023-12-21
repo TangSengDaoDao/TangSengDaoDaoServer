@@ -113,7 +113,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /manager/workplace/category/app:
+  /manager/workplace/categorys/{category_no}/app:
     get:
       tags:
         - "workplaceManager"
@@ -125,7 +125,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "category_no"
           type: string
           description: "分类编号"
@@ -558,7 +558,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/user/app:
+  /workplace/app:
     get:
       tags:
         - "workplace"
@@ -582,6 +582,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /workplace/apps/{app_id}:
     post:
       tags:
         - "workplace"
@@ -593,16 +594,11 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "body"
-          name: "data"
-          description: "添加app数据"
+        - in: "path"
+          type: string
+          name: "app_id"
+          description: "需要添加的appid"
           required: true
-          schema:
-            type: object
-            properties:
-              app_id:
-                type: string
-                description: "应用ID"
       responses:
         200:
           description: "返回"
@@ -625,7 +621,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "app_id"
           type: string
           description: "应用ID"
@@ -641,7 +637,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/user/app/reorder:
+  /workplace/app/reorder:
     put:
       tags:
         - "workplace"
@@ -708,7 +704,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/category/app:
+  /workplace/categorys/{category_no}/app:
     get:
       tags:
         - "workplace"
@@ -720,7 +716,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "category_no"
           type: string
           description: "分类编号"
@@ -738,7 +734,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/user/app/record:
+  /workplace/apps/{app_id}/record:
     post:
       tags:
         - "workplace"
@@ -750,44 +746,16 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "body"
-          name: "data"
+        - in: "path"
+          type: string
+          name: "app_id"
           description: "应用ID"
           required: true
-          schema:
-            type: object
-            properties:
-              app_id:
-                type: string
-                description: "应用ID"
       responses:
         200:
           description: "返回"
           schema:
             $ref: "#/definitions/response"
-        400:
-          description: "错误"
-          schema:
-            $ref: "#/definitions/response"
-      security:
-        - token: []
-    get:
-      tags:
-        - "workplace"
-      summary: "查询用户常用app"
-      description: "查询用户常用app"
-      operationId: "get app record"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      responses:
-        200:
-          description: "返回"
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/appResp"
         400:
           description: "错误"
           schema:
@@ -821,6 +789,31 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /workplace/app/record:
+    get:
+      tags:
+        - "workplace"
+      summary: "查询用户常用app"
+      description: "查询用户常用app"
+      operationId: "get app record"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    
 securityDefinitions:
   token:
     type: "apiKey"

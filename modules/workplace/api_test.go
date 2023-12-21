@@ -71,9 +71,7 @@ func TestUserAddApp(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/v1/workplace/user/app", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
-		"app_id": appId,
-	}))))
+	req, _ := http.NewRequest("POST", fmt.Sprintf("/v1/workplace/apps/%s", appId), nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -126,7 +124,7 @@ func TestUserGetApp(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/v1/workplace/user/app", nil)
+	req, _ := http.NewRequest("GET", "/v1/workplace/app", nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"name":"悟空IM"`))
@@ -147,7 +145,7 @@ func TestDeleteUserApp(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/workplace/user/app?app_id=%s", appId1), nil)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/workplace/apps/%s", appId1), nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -173,7 +171,7 @@ func TestReorderUserApp(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/v1/workplace/user/app/reorder", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+	req, _ := http.NewRequest("PUT", "/v1/workplace/app/reorder", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
 		"app_ids": []string{appId1, appId2},
 	}))))
 	req.Header.Set("token", token)
@@ -199,7 +197,7 @@ func TestGetCategory(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/v1/workplace/category", nil)
+	req, _ := http.NewRequest("GET", "/v1/workplace/categorys", nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"name":"审批流程"`))
@@ -261,7 +259,7 @@ func TestGetAppWithCategory(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/workplace/category/app?category_no=%s", categoryNo), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/workplace/categorys/%s/app", categoryNo), nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"app_id":"wkim"`))
@@ -281,7 +279,7 @@ func TestAddRecord(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/v1/workplace/user/app/record", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+	req, _ := http.NewRequest("POST", "/v1/workplace/app/record", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
 		"app_id": appID,
 	}))))
 	req.Header.Set("token", token)
@@ -325,7 +323,7 @@ func TestGetRecord(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/v1/workplace/user/app/record", nil)
+	req, _ := http.NewRequest("GET", "/v1/workplace/app/record", nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, true, strings.Contains(w.Body.String(), `"name":"唐僧叨叨"`))
@@ -344,7 +342,7 @@ func TestDeleteRecord(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/workplace/user/app/record?app_id=%s", appId), nil)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/workplace/%s/app", appId), nil)
 	req.Header.Set("token", token)
 	s.GetRoute().ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
