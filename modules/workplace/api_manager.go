@@ -32,21 +32,21 @@ func NewManager(ctx *config.Context) *manager {
 func (m *manager) Route(r *wkhttp.WKHttp) {
 	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
 	{
-		auth.POST("/workplace/category", m.addCategory)                   // 添加分类
-		auth.GET("/workplace/category", m.getCategory)                    // 获取分类
-		auth.PUT("/workplace/category/reorder", m.reorderCategory)        // 排序分类
-		auth.GET("/workplace/category/app", m.getCategoryApps)            // 获取分类下app
-		auth.PUT("/workplace/category/app/reorder", m.reorderCategoryApp) // 排序分类下app
-		auth.POST("/workplace/category/app", m.addCategoryApp)            // 新增分类下app
-		auth.DELETE("/workplace/category/app", m.deleteCategoryApp)       // 删除分类下app
-		auth.POST("/workplace/app", m.addApp)                             // 添加app
-		auth.PUT("/workplace/app", m.updateApp)                           // 修改app
-		auth.DELETE("/workplace/app", m.deleteApp)                        // 删除app
-		auth.GET("/workplace/app", m.getApps)                             // 获取app
-		auth.POST("/workplace/banner", m.addBanner)                       // 添加横幅
-		auth.DELETE("/workplace/banner", m.deleteBanner)                  // 删除横幅
-		auth.GET("/workplace/banner", m.getBanners)                       // 获取横幅
-		auth.PUT("/workplace/banner", m.updateBanner)                     // 修改横幅
+		auth.POST("/workplace/category", m.addCategory)                                    // 添加分类
+		auth.GET("/workplace/category", m.getCategory)                                     // 获取分类
+		auth.PUT("/workplace/category/reorder", m.reorderCategory)                         // 排序分类
+		auth.GET("/workplace/categorys/:category_no/app", m.getCategoryApps)               // 获取分类下app
+		auth.PUT("/workplace/categorys/:category_no/app/reorder", m.reorderCategoryApp)    // 排序分类下app
+		auth.POST("/workplace/categorys/:category_no/app", m.addCategoryApp)               // 新增分类下app
+		auth.DELETE("/workplace/categorys/:category_no/apps/:app_id", m.deleteCategoryApp) // 删除分类下app
+		auth.POST("/workplace/app", m.addApp)                                              // 添加app
+		auth.PUT("/workplace/app", m.updateApp)                                            // 修改app
+		auth.DELETE("/workplace/app", m.deleteApp)                                         // 删除app
+		auth.GET("/workplace/app", m.getApps)                                              // 获取app
+		auth.POST("/workplace/banner", m.addBanner)                                        // 添加横幅
+		auth.DELETE("/workplace/banner", m.deleteBanner)                                   // 删除横幅
+		auth.GET("/workplace/banner", m.getBanners)                                        // 获取横幅
+		auth.PUT("/workplace/banner", m.updateBanner)                                      // 修改横幅
 	}
 }
 
@@ -88,8 +88,8 @@ func (m *manager) deleteCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	categoryNo := c.Query("category_no")
-	appId := c.Query("app_id")
+	categoryNo := c.Param("category_no")
+	appId := c.Param("app_id")
 	if categoryNo == "" {
 		c.ResponseError(errors.New("分类编号不能为空"))
 		return
@@ -113,9 +113,9 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
+	categoryNo := c.Param("category_no")
 	type reqVO struct {
-		CategoryNo string   `json:"category_no"`
-		AppIds     []string `json:"app_ids"`
+		AppIds []string `json:"app_ids"`
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
@@ -123,7 +123,7 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(common.ErrData)
 		return
 	}
-	if req.CategoryNo == "" {
+	if categoryNo == "" {
 		c.ResponseError(errors.New("分类编号不能为空"))
 		return
 	}
@@ -141,7 +141,7 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(errors.New("添加的应用不存在"))
 		return
 	}
-	apps, err := m.wpDB.queryAppWithCategroyNo(req.CategoryNo)
+	apps, err := m.wpDB.queryAppWithCategroyNo(categoryNo)
 	if err != nil {
 		m.Error("查询该分类下应用错误", zap.Error(err))
 		c.ResponseError(errors.New("查询该分类下应用错误"))
@@ -166,7 +166,7 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 		c.ResponseOK()
 		return
 	}
-	maxSortNumApp, err := m.db.queryMaxSortNumCategoryApp(req.CategoryNo)
+	maxSortNumApp, err := m.db.queryMaxSortNumCategoryApp(categoryNo)
 	if err != nil {
 		m.Error("查询分类应用最大序号错误", zap.Error(err))
 		c.ResponseError(errors.New("查询分类应用最大序号错误"))
@@ -188,7 +188,7 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 		err := m.db.insertCategoryAppWithTx(&categoryAppModel{
 			AppId:      appId,
 			SortNum:    tempSortNum,
-			CategoryNo: req.CategoryNo,
+			CategoryNo: categoryNo,
 		}, tx)
 		if err != nil {
 			tx.Rollback()
@@ -213,9 +213,9 @@ func (m *manager) reorderCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
+	categoryNo := c.Param("category_no")
 	type reqVO struct {
-		CategoryNo string   `json:"category_no"`
-		AppIds     []string `json:"app_ids"`
+		AppIds []string `json:"app_ids"`
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
@@ -223,7 +223,7 @@ func (m *manager) reorderCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(common.ErrData)
 		return
 	}
-	if req.CategoryNo == "" {
+	if categoryNo == "" {
 		c.ResponseError(errors.New("分类编号不能为空"))
 		return
 	}
@@ -240,7 +240,7 @@ func (m *manager) reorderCategoryApp(c *wkhttp.Context) {
 	}()
 	var tempSortNum = len(req.AppIds)
 	for _, appId := range req.AppIds {
-		err := m.db.updateCategoryAppSortNumWithTx(req.CategoryNo, appId, tempSortNum, tx)
+		err := m.db.updateCategoryAppSortNumWithTx(categoryNo, appId, tempSortNum, tx)
 		if err != nil {
 			tx.Rollback()
 			m.Error("修改分类下app排序错误", zap.Error(err))
@@ -265,7 +265,7 @@ func (m *manager) getCategoryApps(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	categoryNo := c.Query("category_no")
+	categoryNo := c.Param("category_no")
 	if categoryNo == "" {
 		c.ResponseError(errors.New("分类编号不能为空"))
 		return

@@ -154,6 +154,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
         - in: "body"
           name: "data"
           description: "appids"
@@ -161,9 +166,6 @@ paths:
           schema:
             type: object
             properties:
-              category_no:
-                type: string
-                description: "分类编号"
               app_ids:
                 type: array
                 items:
@@ -180,6 +182,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/workplace/categorys/{category_no}/apps/{app_id}:
     delete:
       tags:
         - "workplaceManager"
@@ -191,12 +194,12 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "category_no"
           type: string
           description: "分类编号"
           required: true
-        - in: "query"
+        - in: "path"
           name: "app_id"
           type: string
           description: "应用ID"
@@ -212,7 +215,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /manager/workplace/category/app/reorder:
+  /manager/workplace/categorys/{category_no}/app/reorder:
     put:
       tags:
         - "workplaceManager"
@@ -224,6 +227,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
         - in: "body"
           name: "data"
           description: "appids"
@@ -231,9 +239,6 @@ paths:
           schema:
             type: object
             properties:
-              category_no:
-                type: string
-                description: "分类编号"
               app_ids:
                 type: array
                 items:
@@ -813,7 +818,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-    
+
 securityDefinitions:
   token:
     type: "apiKey"
