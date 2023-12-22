@@ -13,6 +13,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/network"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
+	"github.com/sendgrid/rest"
 	"go.uber.org/zap"
 )
 
@@ -81,38 +82,56 @@ func (h *HMSPush) Push(deviceToken string, payload Payload) error {
 	channelID := "wk_new_msg_notification"
 	sound := "/raw/newmsg"
 	category := "IM"
+	isPushRTCMsg := false
 	if hmsPayload.GetRTCPayload() != nil && hmsPayload.GetRTCPayload().GetOperation() != "cancel" {
 		channelID = "wk_new_rtc_notification"
 		sound = "/raw/newrtc"
 		category = "VOIP"
+		isPushRTCMsg = true
 	}
-	resp, err := network.Post(fmt.Sprintf("https://push-api.cloud.huawei.com/v1/%s/messages:send", h.appID), []byte(util.ToJson(map[string]interface{}{
-		"validate_only": false,
-		"message": map[string]interface{}{
-			"token": []string{deviceToken},
-			"android": map[string]interface{}{
-				"category": category,
-				"notification": map[string]interface{}{
-					"visibility":    "PUBLIC",
-					"title":         payload.GetTitle(),
-					"body":          payload.GetContent(),
-					"sound":         sound,
-					"importance":    "NORMAL",
-					"default_sound": false,
-					"channel_id":    channelID,
-					"click_action": map[string]interface{}{
-						"type": 3,
-					},
-					"badge": map[string]interface{}{
-						"add_num": 1,
-						"class":   fmt.Sprintf("%s%s", h.packageName, ".MainActivity"),
+	var resp *rest.Response
+	var err error
+	if isPushRTCMsg {
+		resp, err = network.Post(fmt.Sprintf("https://push-api.cloud.huawei.com/v1/%s/messages:send", h.appID), []byte(util.ToJson(map[string]interface{}{
+			"validate_only": false,
+			"message": map[string]interface{}{
+				"data": map[string]interface{}{
+					"channel_id": "111",
+				},
+			},
+		})), map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", hmsPayload.accessToken),
+		})
+	} else {
+		resp, err = network.Post(fmt.Sprintf("https://push-api.cloud.huawei.com/v1/%s/messages:send", h.appID), []byte(util.ToJson(map[string]interface{}{
+			"validate_only": false,
+			"message": map[string]interface{}{
+				"token": []string{deviceToken},
+				"android": map[string]interface{}{
+					"category": category,
+					"notification": map[string]interface{}{
+						"visibility":    "PUBLIC",
+						"title":         payload.GetTitle(),
+						"body":          payload.GetContent(),
+						"sound":         sound,
+						"importance":    "NORMAL",
+						"default_sound": false,
+						"channel_id":    channelID,
+						"click_action": map[string]interface{}{
+							"type": 3,
+						},
+						"badge": map[string]interface{}{
+							"add_num": 1,
+							"class":   fmt.Sprintf("%s%s", h.packageName, ".MainActivity"),
+						},
 					},
 				},
 			},
-		},
-	})), map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", hmsPayload.accessToken),
-	})
+		})), map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", hmsPayload.accessToken),
+		})
+	}
+
 	if err != nil {
 		return err
 	}
