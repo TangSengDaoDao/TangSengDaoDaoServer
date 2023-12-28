@@ -788,11 +788,10 @@ func (f *Friend) remark(c *wkhttp.Context) {
 		return
 	}
 	if settingM == nil {
-		settingM = &SettingModel{
-			UID:    loginUID,
-			ToUID:  req.UID,
-			Remark: req.Remark,
-		}
+		settingM = newDefaultSettingModel()
+		settingM.UID = loginUID
+		settingM.ToUID = req.UID
+		settingM.Remark = req.Remark
 		err = f.settingDB.InsertUserSettingModel(settingM)
 		if err != nil {
 			f.Error("添加用户设置失败！", zap.Error(err))
