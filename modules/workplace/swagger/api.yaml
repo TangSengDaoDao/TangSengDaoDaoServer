@@ -330,6 +330,7 @@ paths:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
+  /manager/workplace/apps/{app_id}:
     put:
       tags:
         - "workplaceManager"
@@ -341,6 +342,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "app_id"
+          description: "应用ID"
+          required: true
+          type: string
         - in: "body"
           name: "data"
           description: "app信息"
@@ -348,9 +354,6 @@ paths:
           schema:
             type: object
             properties:
-              app_id:
-                type: string
-                description: "应用ID"
               status:
                 type: integer
                 description: "是否可用 1.是"
@@ -400,7 +403,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "app_id"
           type: string
           description: "应用ID"
@@ -484,6 +487,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/workplace/banners/{banner_no}:
     put:
       tags:
         - "workplaceManager"
@@ -495,12 +499,33 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "banner_no"
+          description: "横幅编号"
+          required: true
+          type: string
         - in: "body"
           name: "data"
           description: "添加app数据"
           required: true
           schema:
-            $ref: "#/definitions/banner"
+            type: object
+            properties:
+              cover:
+                type: string
+                description: "封面"
+              title:
+                type: string
+                description: "标题"
+              description:
+                type: string
+                description: "介绍"
+              jump_type:
+                type: integer
+                description: "打开方式 0.网页 1.原生"
+              route: 
+                type: string
+                description: "打开地址"
       responses:
         200:
           description: "返回"
@@ -523,10 +548,10 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "banner_no"
           type: string
-          description: "横幅ID"
+          description: "横幅编号"
           required: true
       responses:
         200:
