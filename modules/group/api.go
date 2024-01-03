@@ -1421,6 +1421,7 @@ func (g *Group) groupScanJoin(c *wkhttp.Context) {
 		Version:   version,
 		Status:    int(common.GroupMemberStatusNormal),
 		InviteUID: generator,
+		Vercode:   fmt.Sprintf("%s@%d", util.GenerUUID(), common.GroupMember),
 	}
 
 	tx, _ := g.db.session.Begin()
