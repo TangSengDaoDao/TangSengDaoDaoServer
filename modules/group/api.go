@@ -636,14 +636,11 @@ func (g *Group) groupUpdate(c *wkhttp.Context) {
 		switch key {
 		case common.GroupAttrKeyName:
 			group.Name = value
-			break
 		case common.GroupAttrKeyNotice:
 			group.Notice = value
-			break
 		case common.GroupAttrKeyInvite:
 			invite, _ := strconv.ParseInt(value, 10, 64)
 			group.Invite = int(invite)
-			break
 		}
 	}
 	tx, err := g.ctx.DB().Begin()
@@ -1725,7 +1722,6 @@ func (g *Group) memberUpdate(c *wkhttp.Context) {
 		switch key {
 		case "remark":
 			memberModel.Remark = value.(string)
-			break
 		}
 	}
 	memberModel.Version = g.ctx.GenSeq(common.GroupMemberSeqKey)
@@ -2256,7 +2252,7 @@ func (g *Group) blacklist(c *wkhttp.Context) {
 			c.ResponseError(errors.New("查询移除黑名单成员错误"))
 			return
 		}
-		if members == nil || len(members) == 0 {
+		if len(members) == 0 {
 			c.ResponseError(errors.New("移除成员不存在"))
 			return
 		}
@@ -2599,18 +2595,6 @@ type groupReq struct {
 func (g groupReq) Check() error {
 	if len(g.Members) <= 0 {
 		return errors.New("群成员不能为空！")
-	}
-	return nil
-}
-
-type memberUpdateReq struct {
-	UID    string `json:"uid"`
-	Remark string `json:"remark"`
-}
-
-func (m memberUpdateReq) Check() error {
-	if strings.TrimSpace(m.UID) == "" {
-		return errors.New("uid不能为空！")
 	}
 	return nil
 }

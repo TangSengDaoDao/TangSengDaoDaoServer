@@ -133,7 +133,7 @@ func (g *Group) handleGroupMemberAddEvent(data []byte, commit config.EventCommit
 				g.Error("解析JSON失败！", zap.Error(err))
 				return
 			}
-			err = g.ctx.SendGroupMemberAdd(req)
+			_ = g.ctx.SendGroupMemberAdd(req)
 		},
 	}
 }
