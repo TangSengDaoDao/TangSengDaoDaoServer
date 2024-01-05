@@ -1776,21 +1776,52 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 		c.ResponseError(errors.New("群不存在！"))
 		return
 	}
+	var loginMember *MemberModel
 	// 查询操作者身份
 	if c.CheckLoginRole() != nil {
-		member, err := g.db.QueryMemberWithUID(operator, groupNo)
+		loginMember, err = g.db.QueryMemberWithUID(operator, groupNo)
 		if err != nil {
 			g.Error("查询操作者群成员信息错误", zap.Error(err))
 			c.ResponseError(errors.New("查询操作者群成员信息错误"))
 			return
 		}
-		if member == nil {
+		if loginMember == nil {
 			c.ResponseError(errors.New("操作者不再此群"))
 			return
 		}
-		if member.Role != int(common.GroupMemberRoleCreater) && member.Role != int(common.GroupMemberRoleManager) {
+		if loginMember.Role != int(common.GroupMemberRoleCreater) && loginMember.Role != int(common.GroupMemberRoleManager) {
 			c.ResponseError(errors.New("普通成员无法删除群成员"))
 			return
+		}
+	}
+	// 验证删除者是否包含自己
+	for _, uid := range req.Members {
+		if uid == operator {
+			c.ResponseError(errors.New("不能删除自己"))
+			return
+		}
+	}
+	deleteMembers, err := g.db.QueryMembersWithUids(req.Members, groupNo)
+	if err != nil {
+		g.Error("查询被删除的群成员信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询被删除的群成员信息错误"))
+		return
+	}
+	if len(deleteMembers) == 0 {
+		c.ResponseError(errors.New("被删除者不在此群内"))
+		return
+	}
+	// 验证权限
+	for _, member := range deleteMembers {
+		if loginMember.Role == int(common.GroupMemberRoleManager) {
+			if member.Role == int(common.GroupMemberRoleManager) {
+				c.ResponseError(errors.New("管理员不能删除管理员"))
+				return
+			}
+			if member.Role == int(common.GroupMemberRoleCreater) {
+				c.ResponseError(errors.New("管理员不能删除群主"))
+				return
+			}
 		}
 	}
 	realDeleteMemberModels, err := g.userDB.QueryByUIDs(req.Members)
