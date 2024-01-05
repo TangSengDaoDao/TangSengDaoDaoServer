@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -170,7 +171,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		v.POST("/user/pwdforget_web3", u.resetPwdWithWeb3PublicKey) // 通过web3公钥重置密码
 		v.GET("/user/web3verifytext", u.getVerifyText)              // 获取验证字符串
 		v.POST("/user/web3verifysign", u.web3verifySignature)       // 验证签名
-		// v.POST("user/wxlogin", u.wxLogin)
+		//v.POST("user/wxlogin", u.wxLogin)
 		v.POST("/user/sms/forgetpwd", u.getForgetPwdSMS) //获取忘记密码验证码
 		v.POST("/user/pwdforget", u.pwdforget)           //重置登录密码
 		v.GET("/user/search", u.search)                  // 搜索用户
@@ -294,7 +295,7 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 	v := c.Query("v")
 	if u.ctx.GetConfig().IsVisitor(uid) {
 		c.Header("Content-Type", "image/jpeg")
-		avatarBytes, err := ioutil.ReadFile("assets/assets/visitor.png")
+		avatarBytes, err := os.ReadFile("assets/assets/visitor.png")
 		if err != nil {
 			u.Error("头像读取失败！", zap.Error(err))
 			c.Writer.WriteHeader(http.StatusNotFound)
@@ -344,9 +345,23 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 		avatarID := crc32.ChecksumIEEE([]byte(uid)) % uint32(u.ctx.GetConfig().Avatar.Partition)
 		ph = fmt.Sprintf("/avatar/%d/%s.png", avatarID, uid)
 	} else {
-		//访问默认头像
+		// 配置使用本地默认头像
+		if u.ctx.GetConfig().Avatar.Default != "" && strings.TrimSpace(u.ctx.GetConfig().Avatar.DefaultBaseURL) == "" {
+			// 读取配置的头像文件
+			avatarPath := u.ctx.GetConfig().Avatar.Default
+			imageData, err := os.ReadFile(avatarPath)
+			if err != nil {
+				u.Error("打开本地头像文件失败", zap.Error(err))
+			} else {
+				c.Header("Content-Type", "image/png")
+				c.Header("Content-Disposition", "inline; filename=avatar.png")
+				c.Data(http.StatusOK, "image/png", imageData)
+				return
+			}
+		}
+
 		avatarID := crc32.ChecksumIEEE([]byte(uid)) % uint32(u.ctx.GetConfig().Avatar.DefaultCount)
-		ph = fmt.Sprintf("/avatar/default/test (%d).jpg", avatarID)
+		ph = fmt.Sprintf("/avatar/default/test(%d).jpg", avatarID)
 		if strings.TrimSpace(u.ctx.GetConfig().Avatar.DefaultBaseURL) != "" {
 			downloadUrl = strings.ReplaceAll(u.ctx.GetConfig().Avatar.DefaultBaseURL, "{avatar}", fmt.Sprintf("%d", avatarID))
 		}
@@ -358,11 +373,9 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
 	}
 
 	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("%s#%s", downloadUrl, v))
-
 }
 
 // uploadAvatar 上传用户头像
