@@ -134,10 +134,6 @@ func getMessageAlert(msg msgOfflineNotify, toUser *user.Resp, ctx *config.Contex
 		alert = "[文件]"
 	case common.Location:
 		alert = "[位置]"
-	case common.RedPacket:
-		alert = "[红包]"
-	case common.Transfer:
-		alert = "[转账]"
 	case common.VectorSticker:
 		alert = "[动画表情]"
 	case common.EmojiSticker:
