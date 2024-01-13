@@ -85,7 +85,7 @@ func (d *db) queryUserApp(uid string) ([]*userAppModel, error) {
 
 func (d *db) queryBanner() ([]*bannerModel, error) {
 	var models []*bannerModel
-	_, err := d.session.Select("*").From("workplace_banner").OrderDir("created_at", false).Load(&models)
+	_, err := d.session.Select("*").From("workplace_banner").OrderDir("sort_num", false).Load(&models)
 	return models, err
 }
 
@@ -137,6 +137,7 @@ type bannerModel struct {
 	Description string // 介绍
 	JumpType    int    // 打开方式 0.网页 1.原生
 	Route       string // 打开地址
+	SortNum     int    //  排序编号
 	dba.BaseModel
 }
 type userAppModel struct {

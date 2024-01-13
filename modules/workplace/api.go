@@ -386,6 +386,7 @@ func (w *Workplace) getBanner(c *wkhttp.Context) {
 				Description: m.Description,
 				JumpType:    m.JumpType,
 				Route:       m.Route,
+				SortNum:     m.SortNum,
 			})
 		}
 	}
@@ -415,6 +416,7 @@ type bannerResp struct {
 	Description string `json:"description"` // 介绍
 	JumpType    int    `json:"jump_type"`   // 打开方式 0.网页 1.原生
 	Route       string `json:"route"`       // 打开地址
+	SortNum     int    `json:"sort_num"`    // 排序编号
 	CreatedAt   string `json:"created_at"`  // 创建时间
 }
 

@@ -49,7 +49,52 @@ func (m *manager) Route(r *wkhttp.WKHttp) {
 		auth.GET("/banner", m.getBanners)                                        // 获取横幅
 		auth.DELETE("/banners/:banner_no", m.deleteBanner)                       // 删除横幅
 		auth.PUT("/banners/:banner_no", m.updateBanner)                          // 修改横幅
+		auth.PUT("/banner/reorder", m.reorderBanner)                             // 排序横幅
 	}
+}
+
+// 排序横幅
+func (m *manager) reorderBanner(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	type reqVO struct {
+		BannerNos []string `json:"banner_nos"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		m.Error(common.ErrData.Error(), zap.Error(err))
+		c.ResponseError(common.ErrData)
+		return
+	}
+	tx, _ := m.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
+	var tempSortNum = len(req.BannerNos)
+	for _, bannerNo := range req.BannerNos {
+		err := m.db.updateBannerSortNumWithTx(bannerNo, tempSortNum, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("修改分类排序错误", zap.Error(err))
+			c.ResponseError(errors.New("修改分类排序错误"))
+			return
+		}
+		tempSortNum--
+	}
+	err = tx.Commit()
+	if err != nil {
+		m.Error("数据库事物提交失败", zap.Error(err))
+		c.ResponseError(errors.New("数据库事物提交失败"))
+		tx.Rollback()
+		return
+	}
+	c.ResponseOK()
 }
 
 // 编辑分类
@@ -415,6 +460,7 @@ func (m *manager) getBanners(c *wkhttp.Context) {
 				Description: banner.Description,
 				JumpType:    banner.JumpType,
 				Route:       banner.Route,
+				SortNum:     banner.SortNum,
 				CreatedAt:   banner.CreatedAt.String(),
 			})
 		}

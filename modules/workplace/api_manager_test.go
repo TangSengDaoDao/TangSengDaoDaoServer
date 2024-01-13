@@ -46,14 +46,35 @@ func TestGetBanners(t *testing.T) {
 		Description: "ddd",
 		JumpType:    1,
 		Route:       "moment",
+		SortNum:     11,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		BannerNo:    "dsdsdsd",
+		Cover:       "cover_1122",
+		Title:       "",
+		Description: "ddd",
+		JumpType:    1,
+		Route:       "moment",
+		SortNum:     12,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		BannerNo:    "ss",
+		Cover:       "cover_1122",
+		Title:       "",
+		Description: "ddd",
+		JumpType:    1,
+		Route:       "moment",
+		SortNum:     1,
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("GET", "/v1/manager/workplace/banner", nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
-
-	assert.Equal(t, true, strings.Contains(w.Body.String(), `"cover":"cover_1122"`))
+	panic(w.Body)
+	// assert.Equal(t, true, strings.Contains(w.Body.String(), `"cover":"cover_1122"`))
 }
 func TestUpdateBanner(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
@@ -557,6 +578,49 @@ func TestUpdateCategory(t *testing.T) {
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("PUT", fmt.Sprintf("/v1/manager/workplace/categorys/%s", categoryNo), bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
 		"name": "分类2",
+	}))))
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// 排序横幅
+func TestReorderBanner(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		SortNum:  1,
+		BannerNo: "1",
+		Cover:    "dd",
+		JumpType: 1,
+		Route:    "12",
+		Title:    "12",
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		SortNum:  32,
+		BannerNo: "21",
+		Cover:    "d2d",
+		JumpType: 1,
+		Route:    "132",
+		Title:    "1e2",
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		SortNum:  11,
+		BannerNo: "1sd",
+		Cover:    "sdd",
+		JumpType: 1,
+		Route:    "1s2",
+		Title:    "1sd2",
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/banner/reorder", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"banner_nos": []string{"1sd", "1", "21"},
 	}))))
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)

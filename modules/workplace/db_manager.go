@@ -94,6 +94,13 @@ func (d *managerDB) updateCategorySortNumWithTx(categoryNo string, sortNum int, 
 	return err
 }
 
+func (d *managerDB) updateBannerSortNumWithTx(bannerNo string, sortNum int, tx *dbr.Tx) error {
+	_, err := tx.Update("workplace_banner").SetMap(map[string]interface{}{
+		"sort_num": sortNum,
+	}).Where("banner_no=?", bannerNo).Exec()
+	return err
+}
+
 func (d *managerDB) deleteAppTx(appId string, tx *dbr.Tx) error {
 	_, err := tx.DeleteFrom("workplace_app").Where("app_id=?", appId).Exec()
 	return err
