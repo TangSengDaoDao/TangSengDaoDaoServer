@@ -35,6 +35,8 @@ func (m *manager) Route(r *wkhttp.WKHttp) {
 		auth.POST("/category", m.addCategory)                                    // 添加分类
 		auth.GET("/category", m.getCategory)                                     // 获取分类
 		auth.PUT("/category/reorder", m.reorderCategory)                         // 排序分类
+		auth.DELETE("/categorys/:category_no", m.deleteCategory)                 // 删除分类
+		auth.PUT("/categorys/:category_no", m.updateCategory)                    // 修改分类
 		auth.GET("/categorys/:category_no/app", m.getCategoryApps)               // 获取分类下app
 		auth.PUT("/categorys/:category_no/app/reorder", m.reorderCategoryApp)    // 排序分类下app
 		auth.POST("/categorys/:category_no/app", m.addCategoryApp)               // 新增分类下app
@@ -48,6 +50,58 @@ func (m *manager) Route(r *wkhttp.WKHttp) {
 		auth.DELETE("/banners/:banner_no", m.deleteBanner)                       // 删除横幅
 		auth.PUT("/banners/:banner_no", m.updateBanner)                          // 修改横幅
 	}
+}
+
+// 编辑分类
+func (m *manager) updateCategory(c *wkhttp.Context) {
+	categoryNo := c.Param("category_no")
+	if categoryNo == "" {
+		c.ResponseError(errors.New("分类ID不能为空"))
+		return
+	}
+	type reqVO struct {
+		Name string `json:"name"`
+	}
+	var req reqVO
+	if err := c.BindJSON(&req); err != nil {
+		m.Error(common.ErrData.Error(), zap.Error(err))
+		c.ResponseError(common.ErrData)
+		return
+	}
+	category, err := m.db.queryCategoryWithNo(categoryNo)
+	if err != nil {
+		m.Error("获取分类错误", zap.Error(err))
+		c.ResponseError(errors.New("获取分类错误"))
+		return
+	}
+	if category == nil {
+		c.ResponseError(errors.New("该分类不存在"))
+		return
+	}
+	category.Name = req.Name
+	err = m.db.updateCategory(category)
+	if err != nil {
+		m.Error("修改分类错误", zap.Error(err))
+		c.ResponseError(errors.New("修改分类错误"))
+		return
+	}
+	c.ResponseOK()
+}
+
+// 删除分类
+func (m *manager) deleteCategory(c *wkhttp.Context) {
+	categoryNo := c.Param("category_no")
+	if categoryNo == "" {
+		c.ResponseError(errors.New("分类ID不能为空"))
+		return
+	}
+	err := m.db.deleteCategory(categoryNo)
+	if err != nil {
+		m.Error("删除分类错误", zap.Error(err))
+		c.ResponseError(errors.New("删除分类错误"))
+		return
+	}
+	c.ResponseOK()
 }
 
 func (m *manager) getApps(c *wkhttp.Context) {
@@ -500,10 +554,55 @@ func (m *manager) deleteApp(c *wkhttp.Context) {
 		c.ResponseError(errors.New("分类ID和应用ID均不能为空"))
 		return
 	}
-	err = m.db.deleteApp(appId)
+	app, err := m.wpDB.queryAppWithAppId(appId)
 	if err != nil {
+		m.Error("查询app信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询app信息错误"))
+		return
+	}
+	if app == nil {
+		c.ResponseOK()
+		return
+	}
+	tx, _ := m.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
+	err = m.db.deleteAppTx(appId, tx)
+	if err != nil {
+		tx.Rollback()
 		m.Error("删除应用错误", zap.Error(err))
 		c.ResponseError(errors.New("删除应用错误"))
+		return
+	}
+	err = m.db.deleteCategoryAppTx(appId, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("删除分类下应用错误", zap.Error(err))
+		c.ResponseError(errors.New("删除分类下应用错误"))
+		return
+	}
+	err = m.db.deleteUserAppTx(appId, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("删除用户app错误", zap.Error(err))
+		c.ResponseError(errors.New("删除用户app错误"))
+		return
+	}
+	err = m.db.deleteUserRecordAppTx(appId, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("删除用户app使用记录错误", zap.Error(err))
+		c.ResponseError(errors.New("删除用户app使用记录错误"))
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		m.Error("数据库事物提交失败", zap.Error(err))
+		c.ResponseError(errors.New("数据库事物提交失败"))
+		tx.Rollback()
 		return
 	}
 	c.ResponseOK()

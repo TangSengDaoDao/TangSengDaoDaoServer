@@ -240,6 +240,7 @@ func TestUpdateAPP(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+// 删除app
 func TestDeleteAPP(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	wm := NewManager(ctx)
@@ -259,7 +260,12 @@ func TestDeleteAPP(t *testing.T) {
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/app?app_id=%s", appId), nil)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId,
+		CategoryNo: "1",
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/apps/%s", appId), nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
@@ -508,6 +514,50 @@ func TestDeleteCategoryApp(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/category/app?category_no=%s&app_id=%s", categoryNo, appId1), nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// 删除分类
+func TestDeleteCategory(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	categoryNo := "no1"
+	err = wm.db.insertCategory(&categoryModel{
+		Name:       "分类1",
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/categorys/%s", categoryNo), nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// 编辑分类
+func TestUpdateCategory(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	categoryNo := "no1"
+	err = wm.db.insertCategory(&categoryModel{
+		Name:       "分类1",
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/v1/manager/workplace/categorys/%s", categoryNo), bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"name": "分类2",
+	}))))
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)

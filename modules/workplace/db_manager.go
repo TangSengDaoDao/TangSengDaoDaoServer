@@ -29,7 +29,11 @@ func (d *managerDB) insertCategory(m *categoryModel) error {
 	_, err := d.session.InsertInto("workplace_category").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
 	return err
 }
-
+func (d *managerDB) queryCategoryWithNo(categoryNo string) (*categoryModel, error) {
+	var m *categoryModel
+	_, err := d.session.Select("*").From("workplace_category").Where("category_no=?", categoryNo).Load(&m)
+	return m, err
+}
 func (d *managerDB) queryMaxSortNumCategory() (*categoryModel, error) {
 	var m *categoryModel
 	_, err := d.session.Select("*").From("workplace_category").OrderDir("sort_num", false).Limit(1).Load(&m)
@@ -76,6 +80,12 @@ func (d *managerDB) updateBanner(banner *bannerModel) error {
 	}).Where("banner_no=?", banner.BannerNo).Exec()
 	return err
 }
+func (d *managerDB) updateCategory(category *categoryModel) error {
+	_, err := d.session.Update("workplace_category").SetMap(map[string]interface{}{
+		"name": category.Name,
+	}).Where("category_no=?", category.CategoryNo).Exec()
+	return err
+}
 
 func (d *managerDB) updateCategorySortNumWithTx(categoryNo string, sortNum int, tx *dbr.Tx) error {
 	_, err := tx.Update("workplace_category").SetMap(map[string]interface{}{
@@ -84,8 +94,22 @@ func (d *managerDB) updateCategorySortNumWithTx(categoryNo string, sortNum int, 
 	return err
 }
 
-func (d *managerDB) deleteApp(appId string) error {
-	_, err := d.session.DeleteFrom("workplace_app").Where("app_id=?", appId).Exec()
+func (d *managerDB) deleteAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_app").Where("app_id=?", appId).Exec()
+	return err
+}
+func (d *managerDB) deleteCategoryAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_category_app").Where("app_id=?", appId).Exec()
+	return err
+}
+
+func (d *managerDB) deleteUserAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_user_app").Where("app_id=?", appId).Exec()
+	return err
+}
+
+func (d *managerDB) deleteUserRecordAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_app_user_record").Where("app_id=?", appId).Exec()
 	return err
 }
 
@@ -117,6 +141,10 @@ func (d *managerDB) insertCategoryApp(m *categoryAppModel) error {
 
 func (d *managerDB) deleteCategoryApp(appId, categoryNo string) error {
 	_, err := d.session.DeleteFrom("workplace_category_app").Where("app_id=? and category_no=?", appId, categoryNo).Exec()
+	return err
+}
+func (d *managerDB) deleteCategory(categoryNo string) error {
+	_, err := d.session.DeleteFrom("workplace_category").Where("category_no=?", categoryNo).Exec()
 	return err
 }
 

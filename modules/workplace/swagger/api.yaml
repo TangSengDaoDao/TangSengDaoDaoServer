@@ -113,6 +113,75 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/workplace/categorys/{category_no}: 
+    put:
+      tags:
+        - "workplaceManager"
+      summary: "编辑分类"
+      description: "编辑分类"
+      operationId: "m category update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+        - in: "body"
+          name: "data"
+          description: "分类名称"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "分类名称"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete: 
+      tags:
+        - "workplaceManager"
+      summary: "删除分类"
+      description: "删除分类"
+      operationId: "m category delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /manager/workplace/categorys/{category_no}/app:
     get:
       tags:
