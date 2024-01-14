@@ -388,6 +388,22 @@ paths:
         - "application/json"
       produces:
         - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true 
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true 
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
+          required: true 
       responses:
         200:
           description: "返回"
