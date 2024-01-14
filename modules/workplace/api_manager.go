@@ -162,6 +162,7 @@ func (m *manager) getApps(c *wkhttp.Context) {
 	pageIndex, _ := strconv.Atoi(page)
 	pageSize, _ := strconv.Atoi(size)
 	var apps []*appModel
+	var count int64
 	if keyword == "" {
 		apps, err = m.db.queryAppWithPage(uint64(pageSize), uint64(pageIndex))
 		if err != nil {
@@ -169,11 +170,23 @@ func (m *manager) getApps(c *wkhttp.Context) {
 			c.ResponseError(errors.New("查询所有应用错误"))
 			return
 		}
+		count, err = m.db.queryAppCount()
+		if err != nil {
+			m.Error("查询总数量错误", zap.Error(err))
+			c.ResponseError(errors.New("查询总数量错误"))
+			return
+		}
 	} else {
 		apps, err = m.db.searchApp(keyword, uint64(pageSize), uint64(pageIndex))
 		if err != nil {
 			m.Error("搜索应用错误", zap.Error(err))
 			c.ResponseError(errors.New("搜索应用错误"))
+			return
+		}
+		count, err = m.db.queryAppCountWithKeyWord(keyword)
+		if err != nil {
+			m.Error("查询总数量错误", zap.Error(err))
+			c.ResponseError(errors.New("查询总数量错误"))
 			return
 		}
 	}
@@ -195,7 +208,10 @@ func (m *manager) getApps(c *wkhttp.Context) {
 			})
 		}
 	}
-	c.Response(list)
+	c.Response(map[string]interface{}{
+		"count": count,
+		"list":  list,
+	})
 }
 
 func (m *manager) deleteCategoryApp(c *wkhttp.Context) {

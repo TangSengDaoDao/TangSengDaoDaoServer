@@ -167,6 +167,20 @@ func (d *managerDB) searchApp(keyword string, pageSize, page uint64) ([]*appMode
 	return models, err
 }
 
+// 通过关键字查询app总数
+func (m *managerDB) queryAppCountWithKeyWord(keyword string) (int64, error) {
+	var count int64
+	_, err := m.session.Select("count(*)").From("workplace_app").Where("name like ?", "%"+keyword+"%").Load(&count)
+	return count, err
+}
+
+// 查询app总数
+func (d *managerDB) queryAppCount() (int64, error) {
+	var count int64
+	_, err := d.session.Select("count(*)").From("workplace_app").Load(&count)
+	return count, err
+}
+
 func (d *managerDB) queryMaxSortNumCategoryApp(categoryNo string) (*categoryAppModel, error) {
 	var m *categoryAppModel
 	_, err := d.session.Select("*").From("workplace_category_app").Where("category_no=?", categoryNo).OrderDir("sort_num", false).Limit(1).Load(&m)
