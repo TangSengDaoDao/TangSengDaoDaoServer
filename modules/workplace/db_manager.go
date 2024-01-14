@@ -155,11 +155,18 @@ func (d *managerDB) deleteCategory(categoryNo string) error {
 	return err
 }
 
-func (d *managerDB) queryAllApp() ([]*appModel, error) {
+func (d *managerDB) queryAppWithPage(pageSize, page uint64) ([]*appModel, error) {
 	var models []*appModel
-	_, err := d.session.Select("*").From("workplace_app").OrderDir("created_at", false).Load(&models)
+	_, err := d.session.Select("*").From("workplace_app").Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&models)
 	return models, err
 }
+
+func (d *managerDB) searchApp(keyword string, pageSize, page uint64) ([]*appModel, error) {
+	var models []*appModel
+	_, err := d.session.Select("*").From("workplace_app").Where("name like ?", "%"+keyword+"%").Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&models)
+	return models, err
+}
+
 func (d *managerDB) queryMaxSortNumCategoryApp(categoryNo string) (*categoryAppModel, error) {
 	var m *categoryAppModel
 	_, err := d.session.Select("*").From("workplace_category_app").Where("category_no=?", categoryNo).OrderDir("sort_num", false).Limit(1).Load(&m)

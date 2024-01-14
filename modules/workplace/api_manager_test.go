@@ -324,7 +324,7 @@ func TestAppList(t *testing.T) {
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("GET", "/v1/manager/workplace/app", nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/manager/workplace/app?page_index=1&page_size=1&keyword=%s", "唐僧"), nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)

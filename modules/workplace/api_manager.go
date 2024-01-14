@@ -2,6 +2,7 @@ package workplace
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/log"
@@ -155,12 +156,28 @@ func (m *manager) getApps(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-	apps, err := m.db.queryAllApp()
-	if err != nil {
-		m.Error("查询所有应用错误", zap.Error(err))
-		c.ResponseError(errors.New("查询所有应用错误"))
-		return
+	page := c.Query("page_index")
+	size := c.Query("page_size")
+	keyword := c.Query("keyword")
+	pageIndex, _ := strconv.Atoi(page)
+	pageSize, _ := strconv.Atoi(size)
+	var apps []*appModel
+	if keyword == "" {
+		apps, err = m.db.queryAppWithPage(uint64(pageSize), uint64(pageIndex))
+		if err != nil {
+			m.Error("查询所有应用错误", zap.Error(err))
+			c.ResponseError(errors.New("查询所有应用错误"))
+			return
+		}
+	} else {
+		apps, err = m.db.searchApp(keyword, uint64(pageSize), uint64(pageIndex))
+		if err != nil {
+			m.Error("搜索应用错误", zap.Error(err))
+			c.ResponseError(errors.New("搜索应用错误"))
+			return
+		}
 	}
+
 	list := make([]*appDetailResp, 0)
 	if len(apps) > 0 {
 		for _, app := range apps {
