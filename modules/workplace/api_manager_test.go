@@ -244,7 +244,7 @@ func TestUpdateAPP(t *testing.T) {
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/app", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/v1/manager/workplace/apps/%s", appId), bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
 		"app_id":       appId,
 		"icon":         "xxxxxu",
 		"name":         "悟空IMu",

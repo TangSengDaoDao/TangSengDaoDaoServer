@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -88,8 +89,17 @@ func (m *Message) reminderSync(c *wkhttp.Context) {
 		c.ResponseError(errors.New("同步提醒项失败！"))
 		return
 	}
+	userDetail, err := m.userService.GetUser(loginUID)
+	if err != nil {
+		m.Error("查询登录用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询登录用户信息错误"))
+		return
+	}
 	reminderResps := make([]*reminderResp, 0, len(reminders))
 	for _, reminder := range reminders {
+		if time.Time(reminder.CreatedAt).Unix() < userDetail.CreatedAt {
+			reminder.Done = 1
+		}
 		reminderResps = append(reminderResps, newReminderResp(reminder))
 	}
 	c.JSON(http.StatusOK, reminderResps)

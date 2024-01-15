@@ -583,11 +583,11 @@ func (m *manager) addBanner(c *wkhttp.Context) {
 }
 func (m *manager) updateApp(c *wkhttp.Context) {
 	err := c.CheckLoginRoleIsSuperAdmin()
-	appId := c.Param("app_id")
 	if err != nil {
 		c.ResponseError(err)
 		return
 	}
+	appId := c.Param("app_id")
 	var req updateAppReq
 	if err := c.BindJSON(&req); err != nil {
 		m.Error(common.ErrData.Error(), zap.Error(err))
@@ -602,18 +602,26 @@ func (m *manager) updateApp(c *wkhttp.Context) {
 		c.ResponseError(errors.New("修改的应用ID不能为空"))
 		return
 	}
-	err = m.db.updateApp(&appModel{
-		AppID:       appId,
-		AppCategory: req.AppCategory,
-		Icon:        req.Icon,
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      req.Status,
-		JumpType:    req.JumpType,
-		AppRoute:    req.AppRoute,
-		WebRoute:    req.WebRoute,
-		IsPaidApp:   req.IsPaidApp,
-	})
+	app, err := m.wpDB.queryAppWithAppId(appId)
+	if err != nil {
+		m.Error("查询应用信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询应用信息错误"))
+		return
+	}
+	if app == nil {
+		c.ResponseError(errors.New("该应用不存在"))
+		return
+	}
+	app.AppCategory = req.AppCategory
+	app.Icon = req.Icon
+	app.Name = req.Name
+	app.Description = req.Description
+	app.Status = req.Status
+	app.JumpType = req.JumpType
+	app.AppRoute = req.AppRoute
+	app.WebRoute = req.WebRoute
+	app.IsPaidApp = req.IsPaidApp
+	err = m.db.updateApp(app)
 	if err != nil {
 		m.Error("修改应用信息错误", zap.Error(err))
 		c.ResponseError(errors.New("修改应用信息错误"))

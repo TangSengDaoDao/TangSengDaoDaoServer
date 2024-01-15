@@ -347,6 +347,7 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
+	isAddCount := false
 	if apply == nil {
 		err = f.db.insertApplyTx(&FriendApplyModel{
 			Status: 0,
@@ -362,14 +363,18 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			return
 		}
 	} else {
-		apply.Status = 0
-		err = f.db.updateApplyTx(apply, tx)
-		if err != nil {
-			tx.Rollback()
-			f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
-			c.ResponseError(errors.New("修改好友申请记录错误"))
-			return
+		if apply.Status != 0 {
+			isAddCount = true
+			apply.Status = 0
+			err = f.db.updateApplyTx(apply, tx)
+			if err != nil {
+				tx.Rollback()
+				f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
+				c.ResponseError(errors.New("修改好友申请记录错误"))
+				return
+			}
 		}
+
 	}
 	// 新增红点
 	if userRedDot == nil {
@@ -386,14 +391,17 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			return
 		}
 	} else {
-		userRedDot.Count++
-		err = f.userDB.updateUserRedDotTx(userRedDot, tx)
-		if err != nil {
-			tx.Rollback()
-			f.Error("修改用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
-			c.ResponseError(errors.New("修改用户通讯录红点信息错误"))
-			return
+		if isAddCount || userRedDot.Count == 0 {
+			userRedDot.Count++
+			err = f.userDB.updateUserRedDotTx(userRedDot, tx)
+			if err != nil {
+				tx.Rollback()
+				f.Error("修改用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
+				c.ResponseError(errors.New("修改用户通讯录红点信息错误"))
+				return
+			}
 		}
+
 	}
 	if err = tx.Commit(); err != nil {
 		tx.Rollback()
