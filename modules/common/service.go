@@ -34,11 +34,11 @@ type service struct {
 }
 
 func newService(ctx *config.Context) *service {
-	if ctx.GetConfig().ShortNo.NumOn {
-		onceSerce.Do(func() {
-			go runGenShortnoTask(ctx)
-		})
-	}
+	// if ctx.GetConfig().ShortNo.NumOn {
+	onceSerce.Do(func() {
+		go runGenShortnoTask(ctx)
+	})
+	// }
 
 	return &service{
 		ctx:         ctx,
