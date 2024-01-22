@@ -354,11 +354,17 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 		if contentMap["type"] == nil {
 			return errors.New("type为空！")
 		}
+		if contentMap["cmd"] != nil {
+			cmd := contentMap["cmd"].(string)
+			if cmd == "room.invoke" || cmd == "rtc.p2p.invoke" {
+				isVideoCall = true
+			}
+		}
 		contentTypeInt64, _ := contentMap["type"].(json.Number).Int64()
 		contentType := common.ContentType(contentTypeInt64)
 		msgResp.ContentType = int(contentType)
 	}
-	if msgResp.Header.SyncOnce == 1 { // 命令类消息不推送
+	if msgResp.Header.SyncOnce == 1 && !isVideoCall { // 命令类消息不推送
 		w.Debug("命令消息不推送！")
 		return nil
 	}
