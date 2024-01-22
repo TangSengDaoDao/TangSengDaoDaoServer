@@ -110,7 +110,7 @@ func getMessageAlert(msg msgOfflineNotify, toUser *user.Resp, ctx *config.Contex
 	setting := config.SettingFromUint8(msg.Setting)
 	if msg.PayloadMap == nil || setting.Signal || !ctx.GetConfig().Push.ContentDetailOn || toUser.MsgShowDetail == 1 {
 		if msg.PayloadMap != nil && msg.PayloadMap["cmd"] != nil {
-			return "邀请你进行语音通话", nil
+			return "您收到新的来电", nil
 		}
 		return "您有一条新的消息", nil
 	}
