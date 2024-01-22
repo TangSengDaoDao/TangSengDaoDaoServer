@@ -375,17 +375,17 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 	}
 
 	var err error
-	var users []*user.Resp
+	// var users []*user.Resp
 	userSettings := make([]*user.SettingResp, 0)
 	groupSettings := make([]*group.SettingResp, 0)
+	users, err := w.userService.GetUsers(toUids)
+	if err != nil {
+		w.Error("查询推送用户信息错误", zap.Error(err))
+		return nil
+	}
 	if !isVideoCall { // 音视频消息不检查设置，直接推送
 		// 查询免打扰
 		// 查询用户总设置
-		users, err = w.userService.GetUsers(toUids)
-		if err != nil {
-			w.Error("查询推送用户信息错误", zap.Error(err))
-			return nil
-		}
 		if msgResp.ChannelType == common.ChannelTypePerson.Uint8() {
 			// 查询用户对某人设置
 			if msgResp.FromUID != "" && len(toUids) > 0 {
