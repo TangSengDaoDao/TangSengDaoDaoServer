@@ -369,7 +369,7 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 		return nil
 	}
 
-	if !w.containSupportType(common.ContentType(msgResp.ContentType)) {
+	if !w.containSupportType(common.ContentType(msgResp.ContentType)) && !isVideoCall {
 		w.Debug("不推送：不支持的消息类型！", zap.Int("contentType", msgResp.ContentType))
 		return nil
 	}
