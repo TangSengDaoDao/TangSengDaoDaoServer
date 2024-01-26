@@ -54,7 +54,7 @@ func (f *Friend) Route(r *wkhttp.WKHttp) {
 		friend.POST("/apply", f.friendApply)           // 好友申请
 		friend.GET("/apply", f.apply)                  // 好友申请列表
 		friend.DELETE("/apply/:to_uid", f.deleteApply) // 删除好友申请
-		friend.PUT("/refuse", f.refuseApply)           // 拒绝申请
+		friend.PUT("/refuse/:to_uid", f.refuseApply)   // 拒绝申请
 		friend.POST("/sure", f.friendSure)             // 好友确认
 		friend.GET("/sync", f.friendSync)              // 同步好友
 		friend.GET("/search", f.friendSearch)          // 查询好友
@@ -66,7 +66,7 @@ func (f *Friend) Route(r *wkhttp.WKHttp) {
 	}
 }
 
-// 通过或拒绝申请
+// 拒绝申请
 func (f *Friend) refuseApply(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
 	toUid := c.Param("to_uid")
