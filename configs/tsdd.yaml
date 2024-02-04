@@ -98,7 +98,11 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #    appKey: "" # oppo推送appKey
 #    appSecret: "" # oppo推送appSecret
 #    masterSecret: "" # oppo推送masterSecret
-
+#  firebase: # 小米推送
+#    packageName: "" # 小米推送包名 例如：com.xinbida.tangsengdaodao
+#    jsonPath: "" # serviceAccount的JSON文件路径 例如：configs/push/fcm_test.json
+#    projectId: "" # serviceAccount的JSON中的project_id值
+#    channelID: "" # 忽略占位
 ##################### 注册 ####################
 #register:
 #  off: false # 是否关闭注册
