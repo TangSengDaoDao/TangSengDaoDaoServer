@@ -161,8 +161,11 @@ func (e *Event) handleGroupAvatarUpdateEvent(model *Model) {
 				return
 			}
 			// 组合群头像
-			downloadURLs := make([]string, 0, len(req.Members))
+			downloadURLs := make([]string, 0)
 			for _, member := range req.Members {
+				if len(downloadURLs) >= 9 {
+					break
+				}
 				downloadURLs = append(downloadURLs, fmt.Sprintf("%s/users/%s/avatar", e.ctx.GetConfig().External.APIBaseURL, member))
 			}
 			uploadPath := e.ctx.GetConfig().GetGroupAvatarFilePath(req.GroupNo)

@@ -109,6 +109,9 @@ func getFromName(msgResp msgOfflineNotify, ctx *config.Context) (string, error) 
 func getMessageAlert(msg msgOfflineNotify, toUser *user.Resp, ctx *config.Context) (string, error) {
 	setting := config.SettingFromUint8(msg.Setting)
 	if msg.PayloadMap == nil || setting.Signal || !ctx.GetConfig().Push.ContentDetailOn || toUser.MsgShowDetail == 1 {
+		if msg.PayloadMap != nil && msg.PayloadMap["cmd"] != nil {
+			return "您收到新的来电", nil
+		}
 		return "您有一条新的消息", nil
 	}
 
@@ -134,10 +137,6 @@ func getMessageAlert(msg msgOfflineNotify, toUser *user.Resp, ctx *config.Contex
 		alert = "[文件]"
 	case common.Location:
 		alert = "[位置]"
-	case common.RedPacket:
-		alert = "[红包]"
-	case common.Transfer:
-		alert = "[转账]"
 	case common.VectorSticker:
 		alert = "[动画表情]"
 	case common.EmojiSticker:

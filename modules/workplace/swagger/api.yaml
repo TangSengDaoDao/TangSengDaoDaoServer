@@ -113,7 +113,76 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /manager/workplace/category/app:
+  /manager/workplace/categorys/{category_no}: 
+    put:
+      tags:
+        - "workplaceManager"
+      summary: "编辑分类"
+      description: "编辑分类"
+      operationId: "m category update"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+        - in: "body"
+          name: "data"
+          description: "分类名称"
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: "分类名称"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+    delete: 
+      tags:
+        - "workplaceManager"
+      summary: "删除分类"
+      description: "删除分类"
+      operationId: "m category delete"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/categorys/{category_no}/app:
     get:
       tags:
         - "workplaceManager"
@@ -125,7 +194,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "category_no"
           type: string
           description: "分类编号"
@@ -154,6 +223,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
         - in: "body"
           name: "data"
           description: "appids"
@@ -161,9 +235,6 @@ paths:
           schema:
             type: object
             properties:
-              category_no:
-                type: string
-                description: "分类编号"
               app_ids:
                 type: array
                 items:
@@ -180,6 +251,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/workplace/categorys/{category_no}/apps/{app_id}:
     delete:
       tags:
         - "workplaceManager"
@@ -191,12 +263,12 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "category_no"
           type: string
           description: "分类编号"
           required: true
-        - in: "query"
+        - in: "path"
           name: "app_id"
           type: string
           description: "应用ID"
@@ -212,7 +284,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /manager/workplace/category/app/reorder:
+  /manager/workplace/categorys/{category_no}/app/reorder:
     put:
       tags:
         - "workplaceManager"
@@ -224,6 +296,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "category_no"
+          type: string
+          description: "分类编号"
+          required: true
         - in: "body"
           name: "data"
           description: "appids"
@@ -231,9 +308,6 @@ paths:
           schema:
             type: object
             properties:
-              category_no:
-                type: string
-                description: "分类编号"
               app_ids:
                 type: array
                 items:
@@ -314,6 +388,22 @@ paths:
         - "application/json"
       produces:
         - "application/json"
+      parameters:
+        - in: "query"
+          name: "page_index"
+          type: integer
+          description: "页码"
+          required: true 
+        - in: "query"
+          name: "page_size"
+          type: integer
+          description: "每页数据"
+          required: true 
+        - in: "query"
+          name: "keyword"
+          type: string
+          description: "搜索关键字"
+          required: true 
       responses:
         200:
           description: "返回"
@@ -325,6 +415,7 @@ paths:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
+  /manager/workplace/apps/{app_id}:
     put:
       tags:
         - "workplaceManager"
@@ -336,6 +427,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "app_id"
+          description: "应用ID"
+          required: true
+          type: string
         - in: "body"
           name: "data"
           description: "app信息"
@@ -343,9 +439,6 @@ paths:
           schema:
             type: object
             properties:
-              app_id:
-                type: string
-                description: "应用ID"
               status:
                 type: integer
                 description: "是否可用 1.是"
@@ -395,7 +488,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "app_id"
           type: string
           description: "应用ID"
@@ -479,6 +572,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /manager/workplace/banners/{banner_no}:
     put:
       tags:
         - "workplaceManager"
@@ -490,12 +584,33 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - in: "path"
+          name: "banner_no"
+          description: "横幅编号"
+          required: true
+          type: string
         - in: "body"
           name: "data"
           description: "添加app数据"
           required: true
           schema:
-            $ref: "#/definitions/banner"
+            type: object
+            properties:
+              cover:
+                type: string
+                description: "封面"
+              title:
+                type: string
+                description: "标题"
+              description:
+                type: string
+                description: "介绍"
+              jump_type:
+                type: integer
+                description: "打开方式 0.网页 1.原生"
+              route: 
+                type: string
+                description: "打开地址"
       responses:
         200:
           description: "返回"
@@ -518,11 +633,46 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "banner_no"
           type: string
-          description: "横幅ID"
+          description: "横幅编号"
           required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /manager/workplace/banner/reorder:
+    put:
+      tags:
+        - "workplaceManager"
+      summary: "排序横幅"
+      description: "排序横幅"
+      operationId: "m reorder banner"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "data"
+          description: "排序分类编号"
+          required: true
+          schema:
+            type: object
+            properties:
+              banner_nos:
+                type: array
+                items:
+                  type: string
+                description: "横幅编号"
       responses:
         200:
           description: "返回"
@@ -558,7 +708,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/user/app:
+  /workplace/app:
     get:
       tags:
         - "workplace"
@@ -582,6 +732,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /workplace/apps/{app_id}:
     post:
       tags:
         - "workplace"
@@ -593,16 +744,11 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "body"
-          name: "data"
-          description: "添加app数据"
+        - in: "path"
+          type: string
+          name: "app_id"
+          description: "需要添加的appid"
           required: true
-          schema:
-            type: object
-            properties:
-              app_id:
-                type: string
-                description: "应用ID"
       responses:
         200:
           description: "返回"
@@ -625,7 +771,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "app_id"
           type: string
           description: "应用ID"
@@ -641,7 +787,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/user/app/reorder:
+  /workplace/app/reorder:
     put:
       tags:
         - "workplace"
@@ -708,7 +854,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/category/app:
+  /workplace/categorys/{category_no}/app:
     get:
       tags:
         - "workplace"
@@ -720,7 +866,7 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "query"
+        - in: "path"
           name: "category_no"
           type: string
           description: "分类编号"
@@ -738,7 +884,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /workplace/user/app/record:
+  /workplace/apps/{app_id}/record:
     post:
       tags:
         - "workplace"
@@ -750,44 +896,16 @@ paths:
       produces:
         - "application/json"
       parameters:
-        - in: "body"
-          name: "data"
+        - in: "path"
+          type: string
+          name: "app_id"
           description: "应用ID"
           required: true
-          schema:
-            type: object
-            properties:
-              app_id:
-                type: string
-                description: "应用ID"
       responses:
         200:
           description: "返回"
           schema:
             $ref: "#/definitions/response"
-        400:
-          description: "错误"
-          schema:
-            $ref: "#/definitions/response"
-      security:
-        - token: []
-    get:
-      tags:
-        - "workplace"
-      summary: "查询用户常用app"
-      description: "查询用户常用app"
-      operationId: "get app record"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      responses:
-        200:
-          description: "返回"
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/appResp"
         400:
           description: "错误"
           schema:
@@ -821,6 +939,31 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /workplace/app/record:
+    get:
+      tags:
+        - "workplace"
+      summary: "查询用户常用app"
+      description: "查询用户常用app"
+      operationId: "get app record"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/appResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+
 securityDefinitions:
   token:
     type: "apiKey"

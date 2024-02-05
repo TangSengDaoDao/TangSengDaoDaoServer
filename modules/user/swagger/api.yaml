@@ -545,6 +545,9 @@ paths:
               password:
                 type: string
                 description: "密码"
+              name:
+                type: string
+                description: "昵称"
               device:
                 type: object
                 properties:
@@ -788,7 +791,7 @@ paths:
                 description: "用户名"
               password:
                 type: string
-                description: "手机号"
+                description: "密码"
               device:
                 type: object
                 properties:

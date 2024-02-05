@@ -124,7 +124,7 @@ func (g *Group) getToGroupMemberConfirmInviteDetailH5(c *wkhttp.Context) {
 		return
 	}
 	authCode := util.GenerUUID()
-	err = g.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", common.AuthCodeCachePrefix, authCode), util.ToJson(map[string]interface{}{
+	_ = g.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", common.AuthCodeCachePrefix, authCode), util.ToJson(map[string]interface{}{
 		"group_no":  groupNo,  // 群编号
 		"invite_no": inviteNo, // 邀请编号
 		"allower":   loginUID, // 通过者

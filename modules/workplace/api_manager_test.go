@@ -46,14 +46,35 @@ func TestGetBanners(t *testing.T) {
 		Description: "ddd",
 		JumpType:    1,
 		Route:       "moment",
+		SortNum:     11,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		BannerNo:    "dsdsdsd",
+		Cover:       "cover_1122",
+		Title:       "",
+		Description: "ddd",
+		JumpType:    1,
+		Route:       "moment",
+		SortNum:     12,
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		BannerNo:    "ss",
+		Cover:       "cover_1122",
+		Title:       "",
+		Description: "ddd",
+		JumpType:    1,
+		Route:       "moment",
+		SortNum:     1,
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("GET", "/v1/manager/workplace/banner", nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
-
-	assert.Equal(t, true, strings.Contains(w.Body.String(), `"cover":"cover_1122"`))
+	panic(w.Body)
+	// assert.Equal(t, true, strings.Contains(w.Body.String(), `"cover":"cover_1122"`))
 }
 func TestUpdateBanner(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
@@ -223,7 +244,7 @@ func TestUpdateAPP(t *testing.T) {
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/app", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/v1/manager/workplace/apps/%s", appId), bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
 		"app_id":       appId,
 		"icon":         "xxxxxu",
 		"name":         "悟空IMu",
@@ -240,6 +261,7 @@ func TestUpdateAPP(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+// 删除app
 func TestDeleteAPP(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	wm := NewManager(ctx)
@@ -259,7 +281,12 @@ func TestDeleteAPP(t *testing.T) {
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/app?app_id=%s", appId), nil)
+	err = wm.db.insertCategoryApp(&categoryAppModel{
+		AppId:      appId,
+		CategoryNo: "1",
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/apps/%s", appId), nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
@@ -297,7 +324,7 @@ func TestAppList(t *testing.T) {
 		IsPaidApp:   0,
 	})
 	assert.NoError(t, err)
-	req, _ := http.NewRequest("GET", "/v1/manager/workplace/app", nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/v1/manager/workplace/app?page_index=1&page_size=1&keyword=%s", "唐僧"), nil)
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)
@@ -508,6 +535,93 @@ func TestDeleteCategoryApp(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/category/app?category_no=%s&app_id=%s", categoryNo, appId1), nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// 删除分类
+func TestDeleteCategory(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	categoryNo := "no1"
+	err = wm.db.insertCategory(&categoryModel{
+		Name:       "分类1",
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/v1/manager/workplace/categorys/%s", categoryNo), nil)
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// 编辑分类
+func TestUpdateCategory(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	categoryNo := "no1"
+	err = wm.db.insertCategory(&categoryModel{
+		Name:       "分类1",
+		SortNum:    1,
+		CategoryNo: categoryNo,
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/v1/manager/workplace/categorys/%s", categoryNo), bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"name": "分类2",
+	}))))
+	w := httptest.NewRecorder()
+	req.Header.Set("token", testutil.Token)
+	s.GetRoute().ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// 排序横幅
+func TestReorderBanner(t *testing.T) {
+	s, ctx := testutil.NewTestServer()
+	wm := NewManager(ctx)
+	//清除数据
+	err := testutil.CleanAllTables(ctx)
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		SortNum:  1,
+		BannerNo: "1",
+		Cover:    "dd",
+		JumpType: 1,
+		Route:    "12",
+		Title:    "12",
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		SortNum:  32,
+		BannerNo: "21",
+		Cover:    "d2d",
+		JumpType: 1,
+		Route:    "132",
+		Title:    "1e2",
+	})
+	assert.NoError(t, err)
+	err = wm.db.insertBanner(&bannerModel{
+		SortNum:  11,
+		BannerNo: "1sd",
+		Cover:    "sdd",
+		JumpType: 1,
+		Route:    "1s2",
+		Title:    "1sd2",
+	})
+	assert.NoError(t, err)
+	req, _ := http.NewRequest("PUT", "/v1/manager/workplace/banner/reorder", bytes.NewReader([]byte(util.ToJson(map[string]interface{}{
+		"banner_nos": []string{"1sd", "1", "21"},
+	}))))
 	w := httptest.NewRecorder()
 	req.Header.Set("token", testutil.Token)
 	s.GetRoute().ServeHTTP(w, req)

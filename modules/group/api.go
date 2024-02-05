@@ -159,7 +159,7 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 	// 组织群
 	if strings.HasPrefix(groupNo, "org_") {
 		c.Header("Content-Type", "image/jpeg")
-		avatarBytes, err := ioutil.ReadFile("assets/assets/org_avatar.jpeg")
+		avatarBytes, err := ioutil.ReadFile("assets/assets/org_avatar.png")
 		if err != nil {
 			g.Error("头像读取失败！", zap.Error(err))
 			c.Writer.WriteHeader(http.StatusNotFound)
@@ -171,7 +171,7 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 	// 部门群
 	if strings.HasPrefix(groupNo, "dept_") {
 		c.Header("Content-Type", "image/jpeg")
-		avatarBytes, err := ioutil.ReadFile("assets/assets/dept_avatar.jpeg")
+		avatarBytes, err := ioutil.ReadFile("assets/assets/dept_avatar.png")
 		if err != nil {
 			g.Error("头像读取失败！", zap.Error(err))
 			c.Writer.WriteHeader(http.StatusNotFound)
@@ -636,14 +636,11 @@ func (g *Group) groupUpdate(c *wkhttp.Context) {
 		switch key {
 		case common.GroupAttrKeyName:
 			group.Name = value
-			break
 		case common.GroupAttrKeyNotice:
 			group.Notice = value
-			break
 		case common.GroupAttrKeyInvite:
 			invite, _ := strconv.ParseInt(value, 10, 64)
 			group.Invite = int(invite)
-			break
 		}
 	}
 	tx, err := g.ctx.DB().Begin()
@@ -1421,6 +1418,7 @@ func (g *Group) groupScanJoin(c *wkhttp.Context) {
 		Version:   version,
 		Status:    int(common.GroupMemberStatusNormal),
 		InviteUID: generator,
+		Vercode:   fmt.Sprintf("%s@%d", util.GenerUUID(), common.GroupMember),
 	}
 
 	tx, _ := g.db.session.Begin()
@@ -1724,7 +1722,6 @@ func (g *Group) memberUpdate(c *wkhttp.Context) {
 		switch key {
 		case "remark":
 			memberModel.Remark = value.(string)
-			break
 		}
 	}
 	memberModel.Version = g.ctx.GenSeq(common.GroupMemberSeqKey)
@@ -1779,21 +1776,52 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 		c.ResponseError(errors.New("群不存在！"))
 		return
 	}
+	var loginMember *MemberModel
 	// 查询操作者身份
 	if c.CheckLoginRole() != nil {
-		member, err := g.db.QueryMemberWithUID(operator, groupNo)
+		loginMember, err = g.db.QueryMemberWithUID(operator, groupNo)
 		if err != nil {
 			g.Error("查询操作者群成员信息错误", zap.Error(err))
 			c.ResponseError(errors.New("查询操作者群成员信息错误"))
 			return
 		}
-		if member == nil {
+		if loginMember == nil {
 			c.ResponseError(errors.New("操作者不再此群"))
 			return
 		}
-		if member.Role != int(common.GroupMemberRoleCreater) && member.Role != int(common.GroupMemberRoleManager) {
+		if loginMember.Role != int(common.GroupMemberRoleCreater) && loginMember.Role != int(common.GroupMemberRoleManager) {
 			c.ResponseError(errors.New("普通成员无法删除群成员"))
 			return
+		}
+	}
+	// 验证删除者是否包含自己
+	for _, uid := range req.Members {
+		if uid == operator {
+			c.ResponseError(errors.New("不能删除自己"))
+			return
+		}
+	}
+	deleteMembers, err := g.db.QueryMembersWithUids(req.Members, groupNo)
+	if err != nil {
+		g.Error("查询被删除的群成员信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询被删除的群成员信息错误"))
+		return
+	}
+	if len(deleteMembers) == 0 {
+		c.ResponseError(errors.New("被删除者不在此群内"))
+		return
+	}
+	// 验证权限
+	for _, member := range deleteMembers {
+		if loginMember.Role == int(common.GroupMemberRoleManager) {
+			if member.Role == int(common.GroupMemberRoleManager) {
+				c.ResponseError(errors.New("管理员不能删除管理员"))
+				return
+			}
+			if member.Role == int(common.GroupMemberRoleCreater) {
+				c.ResponseError(errors.New("管理员不能删除群主"))
+				return
+			}
 		}
 	}
 	realDeleteMemberModels, err := g.userDB.QueryByUIDs(req.Members)
@@ -2255,7 +2283,7 @@ func (g *Group) blacklist(c *wkhttp.Context) {
 			c.ResponseError(errors.New("查询移除黑名单成员错误"))
 			return
 		}
-		if members == nil || len(members) == 0 {
+		if len(members) == 0 {
 			c.ResponseError(errors.New("移除成员不存在"))
 			return
 		}
@@ -2598,18 +2626,6 @@ type groupReq struct {
 func (g groupReq) Check() error {
 	if len(g.Members) <= 0 {
 		return errors.New("群成员不能为空！")
-	}
-	return nil
-}
-
-type memberUpdateReq struct {
-	UID    string `json:"uid"`
-	Remark string `json:"remark"`
-}
-
-func (m memberUpdateReq) Check() error {
-	if strings.TrimSpace(m.UID) == "" {
-		return errors.New("uid不能为空！")
 	}
 	return nil
 }

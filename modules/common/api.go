@@ -7,6 +7,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,8 +53,8 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	{
 		commonNoAuth.GET("/countries", cn.countriesList)
 
-		commonNoAuth.GET("/appconfig", cn.appConfig) // app配置
-
+		commonNoAuth.GET("/appconfig", cn.appConfig)          // app配置
+		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)  // 获取后台运行引导视频
 		commonNoAuth.GET("/updater/:os/:version", cn.updater) // 版本更新检查（兼容tauri）
 	}
 
@@ -95,6 +97,24 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	// 设置系统私钥
 	cn.ctx.GetConfig().AppRSAPrivateKey = appConfigM.RSAPrivateKey
 	cn.ctx.GetConfig().AppRSAPubKey = appConfigM.RSAPublicKey
+}
+
+// 获取后台运行引导视频
+func (cn *Common) getKeepAliveVideo(c *wkhttp.Context) {
+	videoName := c.Query("video_name")
+	if videoName == "" {
+		c.ResponseError(errors.New("视频名称不能为空"))
+		return
+	}
+	c.Header("Content-Type", "video/mp4")
+	videoPath := fmt.Sprintf("assets/resources/keepalive/%s", videoName)
+	videoBytes, err := ioutil.ReadFile(videoPath)
+	if err != nil {
+		cn.Error("视频不存在", zap.Error(err))
+		c.Writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+	c.Writer.Write(videoBytes)
 }
 
 func (cn *Common) updater(c *wkhttp.Context) {

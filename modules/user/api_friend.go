@@ -54,7 +54,7 @@ func (f *Friend) Route(r *wkhttp.WKHttp) {
 		friend.POST("/apply", f.friendApply)           // 好友申请
 		friend.GET("/apply", f.apply)                  // 好友申请列表
 		friend.DELETE("/apply/:to_uid", f.deleteApply) // 删除好友申请
-		friend.PUT("/refuse", f.refuseApply)           // 拒绝申请
+		friend.PUT("/refuse/:to_uid", f.refuseApply)   // 拒绝申请
 		friend.POST("/sure", f.friendSure)             // 好友确认
 		friend.GET("/sync", f.friendSync)              // 同步好友
 		friend.GET("/search", f.friendSearch)          // 查询好友
@@ -66,7 +66,7 @@ func (f *Friend) Route(r *wkhttp.WKHttp) {
 	}
 }
 
-// 通过或拒绝申请
+// 拒绝申请
 func (f *Friend) refuseApply(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
 	toUid := c.Param("to_uid")
@@ -347,6 +347,7 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
+	isAddCount := false
 	if apply == nil {
 		err = f.db.insertApplyTx(&FriendApplyModel{
 			Status: 0,
@@ -362,14 +363,18 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			return
 		}
 	} else {
-		apply.Status = 0
-		err = f.db.updateApplyTx(apply, tx)
-		if err != nil {
-			tx.Rollback()
-			f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
-			c.ResponseError(errors.New("修改好友申请记录错误"))
-			return
+		if apply.Status != 0 {
+			isAddCount = true
+			apply.Status = 0
+			err = f.db.updateApplyTx(apply, tx)
+			if err != nil {
+				tx.Rollback()
+				f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
+				c.ResponseError(errors.New("修改好友申请记录错误"))
+				return
+			}
 		}
+
 	}
 	// 新增红点
 	if userRedDot == nil {
@@ -386,14 +391,17 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			return
 		}
 	} else {
-		userRedDot.Count++
-		err = f.userDB.updateUserRedDotTx(userRedDot, tx)
-		if err != nil {
-			tx.Rollback()
-			f.Error("修改用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
-			c.ResponseError(errors.New("修改用户通讯录红点信息错误"))
-			return
+		if isAddCount || userRedDot.Count == 0 {
+			userRedDot.Count++
+			err = f.userDB.updateUserRedDotTx(userRedDot, tx)
+			if err != nil {
+				tx.Rollback()
+				f.Error("修改用户通讯录红点信息错误", zap.String("to_uid", req.ToUID))
+				c.ResponseError(errors.New("修改用户通讯录红点信息错误"))
+				return
+			}
 		}
+
 	}
 	if err = tx.Commit(); err != nil {
 		tx.Rollback()
@@ -788,11 +796,10 @@ func (f *Friend) remark(c *wkhttp.Context) {
 		return
 	}
 	if settingM == nil {
-		settingM = &SettingModel{
-			UID:    loginUID,
-			ToUID:  req.UID,
-			Remark: req.Remark,
-		}
+		settingM = newDefaultSettingModel()
+		settingM.UID = loginUID
+		settingM.ToUID = req.UID
+		settingM.Remark = req.Remark
 		err = f.settingDB.InsertUserSettingModel(settingM)
 		if err != nil {
 			f.Error("添加用户设置失败！", zap.Error(err))

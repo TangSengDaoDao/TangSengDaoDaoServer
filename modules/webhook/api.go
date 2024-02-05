@@ -90,7 +90,7 @@ func New(ctx *config.Context) *Webhook {
 	}
 }
 func getSupportTypes() []common.ContentType {
-	return []common.ContentType{common.Text, common.Image, common.GIF, common.Voice, common.Video, common.File, common.Location, common.Card, common.RedPacket, common.MultipleForward, common.VectorSticker, common.EmojiSticker}
+	return []common.ContentType{common.Text, common.Image, common.GIF, common.Voice, common.Video, common.File, common.Location, common.Card, common.MultipleForward, common.VectorSticker, common.EmojiSticker}
 }
 
 // Route 路由配置
@@ -354,32 +354,38 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 		if contentMap["type"] == nil {
 			return errors.New("type为空！")
 		}
+		if contentMap["cmd"] != nil {
+			cmd := contentMap["cmd"].(string)
+			if cmd == "room.invoke" || cmd == "rtc.p2p.invoke" {
+				isVideoCall = true
+			}
+		}
 		contentTypeInt64, _ := contentMap["type"].(json.Number).Int64()
 		contentType := common.ContentType(contentTypeInt64)
 		msgResp.ContentType = int(contentType)
 	}
-	if msgResp.Header.SyncOnce == 1 { // 命令类消息不推送
+	if msgResp.Header.SyncOnce == 1 && !isVideoCall { // 命令类消息不推送
 		w.Debug("命令消息不推送！")
 		return nil
 	}
 
-	if !w.containSupportType(common.ContentType(msgResp.ContentType)) {
+	if !w.containSupportType(common.ContentType(msgResp.ContentType)) && !isVideoCall {
 		w.Debug("不推送：不支持的消息类型！", zap.Int("contentType", msgResp.ContentType))
 		return nil
 	}
 
 	var err error
-	var users []*user.Resp
+	// var users []*user.Resp
 	userSettings := make([]*user.SettingResp, 0)
 	groupSettings := make([]*group.SettingResp, 0)
+	users, err := w.userService.GetUsers(toUids)
+	if err != nil {
+		w.Error("查询推送用户信息错误", zap.Error(err))
+		return nil
+	}
 	if !isVideoCall { // 音视频消息不检查设置，直接推送
 		// 查询免打扰
 		// 查询用户总设置
-		users, err = w.userService.GetUsers(toUids)
-		if err != nil {
-			w.Error("查询推送用户信息错误", zap.Error(err))
-			return nil
-		}
 		if msgResp.ChannelType == common.ChannelTypePerson.Uint8() {
 			// 查询用户对某人设置
 			if msgResp.FromUID != "" && len(toUids) > 0 {

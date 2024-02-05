@@ -29,7 +29,11 @@ func (d *managerDB) insertCategory(m *categoryModel) error {
 	_, err := d.session.InsertInto("workplace_category").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
 	return err
 }
-
+func (d *managerDB) queryCategoryWithNo(categoryNo string) (*categoryModel, error) {
+	var m *categoryModel
+	_, err := d.session.Select("*").From("workplace_category").Where("category_no=?", categoryNo).Load(&m)
+	return m, err
+}
 func (d *managerDB) queryMaxSortNumCategory() (*categoryModel, error) {
 	var m *categoryModel
 	_, err := d.session.Select("*").From("workplace_category").OrderDir("sort_num", false).Limit(1).Load(&m)
@@ -76,6 +80,12 @@ func (d *managerDB) updateBanner(banner *bannerModel) error {
 	}).Where("banner_no=?", banner.BannerNo).Exec()
 	return err
 }
+func (d *managerDB) updateCategory(category *categoryModel) error {
+	_, err := d.session.Update("workplace_category").SetMap(map[string]interface{}{
+		"name": category.Name,
+	}).Where("category_no=?", category.CategoryNo).Exec()
+	return err
+}
 
 func (d *managerDB) updateCategorySortNumWithTx(categoryNo string, sortNum int, tx *dbr.Tx) error {
 	_, err := tx.Update("workplace_category").SetMap(map[string]interface{}{
@@ -84,8 +94,29 @@ func (d *managerDB) updateCategorySortNumWithTx(categoryNo string, sortNum int, 
 	return err
 }
 
-func (d *managerDB) deleteApp(appId string) error {
-	_, err := d.session.DeleteFrom("workplace_app").Where("app_id=?", appId).Exec()
+func (d *managerDB) updateBannerSortNumWithTx(bannerNo string, sortNum int, tx *dbr.Tx) error {
+	_, err := tx.Update("workplace_banner").SetMap(map[string]interface{}{
+		"sort_num": sortNum,
+	}).Where("banner_no=?", bannerNo).Exec()
+	return err
+}
+
+func (d *managerDB) deleteAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_app").Where("app_id=?", appId).Exec()
+	return err
+}
+func (d *managerDB) deleteCategoryAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_category_app").Where("app_id=?", appId).Exec()
+	return err
+}
+
+func (d *managerDB) deleteUserAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_user_app").Where("app_id=?", appId).Exec()
+	return err
+}
+
+func (d *managerDB) deleteUserRecordAppTx(appId string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("workplace_app_user_record").Where("app_id=?", appId).Exec()
 	return err
 }
 
@@ -119,12 +150,37 @@ func (d *managerDB) deleteCategoryApp(appId, categoryNo string) error {
 	_, err := d.session.DeleteFrom("workplace_category_app").Where("app_id=? and category_no=?", appId, categoryNo).Exec()
 	return err
 }
+func (d *managerDB) deleteCategory(categoryNo string) error {
+	_, err := d.session.DeleteFrom("workplace_category").Where("category_no=?", categoryNo).Exec()
+	return err
+}
 
-func (d *managerDB) queryAllApp() ([]*appModel, error) {
+func (d *managerDB) queryAppWithPage(pageSize, page uint64) ([]*appModel, error) {
 	var models []*appModel
-	_, err := d.session.Select("*").From("workplace_app").OrderDir("created_at", false).Load(&models)
+	_, err := d.session.Select("*").From("workplace_app").Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&models)
 	return models, err
 }
+
+func (d *managerDB) searchApp(keyword string, pageSize, page uint64) ([]*appModel, error) {
+	var models []*appModel
+	_, err := d.session.Select("*").From("workplace_app").Where("name like ?", "%"+keyword+"%").Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&models)
+	return models, err
+}
+
+// 通过关键字查询app总数
+func (m *managerDB) queryAppCountWithKeyWord(keyword string) (int64, error) {
+	var count int64
+	_, err := m.session.Select("count(*)").From("workplace_app").Where("name like ?", "%"+keyword+"%").Load(&count)
+	return count, err
+}
+
+// 查询app总数
+func (d *managerDB) queryAppCount() (int64, error) {
+	var count int64
+	_, err := d.session.Select("count(*)").From("workplace_app").Load(&count)
+	return count, err
+}
+
 func (d *managerDB) queryMaxSortNumCategoryApp(categoryNo string) (*categoryAppModel, error) {
 	var m *categoryAppModel
 	_, err := d.session.Select("*").From("workplace_category_app").Where("category_no=?", categoryNo).OrderDir("sort_num", false).Limit(1).Load(&m)

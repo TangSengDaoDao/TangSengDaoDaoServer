@@ -714,6 +714,8 @@ type Resp struct {
 	NewMsgNotice    int
 	MsgShowDetail   int //显示消息通知详情0.否1.是
 	MsgExpireSecond int64
+	CreatedAt       int64 // 注册时间 10位时间戳
+	IsDestroy       int   // 是否注销
 }
 
 func newResp(m *Model) *Resp {
@@ -727,6 +729,8 @@ func newResp(m *Model) *Resp {
 		NewMsgNotice:    m.NewMsgNotice,
 		MsgShowDetail:   m.MsgShowDetail,
 		MsgExpireSecond: m.MsgExpireSecond,
+		IsDestroy:       m.IsDestroy,
+		CreatedAt:       time.Time(m.CreatedAt).Unix(),
 	}
 }
 

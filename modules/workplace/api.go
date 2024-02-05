@@ -28,16 +28,16 @@ func New(ctx *config.Context) *Workplace {
 func (w *Workplace) Route(r *wkhttp.WKHttp) {
 	auth := r.Group("/v1/workplace", w.ctx.AuthMiddleware(r))
 	{
-		auth.GET("/banner", w.getBanner)                // 获取横幅
-		auth.GET("/user/app", w.getApps)                // 获取用户添加的app
-		auth.POST("/user/app", w.addApp)                // 添加app
-		auth.DELETE("/user/app", w.deleteApp)           // 删除app
-		auth.PUT("/user/app/reorder", w.reorderApp)     // 排序app
-		auth.POST("/user/app/record", w.addRecord)      // 添加使用记录
-		auth.GET("/user/app/record", w.getRecord)       // 查询常用app
-		auth.DELETE("/user/app/record", w.deleteRecord) // 删除使用记录
-		auth.GET("/category", w.getCategory)            // 获取分类
-		auth.GET("/category/app", w.getAppWithCategory) // 获取某个分类下的应用
+		auth.GET("/banner", w.getBanner)                              // 获取横幅
+		auth.PUT("/app/reorder", w.reorderApp)                        // 排序app
+		auth.GET("/app/record", w.getRecord)                          // 查询常用app
+		auth.GET("/app", w.getApps)                                   // 获取用户添加的app
+		auth.POST("/apps/:app_id", w.addApp)                          // 添加app
+		auth.DELETE("/apps/:app_id", w.deleteApp)                     // 删除app
+		auth.POST("/apps/:app_id/record", w.addRecord)                // 添加使用记录
+		auth.DELETE("/apps/:app_id/record", w.deleteRecord)           // 删除使用记录
+		auth.GET("/category", w.getCategory)                          // 获取分类
+		auth.GET("/categorys/:category_no/app", w.getAppWithCategory) // 获取某个分类下的应用
 	}
 }
 
@@ -102,22 +102,16 @@ func (w *Workplace) getRecord(c *wkhttp.Context) {
 	}
 	c.Response(list)
 }
+
+// 添加app使用记录
 func (w *Workplace) addRecord(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
-	type reqVO struct {
-		AppId string `json:"app_id"`
-	}
-	var req reqVO
-	if err := c.BindJSON(&req); err != nil {
-		w.Error(common.ErrData.Error(), zap.Error(err))
-		c.ResponseError(common.ErrData)
-		return
-	}
-	if req.AppId == "" {
+	appId := c.Param("app_id")
+	if appId == "" {
 		c.ResponseError(errors.New("应用ID不能为空"))
 		return
 	}
-	app, err := w.db.queryAppWithAppId(req.AppId)
+	app, err := w.db.queryAppWithAppId(appId)
 	if err != nil {
 		w.Error("查询应用错误", zap.Error(err))
 		c.ResponseError(errors.New("查询应用错误"))
@@ -127,7 +121,7 @@ func (w *Workplace) addRecord(c *wkhttp.Context) {
 		c.ResponseError(errors.New("该应用已删除或不可用"))
 		return
 	}
-	record, err := w.db.queryRecordWithUidAndAppId(loginUID, req.AppId)
+	record, err := w.db.queryRecordWithUidAndAppId(loginUID, appId)
 	if err != nil {
 		w.Error("查询使用记录错误", zap.Error(err))
 		c.ResponseError(errors.New("查询使用记录错误"))
@@ -135,7 +129,7 @@ func (w *Workplace) addRecord(c *wkhttp.Context) {
 	}
 	if record == nil {
 		err := w.db.insertRecord(&recordModel{
-			AppId: req.AppId,
+			AppId: appId,
 			Count: 1,
 			Uid:   loginUID,
 		})
@@ -157,7 +151,7 @@ func (w *Workplace) addRecord(c *wkhttp.Context) {
 }
 func (w *Workplace) getAppWithCategory(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
-	categoryNo := c.Query("category_no")
+	categoryNo := c.Param("category_no")
 	if categoryNo == "" {
 		c.ResponseError(errors.New("分类编号不能为空"))
 		return
@@ -239,7 +233,7 @@ func (w *Workplace) reorderApp(c *wkhttp.Context) {
 // 移除一个app
 func (w *Workplace) deleteApp(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
-	appId := c.Query("app_id")
+	appId := c.Param("app_id")
 	if appId == "" {
 		c.ResponseError(errors.New("appId不能为空"))
 		return
@@ -256,20 +250,12 @@ func (w *Workplace) deleteApp(c *wkhttp.Context) {
 // 添加app
 func (w *Workplace) addApp(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
-	type reqVO struct {
-		AppId string `json:"app_id"`
-	}
-	var req reqVO
-	if err := c.BindJSON(&req); err != nil {
-		w.Error(common.ErrData.Error(), zap.Error(err))
-		c.ResponseError(common.ErrData)
-		return
-	}
-	if req.AppId == "" {
+	appId := c.Param("app_id")
+	if appId == "" {
 		c.ResponseError(errors.New("应用ID不能为空"))
 		return
 	}
-	app, err := w.db.queryAppWithAppId(req.AppId)
+	app, err := w.db.queryAppWithAppId(appId)
 	if err != nil {
 		c.ResponseError(errors.New("查询应用错误"))
 		w.Error("查询应用错误", zap.Error(err))
@@ -279,7 +265,7 @@ func (w *Workplace) addApp(c *wkhttp.Context) {
 		w.Error("该应用不存在或被禁用", zap.Error(err))
 		return
 	}
-	userApp, err := w.db.queryUserAppWithAPPId(loginUID, req.AppId)
+	userApp, err := w.db.queryUserAppWithAPPId(loginUID, appId)
 	if err != nil {
 		c.ResponseError(errors.New("查询用户某个应用错误"))
 		w.Error("查询用户某个应用错误", zap.Error(err))
@@ -302,7 +288,7 @@ func (w *Workplace) addApp(c *wkhttp.Context) {
 	err = w.db.insertUserApp(&userAppModel{
 		Uid:     loginUID,
 		SortNum: sortNum,
-		AppID:   req.AppId,
+		AppID:   appId,
 	})
 	if err != nil {
 		c.ResponseError(errors.New("添加用户app错误"))
@@ -400,6 +386,7 @@ func (w *Workplace) getBanner(c *wkhttp.Context) {
 				Description: m.Description,
 				JumpType:    m.JumpType,
 				Route:       m.Route,
+				SortNum:     m.SortNum,
 			})
 		}
 	}
@@ -429,6 +416,7 @@ type bannerResp struct {
 	Description string `json:"description"` // 介绍
 	JumpType    int    `json:"jump_type"`   // 打开方式 0.网页 1.原生
 	Route       string `json:"route"`       // 打开地址
+	SortNum     int    `json:"sort_num"`    // 排序编号
 	CreatedAt   string `json:"created_at"`  // 创建时间
 }
 

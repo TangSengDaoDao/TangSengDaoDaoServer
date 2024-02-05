@@ -78,14 +78,15 @@ func (h *HMSPush) GetPayload(msg msgOfflineNotify, ctx *config.Context, toUser *
 // Push 推送
 func (h *HMSPush) Push(deviceToken string, payload Payload) error {
 	hmsPayload := payload.(*HMSPayload)
-	channelID := "wukongchat_new_msg_notification"
+	channelID := "wk_new_msg_notification"
 	sound := "/raw/newmsg"
 	category := "IM"
 	if hmsPayload.GetRTCPayload() != nil && hmsPayload.GetRTCPayload().GetOperation() != "cancel" {
-		channelID = "wukongchat_new_rtc_notification"
+		channelID = "wk_new_rtc_notification"
 		sound = "/raw/newrtc"
 		category = "VOIP"
 	}
+
 	resp, err := network.Post(fmt.Sprintf("https://push-api.cloud.huawei.com/v1/%s/messages:send", h.appID), []byte(util.ToJson(map[string]interface{}{
 		"validate_only": false,
 		"message": map[string]interface{}{
@@ -98,7 +99,7 @@ func (h *HMSPush) Push(deviceToken string, payload Payload) error {
 					"body":          payload.GetContent(),
 					"sound":         sound,
 					"importance":    "NORMAL",
-					"default_sound": true,
+					"default_sound": false,
 					"channel_id":    channelID,
 					"click_action": map[string]interface{}{
 						"type": 3,
@@ -113,6 +114,7 @@ func (h *HMSPush) Push(deviceToken string, payload Payload) error {
 	})), map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", hmsPayload.accessToken),
 	})
+
 	if err != nil {
 		return err
 	}
