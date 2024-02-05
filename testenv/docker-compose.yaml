@@ -17,13 +17,25 @@ services:
   wukongim: # wukongim底层通讯服务
     image: wukongim/wukongim:latest
     restart: always
-    # volumes:
-    #   - ./wukongimdata:/root/wukongim
-    # environment:
-    #   WK_MODE: "debug"
-    #   # WK_EXTERNAL_IP: "111.127.45.198"
+    volumes:
+      - ./wukongimdata:/root/wukongim
+    environment:
+      WK_MODE: "debug"
+      WK_EXTERNAL_IP: "192.168.99.219"
     ports:
       - 5001:5001 # http api 端口
       - 5100:5100 # tcp端口
       - 5200:5200 # websocket端口
-      - 5300:5300 # monitor端口    
+      - 5300:5300 # monitor端口
+  minio: # minio文件管理服务
+    image: minio/minio:latest # use a remote image
+    restart: always
+    command: "server /data --console-address ':9001'"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=12345678
+    volumes:
+      - ./miniodata:/data
