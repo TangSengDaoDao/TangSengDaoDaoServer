@@ -3,7 +3,8 @@ module github.com/TangSengDaoDao/TangSengDaoDaoServer
 go 1.20
 
 require (
-	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.7-0.20240111075852-1dc32c550e55
+	firebase.google.com/go/v4 v4.13.0
+	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.7-0.20240205110210-3093686109a7
 	github.com/alibabacloud-go/darabonba-openapi v0.2.1
 	github.com/alibabacloud-go/sms-intl-20180501 v1.0.1
 	github.com/alibabacloud-go/tea v1.2.1
@@ -35,6 +36,7 @@ require (
 	github.com/tidwall/gjson v1.15.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.14.0
+	google.golang.org/api v0.122.0
 	google.golang.org/grpc v1.57.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
@@ -50,8 +52,6 @@ require (
 	cloud.google.com/go/longrunning v0.4.1 // indirect
 	cloud.google.com/go/pubsub v1.30.0 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	firebase.google.com/go v3.13.0+incompatible // indirect
-	firebase.google.com/go/v4 v4.13.0 // indirect
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/RichardKnop/logging v0.0.0-20190827224416-1a693bdd4fae // indirect
 	github.com/RichardKnop/machinery/v2 v2.0.11 // indirect
@@ -155,7 +155,6 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/api v0.122.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/appengine/v2 v2.0.2 // indirect
 	google.golang.org/genproto v0.0.0-20230526161137-0005af68ea54 // indirect
