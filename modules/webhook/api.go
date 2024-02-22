@@ -51,6 +51,7 @@ func New(ctx *config.Context) *Webhook {
 	hms := ctx.GetConfig().Push.HMS
 	oppo := ctx.GetConfig().Push.OPPO
 	vivo := ctx.GetConfig().Push.VIVO
+	firebase := ctx.GetConfig().Push.FIREBASE
 
 	if apns.Topic != "" && apns.Cert != "" {
 		pushMap[common.DeviceTypeIOS] = map[string]Push{
@@ -77,7 +78,11 @@ func New(ctx *config.Context) *Webhook {
 			ctx.GetConfig().Push.VIVO.PackageName: NewVIVOPush(vivo.AppID, vivo.AppKey, vivo.AppSecret, ctx),
 		}
 	}
-
+	if firebase.PackageName != "" {
+		pushMap[common.DeviceTypeFirebase] = map[string]Push{
+			ctx.GetConfig().Push.FIREBASE.PackageName: NewFIREBASEPush(firebase.PackageName, firebase.JsonPath, firebase.ProjectId, ""),
+		}
+	}
 	return &Webhook{
 		db:           NewDB(ctx.DB()),
 		supportTypes: supportTypes,

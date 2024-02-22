@@ -54,3 +54,17 @@ func TestVIVOPush(t *testing.T) {
 	err := vivo.Push("16569158930074211800064", NewVIVOPayload(payloadInfo, "11"))
 	assert.NoError(t, err)
 }
+
+func TestFirebasePush(t *testing.T) {
+	// 请使用你本地的绝对路径进行测试
+	mi := NewFIREBASEPush("service_Account_json_Path", "bobo", "这个值请从json里面获取", "")
+
+	payloadInfo := &PayloadInfo{
+		Title:   "title",
+		Content: "content",
+		Badge:   1,
+	}
+	// 这个device token是 firebase的token 不是app的device token，请前端老师帮忙提供即可。
+	err := mi.Push("请前端开发给你提供这个值", NewFIREBASEPayload(payloadInfo, "11"))
+	assert.NoError(t, err)
+}
