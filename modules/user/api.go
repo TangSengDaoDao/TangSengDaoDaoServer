@@ -361,7 +361,7 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 		}
 
 		avatarID := crc32.ChecksumIEEE([]byte(uid)) % uint32(u.ctx.GetConfig().Avatar.DefaultCount)
-		ph = fmt.Sprintf("/avatar/default/test(%d).jpg", avatarID)
+		ph = fmt.Sprintf("/avatar/default/test (%d).jpg", avatarID)
 		if strings.TrimSpace(u.ctx.GetConfig().Avatar.DefaultBaseURL) != "" {
 			downloadUrl = strings.ReplaceAll(u.ctx.GetConfig().Avatar.DefaultBaseURL, "{avatar}", fmt.Sprintf("%d", avatarID))
 		}
