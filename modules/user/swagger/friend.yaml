@@ -89,6 +89,9 @@ paths:
                 to_uid:
                   type: string
                   description: "申请用户UID"
+                to_name:
+                  type: string
+                  description: "申请用户名"
                 remark: 
                   type: string
                   description: "备注"
