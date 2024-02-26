@@ -127,11 +127,33 @@ func (f *Friend) apply(c *wkhttp.Context) {
 	}
 	list := make([]*friendApplyResp, 0)
 	if len(applys) > 0 {
+		uids := make([]string, 0)
 		for _, apply := range applys {
+			uids = append(uids, apply.ToUID)
+		}
+		users, err := f.userService.GetUsers(uids)
+		if err != nil {
+			f.Error("查询申请用户信息错误", zap.Error(err))
+			c.ResponseError(errors.New("查询申请用户信息错误"))
+			return
+		}
+		if len(users) == 0 {
+			c.ResponseError(errors.New("申请者不存在"))
+			return
+		}
+		for _, apply := range applys {
+			name := ""
+			for _, user := range users {
+				if user.UID == apply.ToUID {
+					name = user.Name
+					break
+				}
+			}
 			list = append(list, &friendApplyResp{
 				Id:        apply.Id,
 				UID:       apply.UID,
 				ToUID:     apply.ToUID,
+				ToName:    name,
 				Remark:    apply.Remark,
 				Status:    apply.Status,
 				Token:     apply.Token,
@@ -889,6 +911,7 @@ type friendApplyResp struct {
 	Id        int64  `json:"id"`
 	UID       string `json:"uid"`
 	ToUID     string `json:"to_uid"`
+	ToName    string `json:"to_name"`
 	Remark    string `json:"remark"`
 	Status    int    `json:"status"` // 状态 0.未处理 1.通过 2.拒绝
 	Token     string `json:"token"`
