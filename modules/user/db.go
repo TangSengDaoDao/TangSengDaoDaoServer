@@ -169,6 +169,12 @@ func (d *DB) QueryByCategory(category string) ([]*Model, error) {
 	return models, err
 }
 
+func (d *DB) queryWithCategories(categories []string) ([]*Model, error) {
+	var models []*Model
+	_, err := d.session.Select("*").From("user").Where("category in ?", categories).Load(&models)
+	return models, err
+}
+
 // QueryWithAppID 根据appID查询用户列表
 func (d *DB) QueryWithAppID(appID string) ([]*Model, error) {
 	var models []*Model

@@ -33,6 +33,8 @@ type IService interface {
 	GetUsersWithAppID(appID string) ([]*Resp, error)
 	// 获取用户集合
 	GetUsersWithCategory(category Category) ([]*Resp, error)
+	// 获取指定类别的用户列表
+	GetUsersWithCategories(categories []string) ([]*Resp, error)
 	//查询某个人好友
 	GetFriendsWithToUIDs(uid string, toUIDs []string) ([]*FriendResp, error)
 	//查询某个用户的所有好友
@@ -536,6 +538,19 @@ func (s *Service) GetUsersWithAppID(appID string) ([]*Resp, error) {
 // GetUsersWithCategory 获取用户列表
 func (s *Service) GetUsersWithCategory(category Category) ([]*Resp, error) {
 	userModels, err := s.db.QueryByCategory(string(category))
+	if err != nil {
+		return nil, err
+	}
+	resps := make([]*Resp, 0, len(userModels))
+	for _, userM := range userModels {
+		resps = append(resps, newResp(userM))
+	}
+	return resps, nil
+}
+
+// GetUsersWithCategories 获取指定类别的用户列表
+func (s *Service) GetUsersWithCategories(categories []string) ([]*Resp, error) {
+	userModels, err := s.db.queryWithCategories(categories)
 	if err != nil {
 		return nil, err
 	}

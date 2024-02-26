@@ -36,7 +36,7 @@ func init() {
 			SQLDir:  register.NewSQLFS(sqlFS),
 			IMDatasource: register.IMDatasource{
 				SystemUIDs: func() ([]string, error) {
-					users, err := api.userService.GetUsersWithCategory(CategoryService)
+					users, err := api.userService.GetUsersWithCategories([]string{CategoryCustomerService, CategorySystem})
 					if err != nil {
 						return nil, err
 					}

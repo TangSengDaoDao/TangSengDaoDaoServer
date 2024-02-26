@@ -1995,7 +1995,7 @@ func (u *User) loginCheckPhone(c *wkhttp.Context) {
 
 // customerservices 客服列表
 func (u *User) customerservices(c *wkhttp.Context) {
-	list, err := u.db.QueryByCategory("service")
+	list, err := u.db.QueryByCategory(CategoryCustomerService)
 	if err != nil {
 		u.Error("查询客服列表失败", zap.Error(err))
 		c.ResponseError(errors.New("查询客服列表失败"))

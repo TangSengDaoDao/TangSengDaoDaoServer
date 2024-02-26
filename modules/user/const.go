@@ -29,8 +29,10 @@ func (s Status) Int() int {
 type Category string
 
 const (
-	// Service Service
-	CategoryService Category = "service"
+	// CategoryCustomerService 客服
+	CategoryCustomerService = "customerService"
+	// CategorySystem 系统账号
+	CategorySystem = "system"
 )
 
 // Names 注册用户随机名字
