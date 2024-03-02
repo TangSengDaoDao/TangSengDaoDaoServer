@@ -552,12 +552,14 @@ func (s *Service) GetUsersWithCategory(category Category) ([]*Resp, error) {
 func (s *Service) GetUsersWithCategories(categories []string) ([]*Resp, error) {
 	userModels, err := s.db.queryWithCategories(categories)
 	if err != nil {
+		s.Error("查询用户列表错误", zap.Error(err))
 		return nil, err
 	}
 	resps := make([]*Resp, 0, len(userModels))
 	for _, userM := range userModels {
 		resps = append(resps, newResp(userM))
 	}
+	s.Debug("查询用户列表", zap.Strings("categories", categories), zap.Int("count", len(resps)))
 	return resps, nil
 }
 

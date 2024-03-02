@@ -1526,12 +1526,12 @@ func (u *User) addBlacklist(c *wkhttp.Context) {
 	}
 
 	// 请求im服务器设置黑名单
-	err = u.ctx.IMBlacklistSet(config.ChannelBlacklistReq{
+	err = u.ctx.IMBlacklistAdd(config.ChannelBlacklistReq{
 		ChannelReq: config.ChannelReq{
-			ChannelID:   common.GetFakeChannelIDWith(loginUID, uid),
+			ChannelID:   loginUID,
 			ChannelType: common.ChannelTypePerson.Uint8(),
 		},
-		UIDs: []string{loginUID, uid},
+		UIDs: []string{uid},
 	})
 	if err != nil {
 		u.Error("设置黑名单失败！", zap.Error(err))
@@ -1646,12 +1646,12 @@ func (u *User) removeBlacklist(c *wkhttp.Context) {
 	// 双方都不在黑名单后才能设置IM黑名单
 	if userSetting == nil || userSetting.Blacklist == 0 {
 		// 请求im服务器设置黑名单
-		err = u.ctx.IMBlacklistSet(config.ChannelBlacklistReq{
+		err = u.ctx.IMBlacklistRemove(config.ChannelBlacklistReq{
 			ChannelReq: config.ChannelReq{
-				ChannelID:   common.GetFakeChannelIDWith(loginUID, uid),
+				ChannelID:   loginUID,
 				ChannelType: common.ChannelTypePerson.Uint8(),
 			},
-			UIDs: make([]string, 0),
+			UIDs: []string{uid},
 		})
 		if err != nil {
 			u.Error("设置黑名单失败！", zap.Error(err))
