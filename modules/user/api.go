@@ -1636,28 +1636,18 @@ func (u *User) removeBlacklist(c *wkhttp.Context) {
 		return
 	}
 
-	userSetting, err := u.settingDB.querySettingByUIDAndToUID(uid, loginUID)
+	// 请求im服务器移除黑名单
+	err = u.ctx.IMBlacklistRemove(config.ChannelBlacklistReq{
+		ChannelReq: config.ChannelReq{
+			ChannelID:   loginUID,
+			ChannelType: common.ChannelTypePerson.Uint8(),
+		},
+		UIDs: []string{uid},
+	})
 	if err != nil {
-		u.Error("查询用户设置错误", zap.Error(err))
-		c.ResponseError(errors.New("查询用户设置错误"))
+		u.Error("设置黑名单失败！", zap.Error(err))
+		c.ResponseError(errors.New("设置黑名单失败！"))
 		return
-	}
-
-	// 双方都不在黑名单后才能设置IM黑名单
-	if userSetting == nil || userSetting.Blacklist == 0 {
-		// 请求im服务器设置黑名单
-		err = u.ctx.IMBlacklistRemove(config.ChannelBlacklistReq{
-			ChannelReq: config.ChannelReq{
-				ChannelID:   loginUID,
-				ChannelType: common.ChannelTypePerson.Uint8(),
-			},
-			UIDs: []string{uid},
-		})
-		if err != nil {
-			u.Error("设置黑名单失败！", zap.Error(err))
-			c.ResponseError(errors.New("设置黑名单失败！"))
-			return
-		}
 	}
 
 	// 发送给被拉黑的人去更新拉黑人的频道
