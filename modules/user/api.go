@@ -375,7 +375,11 @@ func (u *User) UserAvatar(c *wkhttp.Context) {
 		}
 	}
 
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("%s#%s", downloadUrl, v))
+	if strings.Contains(downloadUrl, "?") {
+		c.Redirect(http.StatusFound, fmt.Sprintf("%s&v=%s", downloadUrl, v))
+	} else {
+		c.Redirect(http.StatusFound, fmt.Sprintf("%s?v=%s", downloadUrl, v))
+	}
 }
 
 // uploadAvatar 上传用户头像
