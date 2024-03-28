@@ -187,7 +187,12 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	c.Redirect(http.StatusFound, fmt.Sprintf("%s?%s", downloadUrl, v))
+	if strings.Contains(downloadUrl, "?") {
+		c.Redirect(http.StatusFound, fmt.Sprintf("%s&v=%s", downloadUrl, v))
+	} else {
+		c.Redirect(http.StatusFound, fmt.Sprintf("%s?v=%s", downloadUrl, v))
+	}
+
 }
 
 func (g *Group) avatarUpload(c *wkhttp.Context) {
