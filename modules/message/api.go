@@ -18,6 +18,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/network"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"github.com/gocraft/dbr/v2"
 	"github.com/pkg/errors"
@@ -262,13 +263,21 @@ func (m *Message) messageEdit(c *wkhttp.Context) {
 		c.ResponseOK()
 		return
 	}
+
+	tx, _ := m.db.session.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
 	fakeChannelID := req.ChannelID
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(c.GetLoginUID(), req.ChannelID)
 	}
 
 	version := m.genMessageExtraSeq(fakeChannelID)
-	err = m.messageExtraDB.insertOrUpdateContentEdit(&messageExtraModel{
+	err = m.messageExtraDB.insertOrUpdateContentEditTx(&messageExtraModel{
 		MessageID:       req.MessageID,
 		MessageSeq:      req.MessageSeq,
 		ChannelID:       fakeChannelID,
@@ -277,13 +286,35 @@ func (m *Message) messageEdit(c *wkhttp.Context) {
 		ContentEditHash: contentMD5,
 		EditedAt:        int(time.Now().Unix()),
 		Version:         version,
-	})
+	}, tx)
 	if err != nil {
 		m.Error("添加或修改编辑内容失败！", zap.Error(err))
 		c.ResponseError(errors.New("添加或修改编辑内容失败！"))
 		return
 	}
-
+	msgIds := make([]string, 0)
+	msgIds = append(msgIds, req.MessageID)
+	// 发布编辑事件
+	eventID, err := m.ctx.EventBegin(&wkevent.Data{
+		Event: event.EventUpdateSearchMessage,
+		Data: map[string]interface{}{
+			"message_ids": msgIds,
+			"channel_id":  req.ChannelID,
+		},
+		Type: wkevent.None,
+	}, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("开启事件失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事件失败！"))
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		c.ResponseErrorf("事务提交失败！", err)
+		return
+	}
+	m.ctx.EventCommit(eventID)
 	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
 		ChannelID:   req.ChannelID,
@@ -1283,12 +1314,29 @@ func (m *Message) revoke(c *wkhttp.Context) {
 			return
 		}
 	}
+	msgIds := make([]string, 0)
+	msgIds = append(msgIds, messageID)
+	// 发布撤回消息事件
+	eventID, err := m.ctx.EventBegin(&wkevent.Data{
+		Event: event.EventUpdateSearchMessage,
+		Data: map[string]interface{}{
+			"message_ids": msgIds,
+			"channel_id":  channelID,
+		},
+		Type: wkevent.None,
+	}, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("开启事件失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事件失败！"))
+		return
+	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		c.ResponseErrorf("事务提交失败！", err)
 		return
 	}
-
+	m.ctx.EventCommit(eventID)
 	// err = m.ctx.SendCMD(config.MsgCMDReq{
 	// 	NoPersist:   true,
 	// 	ChannelID:   channelID,
