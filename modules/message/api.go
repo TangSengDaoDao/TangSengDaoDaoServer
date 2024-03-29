@@ -297,9 +297,9 @@ func (m *Message) messageEdit(c *wkhttp.Context) {
 	// 发布编辑事件
 	eventID, err := m.ctx.EventBegin(&wkevent.Data{
 		Event: event.EventUpdateSearchMessage,
-		Data: map[string]interface{}{
-			"message_ids": msgIds,
-			"channel_id":  req.ChannelID,
+		Data: &config.UpdateSearchMessageReq{
+			MessageIDs: msgIds,
+			ChannelID:  req.ChannelID,
 		},
 		Type: wkevent.None,
 	}, tx)
@@ -1319,9 +1319,9 @@ func (m *Message) revoke(c *wkhttp.Context) {
 	// 发布撤回消息事件
 	eventID, err := m.ctx.EventBegin(&wkevent.Data{
 		Event: event.EventUpdateSearchMessage,
-		Data: map[string]interface{}{
-			"message_ids": msgIds,
-			"channel_id":  channelID,
+		Data: &config.UpdateSearchMessageReq{
+			MessageIDs: msgIds,
+			ChannelID:  channelID,
 		},
 		Type: wkevent.None,
 	}, tx)

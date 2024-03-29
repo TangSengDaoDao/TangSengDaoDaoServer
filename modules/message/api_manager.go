@@ -168,9 +168,9 @@ func (m *Manager) delete(c *wkhttp.Context) {
 	}
 	eventID, err := m.ctx.EventBegin(&wkevent.Data{
 		Event: event.EventUpdateSearchMessage,
-		Data: map[string]interface{}{
-			"message_ids": msgIds,
-			"channel_id":  req.ChannelID,
+		Data: &config.UpdateSearchMessageReq{
+			MessageIDs: msgIds,
+			ChannelID:  req.ChannelID,
 		},
 		Type: wkevent.None,
 	}, tx)
