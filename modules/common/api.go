@@ -131,7 +131,15 @@ func (cn *Common) updater(c *wkhttp.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
+	if os == "latest-mac.yml" || os == "latest-linux.yml" || os == "latest.yml" {
+		c.JSON(http.StatusOK, gin.H{
+			"version":      model.AppVersion,
+			"path":         model.DownloadURL,
+			"sha512":       model.Signature,
+			"releaseNotes": model.UpdateDesc,
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"url":       model.DownloadURL,
 		"version":   model.AppVersion,
@@ -316,6 +324,7 @@ func (cn *Common) addAppVersion(c *wkhttp.Context) {
 		IsForce:     req.IsForce,
 		UpdateDesc:  req.UpdateDesc,
 		DownloadURL: req.DownloadURL,
+		Signature:   req.Signature,
 	})
 	if err != nil {
 		cn.Error("添加更新记录错误", zap.Error(err))
@@ -448,6 +457,7 @@ type appVersionReq struct {
 	IsForce     int    `json:"is_force"`     // 是否强制更新
 	UpdateDesc  string `json:"update_desc"`  // 更新说明
 	DownloadURL string `json:"download_url"` // 下载地址
+	Signature   string `json:"signature"`    // 文件签名
 }
 
 type appVersionResp struct {

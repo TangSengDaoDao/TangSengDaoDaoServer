@@ -1,10 +1,14 @@
 package file
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -113,6 +117,11 @@ func (f *File) getFilePath(c *wkhttp.Context) {
 func (f *File) uploadFile(c *wkhttp.Context) {
 	uploadPath := c.Query("path")
 	fileType := c.Query("type")
+	signature := c.Query("signature") // 是否返回签名
+	var signatureInt int64 = 0
+	if signature != "" {
+		signatureInt, _ = strconv.ParseInt(signature, 10, 64)
+	}
 	contentType := c.DefaultPostForm("contenttype", "application/octet-stream")
 	err := f.checkReq(Type(fileType), uploadPath)
 	if err != nil {
@@ -133,16 +142,28 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		_, err := io.Copy(w, file)
 		return err
 	})
+	var sign = ""
+	if signatureInt == 1 {
+		bytes, _ := ioutil.ReadAll(file)
+		hash := sha512.Sum512(bytes)
+		sign = hex.EncodeToString(hash[:])
+	}
 	defer file.Close()
 	if err != nil {
 		f.Error("上传文件失败！", zap.Error(err))
 		c.ResponseError(errors.New("上传文件失败！"))
 		return
 	}
-
-	c.Response(map[string]string{
-		"path": fmt.Sprintf("file/preview/%s%s", fileType, path),
-	})
+	if signatureInt == 1 {
+		c.Response(map[string]interface{}{
+			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
+			"sha512": sign,
+		})
+	} else {
+		c.Response(map[string]string{
+			"path": fmt.Sprintf("file/preview/%s%s", fileType, path),
+		})
+	}
 }
 
 // 获取文件
