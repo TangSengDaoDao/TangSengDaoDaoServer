@@ -44,7 +44,7 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	common := r.Group("/v1/common", cn.ctx.AuthMiddleware(r))
 	{
 		common.POST("/appversion", cn.addAppVersion)             // 添加APP版本
-		common.GET("/appversion/:os/:version", cn.getNewVersion) //获取最新版本
+		common.GET("/appversion/:os/:version", cn.getNewVersion) // 获取最新版本
 		common.GET("/appversion/list", cn.appVersionList)        // 版本列表
 		common.GET("/chatbg", cn.chatBgList)                     // 聊天背景列表
 		common.GET("/appmodule", cn.appModule)                   // app模块列表
@@ -53,9 +53,10 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	{
 		commonNoAuth.GET("/countries", cn.countriesList)
 
-		commonNoAuth.GET("/appconfig", cn.appConfig)          // app配置
-		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)  // 获取后台运行引导视频
-		commonNoAuth.GET("/updater/:os/:version", cn.updater) // 版本更新检查（兼容tauri）
+		commonNoAuth.GET("/appconfig", cn.appConfig)           // app配置
+		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)   // 获取后台运行引导视频
+		commonNoAuth.GET("/updater/:os/:version", cn.updater)  // 版本更新检查（兼容tauri）
+		commonNoAuth.GET("/pcupdater/:os", cn.getPCNewVersion) // pc版本更新检查
 	}
 
 	r.GET("/v1/health", func(c *wkhttp.Context) {
@@ -117,6 +118,29 @@ func (cn *Common) getKeepAliveVideo(c *wkhttp.Context) {
 	c.Writer.Write(videoBytes)
 }
 
+// 获取pc最新版本
+func (cn *Common) getPCNewVersion(c *wkhttp.Context) {
+	os := c.Param("os")
+	model, err := cn.db.queryNewVersion(os)
+	if err != nil {
+		cn.Error("查询最新版本错误", zap.Error(err))
+		c.ResponseError(errors.New("查询最新版本错误"))
+		return
+	}
+	if model == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"version":      model.AppVersion,
+		"path":         model.DownloadURL,
+		"sha512":       model.Signature,
+		"releaseNotes": model.UpdateDesc,
+	})
+	// if os == "latest-mac.yml" || os == "latest-linux.yml" || os == "latest.yml" {
+
+	// }
+}
 func (cn *Common) updater(c *wkhttp.Context) {
 	os := c.Param("os")
 	oldVersion := c.Param("version")
