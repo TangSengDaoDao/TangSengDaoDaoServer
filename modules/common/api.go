@@ -141,9 +141,10 @@ func (cn *Common) getPCNewVersion(c *wkhttp.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
+	downloadURL := fmt.Sprintf("%s/%s", cn.ctx.GetConfig().External.APIBaseURL, model.DownloadURL)
 	c.JSON(http.StatusOK, gin.H{
 		"version":      model.AppVersion,
-		"path":         model.DownloadURL,
+		"path":         downloadURL,
 		"sha512":       model.Signature,
 		"releaseNotes": model.UpdateDesc,
 	})
