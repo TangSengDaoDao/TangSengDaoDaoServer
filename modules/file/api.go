@@ -2,6 +2,7 @@ package file
 
 import (
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -155,9 +156,10 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		return
 	}
 	if signatureInt == 1 {
+		encoded := base64.StdEncoding.EncodeToString([]byte(sign))
 		c.Response(map[string]interface{}{
 			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
-			"sha512": sign,
+			"sha512": encoded,
 		})
 	} else {
 		c.Response(map[string]string{
