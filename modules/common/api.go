@@ -121,7 +121,17 @@ func (cn *Common) getKeepAliveVideo(c *wkhttp.Context) {
 // 获取pc最新版本
 func (cn *Common) getPCNewVersion(c *wkhttp.Context) {
 	os := c.Param("os")
-	model, err := cn.db.queryNewVersion(os)
+	tempOS := ""
+	if os == "latest-mac.yml" {
+		tempOS = "mac"
+	}
+	if os == "latest-linux.yml" {
+		tempOS = "linux"
+	}
+	if os == "latest.yml" {
+		tempOS = "win"
+	}
+	model, err := cn.db.queryNewVersion(tempOS)
 	if err != nil {
 		cn.Error("查询最新版本错误", zap.Error(err))
 		c.ResponseError(errors.New("查询最新版本错误"))
