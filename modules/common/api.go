@@ -126,10 +126,10 @@ func (cn *Common) getPCNewVersion(c *wkhttp.Context) {
 		tempOS = "mac"
 	}
 	if os == "latest-linux.yml" {
-		tempOS = "linux"
+		tempOS = "linx"
 	}
 	if os == "latest.yml" {
-		tempOS = "win"
+		tempOS = "windows"
 	}
 	model, err := cn.db.queryNewVersion(tempOS)
 	if err != nil {
