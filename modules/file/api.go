@@ -3,7 +3,6 @@ package file
 import (
 	"crypto/sha512"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -143,11 +142,12 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		_, err := io.Copy(w, file)
 		return err
 	})
-	var sign = ""
+	var sign []byte
 	if signatureInt == 1 {
 		bytes, _ := ioutil.ReadAll(file)
-		hash := sha512.Sum512(bytes)
-		sign = hex.EncodeToString(hash[:])
+		//sign := sha512.Sum512(bytes)
+		sign = sha512.New().Sum(bytes)
+		//sign = hex.EncodeToString(hash[:])
 	}
 	defer file.Close()
 	if err != nil {
@@ -156,7 +156,7 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		return
 	}
 	if signatureInt == 1 {
-		encoded := base64.StdEncoding.EncodeToString([]byte(sign))
+		encoded := base64.StdEncoding.EncodeToString(sign)
 		c.Response(map[string]interface{}{
 			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
 			"sha512": encoded,
@@ -197,7 +197,7 @@ func (f *File) checkReq(fileType Type, path string) error {
 	if path == "" && fileType != TypeMomentCover && fileType != TypeSticker {
 		return errors.New("上传路径不能为空")
 	}
-	if fileType != TypeChat && fileType != TypeMoment && fileType != TypeMomentCover && fileType != TypeSticker && fileType != TypeReport && fileType != TypeChatBg && fileType != TypeCommon {
+	if fileType != TypeChat && fileType != TypeMoment && fileType != TypeMomentCover && fileType != TypeSticker && fileType != TypeReport && fileType != TypeChatBg && fileType != TypeCommon && fileType != TypeDownload {
 		return errors.New("文件类型错误")
 	}
 	return nil
