@@ -142,12 +142,15 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		_, err := io.Copy(w, file)
 		return err
 	})
-	var sign []byte
+	var sign [64]byte
 	if signatureInt == 1 {
-		bytes, _ := ioutil.ReadAll(file)
-		//sign := sha512.Sum512(bytes)
-		sign = sha512.New().Sum(bytes)
-		//sign = hex.EncodeToString(hash[:])
+		bytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			f.Error("读取文件错误", zap.Error(err))
+			c.ResponseError(errors.New("读取文件错误"))
+			return
+		}
+		sign = sha512.Sum512(bytes)
 	}
 	defer file.Close()
 	if err != nil {
@@ -156,7 +159,7 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		return
 	}
 	if signatureInt == 1 {
-		encoded := base64.StdEncoding.EncodeToString(sign)
+		encoded := base64.StdEncoding.EncodeToString(sign[:])
 		c.Response(map[string]interface{}{
 			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
 			"sha512": encoded,
