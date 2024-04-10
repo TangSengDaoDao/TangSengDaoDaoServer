@@ -1231,8 +1231,13 @@ func (g *Group) groupForbidden(c *wkhttp.Context) {
 		return
 	}
 
-	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
+	tx, _ := g.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 
 	err = g.db.UpdateTx(groupModel, tx)
 	if err != nil {
@@ -1663,7 +1668,6 @@ func (g *Group) transferGrouper(c *wkhttp.Context) {
 	if groupModel.Forbidden == 1 { // 如果是禁言状态，则重置管理员白名单
 		err = g.setIMWhitelistForGroupManager(groupModel.GroupNo)
 		if err != nil {
-			tx.Rollback()
 			c.ResponseError(errors.New("设置白名单失败！"))
 			g.Error("设置白名单失败！", zap.Error(err))
 			return
@@ -1680,7 +1684,6 @@ func (g *Group) transferGrouper(c *wkhttp.Context) {
 			UIDs: toUIDs,
 		})
 		if err != nil {
-			tx.Rollback()
 			c.ResponseError(errors.New("新群主添加白名单失败！"))
 			g.Error("新群主添加白名单失败！", zap.Error(err))
 			return
@@ -1963,7 +1966,6 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 		Subscribers: req.Members,
 	})
 	if err != nil {
-		tx.RollbackUnlessCommitted()
 		g.Error("调用IM的移除订阅者接口失败！", zap.Error(err))
 		c.ResponseError(errors.New("调用IM的移除订阅者接口失败！"))
 		return
