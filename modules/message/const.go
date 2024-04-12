@@ -7,8 +7,7 @@ const (
 	CMDMessageErase       = "messageEerase"
 	sensitiveWordsVersion = 1
 )
-const ReadedCount = "readedCount"       // 消息已读数量
-const SyncReadedCountIntervalSecond = 5 // 同步已读消息数量间隔时间
+const ReadedCount = "readedCount" // 消息已读数量
 
 type ReminderType int
 

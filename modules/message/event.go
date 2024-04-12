@@ -16,7 +16,11 @@ func (m *Message) syncMessageReadedCount() {
 	go m.startTimer()
 }
 func (m *Message) startTimer() {
-	ticker := time.NewTicker(SyncReadedCountIntervalSecond * time.Second)
+	intervalSecond := m.ctx.GetConfig().Message.SyncReadedCountIntervalSecond
+	if intervalSecond == 0 {
+		intervalSecond = 5
+	}
+	ticker := time.NewTicker(time.Duration(intervalSecond) * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		m.handleReadedMessageCount()
