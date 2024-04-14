@@ -438,7 +438,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 			return
 		}
 		m.mutex.Lock()
-		err = m.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s:%s", ReadedCount, messageIDStr), jsonStr, time.Hour*24*7)
+		err = m.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", CacheReadedCountPrefix, messageIDStr), jsonStr, time.Hour*24*7)
 		if err != nil {
 			m.mutex.Unlock()
 			m.Error("添加消息扩展数据到缓存失败！", zap.Error(err), zap.Int64("messageID", message.MessageID), zap.String("channelID", fakeChannelID))

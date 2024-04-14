@@ -29,7 +29,7 @@ func (m *Message) startTimer() {
 
 // 处理消息已读数量
 func (m *Message) handleReadedMessageCount() {
-	keysStr, err := m.ctx.GetRedisConn().GetKeys(fmt.Sprintf("%s:*", ReadedCount))
+	keysStr, err := m.ctx.GetRedisConn().GetKeys(fmt.Sprintf("%s*", CacheReadedCountPrefix))
 	if err != nil {
 		m.Error("获取已读消息keys错误", zap.Error(err))
 		return
@@ -97,7 +97,13 @@ func (m *Message) handleReadedMessageCount() {
 			panic(err)
 		}
 	}()
-
+	type sendCMDVO struct {
+		ChannelID   string
+		ChannelType uint8
+		LoginUID    string
+		FromUIDs    []string
+	}
+	sendCmds := make([]*sendCMDVO, 0)
 	for fakeChannelID, msgs := range messageChannelMap {
 		messageIDStrs := make([]string, 0)
 		reqChannelType := common.ChannelTypePerson.Uint8()
@@ -141,34 +147,70 @@ func (m *Message) handleReadedMessageCount() {
 			}
 		}
 		if reqChannelType == common.ChannelTypePerson.Uint8() {
-			err = m.ctx.SendCMD(config.MsgCMDReq{
-				NoPersist:   true,
+			// err = m.ctx.SendCMD(config.MsgCMDReq{
+			// 	NoPersist:   true,
+			// 	ChannelID:   reqChannelID,
+			// 	ChannelType: reqChannelType,
+			// 	FromUID:     reqLoginUID,
+			// 	CMD:         common.CMDSyncMessageExtra,
+			// })
+			sendCmds = append(sendCmds, &sendCMDVO{
 				ChannelID:   reqChannelID,
 				ChannelType: reqChannelType,
-				FromUID:     reqLoginUID,
-				CMD:         common.CMDSyncMessageExtra,
+				LoginUID:    reqLoginUID,
 			})
 		} else {
-			err = m.ctx.SendCMD(config.MsgCMDReq{
-				NoPersist:   true,
+			// err = m.ctx.SendCMD(config.MsgCMDReq{
+			// 	NoPersist:   true,
+			// 	ChannelID:   fakeChannelID,
+			// 	ChannelType: reqChannelType,
+			// 	Subscribers: fromUIDs, // 消息只发送给发送者
+			// 	CMD:         common.CMDSyncMessageExtra,
+			// })
+			sendCmds = append(sendCmds, &sendCMDVO{
 				ChannelID:   fakeChannelID,
 				ChannelType: reqChannelType,
-				Subscribers: fromUIDs, // 消息只发送给发送者
-				CMD:         common.CMDSyncMessageExtra,
+				FromUIDs:    fromUIDs,
 			})
 		}
 
-		if err != nil {
-			tx.Rollback()
-			m.Error("发送cmd消息错误", zap.Error(err))
-			return
-		}
+		// if err != nil {
+		// 	tx.Rollback()
+		// 	m.Error("发送cmd消息错误", zap.Error(err))
+		// 	return
+		// }
 	}
 
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		m.Error("提交事物错误", zap.Error(err))
 		return
+	}
+
+	if len(sendCmds) > 0 {
+		for _, cmd := range sendCmds {
+			if cmd.ChannelType == common.ChannelTypePerson.Uint8() {
+				err = m.ctx.SendCMD(config.MsgCMDReq{
+					NoPersist:   true,
+					ChannelID:   cmd.ChannelID,
+					ChannelType: cmd.ChannelType,
+					FromUID:     cmd.LoginUID,
+					CMD:         common.CMDSyncMessageExtra,
+				})
+			} else {
+				err = m.ctx.SendCMD(config.MsgCMDReq{
+					NoPersist:   true,
+					ChannelID:   cmd.ChannelID,
+					ChannelType: cmd.ChannelType,
+					Subscribers: cmd.FromUIDs, // 消息只发送给发送者
+					CMD:         common.CMDSyncMessageExtra,
+				})
+			}
+			if err != nil {
+				m.Error("发送cmd消息错误", zap.Error(err))
+				return
+			}
+		}
 	}
 
 }

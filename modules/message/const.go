@@ -7,7 +7,7 @@ const (
 	CMDMessageErase       = "messageEerase"
 	sensitiveWordsVersion = 1
 )
-const ReadedCount = "readedCount" // 消息已读数量
+const CacheReadedCountPrefix = "readedCount:" // 消息已读数量
 
 type ReminderType int
 
