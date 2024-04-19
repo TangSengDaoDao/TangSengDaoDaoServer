@@ -716,6 +716,9 @@ func (u *User) get(c *wkhttp.Context) {
 			}
 		}
 	}
+	if userDetailResp.Follow == 1 {
+		isShowShortNo = true
+	}
 	if !isShowShortNo {
 		userDetailResp.ShortNo = ""
 	}
