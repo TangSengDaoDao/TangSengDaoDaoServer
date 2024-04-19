@@ -1163,19 +1163,19 @@ func (u *User) register(c *wkhttp.Context) {
 		return
 	}
 	//测试模式
-	// if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
-	// 	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
-	// 		c.ResponseError(errors.New("验证码错误"))
-	// 		return
-	// 	}
-	// } else {
-	// 	//线上验证短信验证码
-	// 	err = u.smsServie.Verify(registerSpanCtx, req.Zone, req.Phone, req.Code, commonapi.CodeTypeRegister)
-	// 	if err != nil {
-	// 		c.ResponseError(err)
-	// 		return
-	// 	}
-	// }
+	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
+		if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
+			c.ResponseError(errors.New("验证码错误"))
+			return
+		}
+	} else {
+		//线上验证短信验证码
+		err = u.smsServie.Verify(registerSpanCtx, req.Zone, req.Phone, req.Code, commonapi.CodeTypeRegister)
+		if err != nil {
+			c.ResponseError(err)
+			return
+		}
+	}
 	uid := util.GenerUUID()
 	var model = &createUserModel{
 		UID:      uid,
