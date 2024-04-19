@@ -1122,8 +1122,6 @@ func (u *User) register(c *wkhttp.Context) {
 	if appConfig != nil {
 		registerInviteOn = appConfig.RegisterInviteOn
 	}
-	println("是否开启注册邀请")
-	println(registerInviteOn)
 	if registerInviteOn == 1 {
 		if req.InviteCode == "" {
 			c.ResponseError(errors.New("邀请码不能为空"))
@@ -1139,10 +1137,7 @@ func (u *User) register(c *wkhttp.Context) {
 					break
 				}
 			}
-
 		}
-		println("邀请码是否存在")
-		println(inviteCodeIsExist)
 		if !inviteCodeIsExist {
 			c.ResponseError(errors.New("邀请码不存在"))
 			return
