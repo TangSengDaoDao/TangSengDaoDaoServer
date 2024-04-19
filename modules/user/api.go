@@ -31,6 +31,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/network"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -683,6 +684,7 @@ func (u *User) userUpdateSetting(c *wkhttp.Context) {
 // 获取用户详情
 func (u *User) get(c *wkhttp.Context) {
 	uid := c.Param("uid")
+	groupNo := c.Query("group_no")
 	loginUID := c.MustGet("uid").(string)
 
 	if u.ctx.GetConfig().IsVisitor(uid) { // 访客频道
@@ -700,6 +702,22 @@ func (u *User) get(c *wkhttp.Context) {
 	if userDetailResp == nil {
 		c.ResponseError(errors.New("用户不存在！"))
 		return
+	}
+	isShowShortNo := false
+	if groupNo != "" {
+		modules := register.GetModules(u.ctx)
+		for _, m := range modules {
+			if m.BussDataSource.IsShowShortNo != nil {
+				tempShowShortNo, _ := m.BussDataSource.IsShowShortNo(groupNo, uid, loginUID)
+				if tempShowShortNo {
+					isShowShortNo = tempShowShortNo
+					break
+				}
+			}
+		}
+	}
+	if !isShowShortNo {
+		userDetailResp.ShortNo = ""
 	}
 	c.Response(userDetailResp)
 }
@@ -845,7 +863,7 @@ func (u *User) wxLogin(c *wkhttp.Context) {
 				}
 			}
 		}
-		u.createUser(loginSpanCtx, model, c)
+		u.createUser(loginSpanCtx, model, c, "")
 	}
 }
 
@@ -1036,15 +1054,19 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 
 // sendWelcomeMsg 发送欢迎语
 func (u *User) sentWelcomeMsg(publicIP, uid string) {
+	appconfig, err := u.commonService.GetAppConfig()
+	if err != nil {
+		u.Error("获取应用配置错误", zap.Error(err))
+	}
+	if appconfig.SendWelcomeMessageOn == 0 {
+		return
+	}
 	time.Sleep(time.Second * 2)
 	//发送登录欢迎消息
 	lastLoginLog := u.loginLog.getLastLoginIP(uid)
 	content := u.ctx.GetConfig().WelcomeMessage
 	var sentContent string
-	appconfig, err := u.commonService.GetAppConfig()
-	if err != nil {
-		u.Error("获取应用配置错误", zap.Error(err))
-	}
+
 	if appconfig != nil && appconfig.WelcomeMessage != "" {
 		content = appconfig.WelcomeMessage
 	}
@@ -1090,7 +1112,42 @@ func (u *User) register(c *wkhttp.Context) {
 		c.ResponseError(errors.New("注册通道暂不开放"))
 		return
 	}
+	appConfig, err := u.commonService.GetAppConfig()
+	if err != nil {
+		u.Error("查询应用设置错误", zap.Error(err))
+		c.ResponseError(err)
+		return
+	}
+	var registerInviteOn = 0
+	if appConfig != nil {
+		registerInviteOn = appConfig.RegisterInviteOn
+	}
+	println("是否开启注册邀请")
+	println(registerInviteOn)
+	if registerInviteOn == 1 {
+		if req.InviteCode == "" {
+			c.ResponseError(errors.New("邀请码不能为空"))
+			return
+		}
+		var inviteCodeIsExist = false
+		modules := register.GetModules(u.ctx)
+		for _, m := range modules {
+			if m.BussDataSource.RegisterInviteCodeIsExist != nil {
+				isExist, _ := m.BussDataSource.RegisterInviteCodeIsExist(req.InviteCode)
+				if isExist {
+					inviteCodeIsExist = isExist
+					break
+				}
+			}
 
+		}
+		println("邀请码是否存在")
+		println(inviteCodeIsExist)
+		if !inviteCodeIsExist {
+			c.ResponseError(errors.New("邀请码不存在"))
+			return
+		}
+	}
 	registerSpan := u.ctx.Tracer().StartSpan(
 		"user.register",
 		opentracing.ChildOf(c.GetSpanContext()),
@@ -1111,19 +1168,19 @@ func (u *User) register(c *wkhttp.Context) {
 		return
 	}
 	//测试模式
-	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
-		if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
-			c.ResponseError(errors.New("验证码错误"))
-			return
-		}
-	} else {
-		//线上验证短信验证码
-		err = u.smsServie.Verify(registerSpanCtx, req.Zone, req.Phone, req.Code, commonapi.CodeTypeRegister)
-		if err != nil {
-			c.ResponseError(err)
-			return
-		}
-	}
+	// if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
+	// 	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
+	// 		c.ResponseError(errors.New("验证码错误"))
+	// 		return
+	// 	}
+	// } else {
+	// 	//线上验证短信验证码
+	// 	err = u.smsServie.Verify(registerSpanCtx, req.Zone, req.Phone, req.Code, commonapi.CodeTypeRegister)
+	// 	if err != nil {
+	// 		c.ResponseError(err)
+	// 		return
+	// 	}
+	// }
 	uid := util.GenerUUID()
 	var model = &createUserModel{
 		UID:      uid,
@@ -1135,7 +1192,7 @@ func (u *User) register(c *wkhttp.Context) {
 		Flag:     int(req.Flag),
 		Device:   req.Device,
 	}
-	u.createUser(registerSpanCtx, model, c)
+	u.createUser(registerSpanCtx, model, c, req.InviteCode)
 }
 
 // 搜索用户
@@ -2281,7 +2338,7 @@ func allowUpdateUserField(field string) bool {
 	return false
 }
 
-func (u *User) createUser(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context) {
+func (u *User) createUser(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, inviteCode string) {
 	tx, _ := u.db.session.Begin()
 	defer func() {
 		if err := recover(); err != nil {
@@ -2290,7 +2347,7 @@ func (u *User) createUser(registerSpanCtx context.Context, createUser *createUse
 		}
 	}()
 	publicIP := util.GetClientPublicIP(c.Request)
-	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, tx, func() error {
+	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, inviteCode, tx, func() error {
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()
@@ -2308,9 +2365,9 @@ func (u *User) createUser(registerSpanCtx context.Context, createUser *createUse
 	c.Response(resp)
 }
 
-func (u *User) createUserTx(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, commitCallback func() error, tx *dbr.Tx) {
+func (u *User) createUserTx(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, commitCallback func() error, inviteCode string, tx *dbr.Tx) {
 	publicIP := util.GetClientPublicIP(c.Request)
-	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, tx, commitCallback)
+	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, inviteCode, tx, commitCallback)
 	if err != nil {
 		c.ResponseError(errors.New("注册失败！"))
 		return
@@ -2318,7 +2375,7 @@ func (u *User) createUserTx(registerSpanCtx context.Context, createUser *createU
 	c.Response(resp)
 }
 
-func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUser *createUserModel, publicIP string, tx *dbr.Tx, commitCallback func() error) (*loginUserDetailResp, error) {
+func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUser *createUserModel, publicIP string, inviteCode string, tx *dbr.Tx, commitCallback func() error) (*loginUserDetailResp, error) {
 	var (
 		shortNo = ""
 		err     error
@@ -2404,7 +2461,8 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 		Event: event.EventUserRegister,
 		Type:  wkevent.Message,
 		Data: map[string]interface{}{
-			"uid": createUser.UID,
+			"uid":         createUser.UID,
+			"invite_code": inviteCode,
 		},
 	}, tx)
 	if err != nil {
@@ -2475,13 +2533,14 @@ type customerservicesResp struct {
 	Name string `json:"name"`
 }
 type registerReq struct {
-	Name     string     `json:"name"`
-	Zone     string     `json:"zone"`
-	Phone    string     `json:"phone"`
-	Code     string     `json:"code"`
-	Password string     `json:"password"`
-	Flag     uint8      `json:"flag"`   // 注册设备的标记 0.APP 1.PC
-	Device   *deviceReq `json:"device"` //注册用户设备信息
+	Name       string     `json:"name"`
+	Zone       string     `json:"zone"`
+	Phone      string     `json:"phone"`
+	Code       string     `json:"code"`
+	Password   string     `json:"password"`
+	Flag       uint8      `json:"flag"`        // 注册设备的标记 0.APP 1.PC
+	Device     *deviceReq `json:"device"`      //注册用户设备信息
+	InviteCode string     `json:"invite_code"` // 邀请码
 }
 
 func (r registerReq) CheckRegister() error {

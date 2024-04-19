@@ -32,6 +32,12 @@ func (g *Group) groupMemberInviteAdd(c *wkhttp.Context) {
 		return
 	}
 
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+
 	creatorOrManagerUIDS, err := g.db.QueryGroupManagerOrCreatorUIDS(groupNo)
 	if err != nil {
 		g.Error("查询创建者或管理员的uid失败！", zap.String("group_no", groupNo), zap.Error(err))
@@ -112,6 +118,15 @@ func (g *Group) getToGroupMemberConfirmInviteDetailH5(c *wkhttp.Context) {
 	groupNo := c.Param("group_no")
 	inviteNo := c.Query("invite_no")
 	loginUID := c.MustGet("uid").(string)
+	if groupNo == "" {
+		c.ResponseError(errors.New("群编号不能为空"))
+		return
+	}
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 
 	managerOrCreator, err := g.db.QueryIsGroupManagerOrCreator(groupNo, loginUID)
 	if err != nil {
@@ -194,6 +209,15 @@ func (g *Group) groupMemberInviteSure(c *wkhttp.Context) {
 	inviter := inviteItemDetilModels[0].Inviter
 	for _, inviteItemDetilModel := range inviteItemDetilModels {
 		members = append(members, inviteItemDetilModel.UID)
+	}
+	if groupNo == "" {
+		c.ResponseError(errors.New("群编号不能为空"))
+		return
+	}
+	_, err = g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
 	}
 	/**
 	添加成员

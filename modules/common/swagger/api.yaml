@@ -42,6 +42,15 @@ paths:
                 search_by_phone:
                   type: integer
                   description: "是否开启手机号搜索 1.是"
+                register_invite_on:
+                  type: integer
+                  description: "是否开启注册邀请机制 1.开启"
+                send_welcome_message_on:
+                  type: integer
+                  description: "是否开启注册登录发送欢迎语 1.开启"
+                invite_system_account_join_group_on:
+                  type: integer
+                  description: "是否开启系统账号加入群聊 1.开启"
         400:
           description: '错误'
           schema:
@@ -78,6 +87,15 @@ paths:
               search_by_phone:
                   type: integer
                   description: "是否开启手机号搜索 1.是"
+              register_invite_on:
+                type: integer
+                description: "是否开启注册邀请机制 1.开启"
+              send_welcome_message_on:
+                type: integer
+                description: "是否开启注册登录发送欢迎语 1.开启"
+              invite_system_account_join_group_on:
+                type: integer
+                description: "是否开启系统账号加入群聊 1.开启"
       responses:
         200:
           description: "返回"
@@ -498,6 +516,15 @@ paths:
                 revoke_second:
                   type: integer
                   description: "消息撤回限制时长"
+                register_invite_on:
+                  type: integer
+                  description: "是否开启注册邀请机制 1.开启"
+                send_welcome_message_on:
+                  type: integer
+                  description: "是否开启注册登录发送欢迎语 1.开启"
+                invite_system_account_join_group_on:
+                  type: integer
+                  description: "是否开启系统账号加入群聊 1.开启"
         400:
           description: '错误'
           schema:

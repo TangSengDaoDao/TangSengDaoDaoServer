@@ -53,6 +53,7 @@ func New(ctx *config.Context) *Group {
 		fileService:   file.NewService(ctx),
 		commonService: common2.NewService(ctx),
 	}
+	// g.ctx.AddEventListener(event.GroupDisband, g.handleGroupDisbandEvent)
 	g.ctx.AddEventListener(event.EventUserRegister, g.handleRegisterUserEvent)
 	g.ctx.AddEventListener(event.GroupMemberAdd, g.handleGroupMemberAddEvent)
 	g.ctx.AddEventListener(event.OrgOrDeptCreate, g.handleOrgOrDeptCreateEvent)
@@ -93,6 +94,7 @@ func (g *Group) Route(r *wkhttp.WKHttp) {
 		groups.POST("/:group_no/blacklist/:action", g.blacklist)                           // 添加或移除黑名单
 		groups.POST("/:group_no/forbidden_with_member", g.forbiddenWithGroupMember)        // 禁言或解禁某个群成员
 		groups.POST("/:group_no/avatar", g.avatarUpload)                                   // 上传群头像
+		// groups.DELETE("/:group_no/disband", g.disband)                                     // 解散群
 	}
 	openGroups := r.Group("/v1/groups")
 	{ // 获取群头像
@@ -107,6 +109,87 @@ func (g *Group) Route(r *wkhttp.WKHttp) {
 		openGroup.POST("invite/sure", g.groupMemberInviteSure)         // 确认邀请
 	}
 	go g.CheckForbiddenLoop()
+}
+
+// 解散群
+func (g *Group) disband(c *wkhttp.Context) {
+	groupNo := c.Param("group_no")
+	loginUID := c.GetLoginUID()
+	loginName := c.GetLoginName()
+	if groupNo == "" {
+		c.ResponseError(errors.New("群ID不能为空"))
+		return
+	}
+	group, err := g.db.QueryWithGroupNo(groupNo)
+	if err != nil {
+		g.Error("查询群资料错误", zap.Error(err))
+		c.ResponseError(errors.New("查询群资料错误"))
+		return
+	}
+	if group == nil {
+		c.ResponseOK()
+		return
+	}
+	loginMember, err := g.db.QueryMemberWithUID(loginUID, groupNo)
+	if err != nil {
+		g.Error("查询用户群内身份错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户群内身份错误"))
+		return
+	}
+	if loginMember == nil || loginMember.Role != MemberRoleCreator {
+		g.Error("用户无权执行此操作", zap.Error(err))
+		c.ResponseError(errors.New("用户无权执行此操作"))
+		return
+	}
+
+	// todo
+	tx, err := g.ctx.DB().Begin()
+	util.CheckErr(err)
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
+	group.Status = GroupStatusDisband
+	err = g.db.UpdateTx(group, tx)
+	if err != nil {
+		tx.Rollback()
+		g.Error("修改群状态错误", zap.Error(err))
+		c.ResponseError(errors.New("修改群状态错误"))
+		return
+	}
+	err = g.db.deleteMembersWithGroupNOTx(groupNo, tx)
+	if err != nil {
+		tx.Rollback()
+		g.Error("删除群成员错误", zap.Error(err))
+		c.ResponseError(errors.New("删除群成员错误"))
+		return
+	}
+	// 发布群解散事件
+	eventID, err := g.ctx.EventBegin(&wkevent.Data{
+		Event: event.GroupDisband,
+		Type:  wkevent.Message,
+		Data: &config.MsgGroupDisband{
+			GroupNo:      groupNo,
+			Operator:     loginUID,
+			OperatorName: loginName,
+		},
+	}, tx)
+	if err != nil {
+		tx.RollbackUnlessCommitted()
+		g.Error("开启事件失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事件失败！"))
+		return
+	}
+	g.ctx.EventCommit(eventID)
+	if err := tx.Commit(); err != nil {
+		tx.RollbackUnlessCommitted()
+		g.Error("提交事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("提交事务失败！"))
+		return
+	}
+	c.ResponseOK()
 }
 
 func (g *Group) membersGet(c *wkhttp.Context) {
@@ -198,6 +281,15 @@ func (g *Group) avatarGet(c *wkhttp.Context) {
 func (g *Group) avatarUpload(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
 	groupNo := c.Param("group_no")
+	if groupNo == "" {
+		c.ResponseError(errors.New("群编号不能为空"))
+		return
+	}
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 	if c.Request.MultipartForm == nil {
 		err := c.Request.ParseMultipartForm(1024 * 1024 * 20) // 20M
 		if err != nil {
@@ -608,15 +700,9 @@ func (g *Group) groupUpdate(c *wkhttp.Context) {
 		return
 	}
 	// 查询群信息
-	group, err := g.db.QueryWithGroupNo(groupNo)
+	group, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if group == nil {
-		g.Error("群不存在！", zap.String("group_no", groupNo))
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 	// 查询是否是管理者
@@ -705,14 +791,9 @@ func (g *Group) memberAdd(c *wkhttp.Context) {
 	/**
 	判断群是否存在
 	**/
-	group, err := g.db.QueryWithGroupNo(groupNo)
+	group, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err), zap.String("groupNo", groupNo))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if group == nil {
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 	/**
@@ -1062,14 +1143,9 @@ func (g *Group) managerAdd(c *wkhttp.Context) {
 		return
 	}
 
-	groupModel, err := g.db.QueryWithGroupNo(groupNo)
+	groupModel, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if groupModel == nil {
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 
@@ -1139,14 +1215,9 @@ func (g *Group) managerRemove(c *wkhttp.Context) {
 		return
 	}
 
-	groupModel, err := g.db.QueryWithGroupNo(groupNo)
+	groupModel, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if groupModel == nil {
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 
@@ -1200,14 +1271,9 @@ func (g *Group) groupForbidden(c *wkhttp.Context) {
 		c.ResponseError(errors.New("只有创建者或管理员才能禁言！"))
 		return
 	}
-	groupModel, err := g.db.QueryWithGroupNo(groupNo)
+	groupModel, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if groupModel == nil {
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 	forbidden, _ := strconv.ParseInt(on, 10, 64)
@@ -1308,7 +1374,11 @@ func (g *Group) resetIMWhitelist(whitelist []string, groupNo string) error {
 func (g *Group) groupQRCode(c *wkhttp.Context) {
 	loginUID := c.MustGet("uid").(string)
 	groupNo := c.Param("group_no")
-
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 	exist, err := g.db.ExistMember(loginUID, groupNo)
 	if err != nil {
 		g.Error("查询是否存在群内失败！", zap.Error(err))
@@ -1342,6 +1412,15 @@ func (g *Group) groupQRCode(c *wkhttp.Context) {
 func (g *Group) groupScanJoin(c *wkhttp.Context) {
 	authCode := c.Query("auth_code")
 	groupNo := c.Param("group_no")
+	if groupNo == "" {
+		c.ResponseError(errors.New("群编号不能为空"))
+		return
+	}
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 	authInfo, err := g.ctx.GetRedisConn().GetString(fmt.Sprintf("%s%s", common.AuthCodeCachePrefix, authCode))
 	if err != nil {
 		g.Error("获取认证信息数据失败！", zap.Error(err))
@@ -1596,14 +1675,9 @@ func (g *Group) transferGrouper(c *wkhttp.Context) {
 		return
 	}
 
-	groupModel, err := g.db.QueryWithGroupNo(groupNo)
+	groupModel, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if groupModel == nil {
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 
@@ -1705,6 +1779,11 @@ func (g *Group) memberUpdate(c *wkhttp.Context) {
 		c.ResponseError(errors.New("数据格式有误！"))
 		return
 	}
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 	isManager, err := g.db.QueryIsGroupManagerOrCreator(groupNo, loginUID)
 	if err != nil {
 		g.Error("查询是否是群管理者失败！", zap.Error(err))
@@ -1774,14 +1853,9 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 	req.Members = util.RemoveRepeatedElement(req.Members)
 
 	// 判断群是否存在
-	group, err := g.db.QueryWithGroupNo(groupNo)
+	_, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息失败！", zap.Error(err), zap.String("groupNo", groupNo))
-		c.ResponseError(errors.New("查询群信息失败！"))
-		return
-	}
-	if group == nil {
-		c.ResponseError(errors.New("群不存在！"))
+		c.ResponseError(err)
 		return
 	}
 	var loginMember *MemberModel
@@ -1996,7 +2070,11 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 		c.ResponseOK()
 		return
 	}
-
+	_, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
 	getSettingFnc := func() (*Setting, bool, error) {
 		setting, err := g.settingDB.QuerySetting(groupNo, loginUID)
 		if err != nil {
@@ -2246,7 +2324,7 @@ func (g *Group) blacklist(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询群详情错误"))
 		return
 	}
-	if group == nil {
+	if group == nil || group.Status == GroupStatusDisband {
 		g.Error("群不存在", zap.Error(err))
 		c.ResponseError(errors.New("群不存在"))
 		return
@@ -2389,14 +2467,9 @@ func (g *Group) forbiddenWithGroupMember(c *wkhttp.Context) {
 		c.ResponseError(errors.New("操作类型错误"))
 		return
 	}
-	group, err := g.db.QueryWithGroupNo(groupNo)
+	group, err := g.getGroupInfo(groupNo)
 	if err != nil {
-		g.Error("查询群信息错误", zap.Error(err))
-		c.ResponseError(errors.New("查询群信息错误"))
-		return
-	}
-	if group == nil {
-		c.ResponseError(errors.New("操作群不存在"))
+		c.ResponseError(err)
 		return
 	}
 	loginGroupMember, err := g.db.QueryMemberWithUID(loginUID, group.GroupNo)
@@ -2558,6 +2631,19 @@ func (g *Group) setGroupBlacklist(groupNo string, uids []string, isAdd bool) err
 		return err
 	}
 	return nil
+}
+
+// 获取群资料
+func (g *Group) getGroupInfo(groupNo string) (*Model, error) {
+	group, err := g.db.QueryWithGroupNo(groupNo)
+	if err != nil {
+		g.Error("查询群资料错误", zap.Error(err))
+		return nil, errors.New("查询群资料错误")
+	}
+	if group == nil || group.Status == GroupStatusDisband {
+		return nil, errors.New("群不存在")
+	}
+	return group, nil
 }
 
 // ---------- vo ----------

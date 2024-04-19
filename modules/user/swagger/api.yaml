@@ -548,6 +548,9 @@ paths:
               name:
                 type: string
                 description: "昵称"
+              invite_code:
+                type: string
+                description: "邀请码 开启邀请码注册后必填"
               device:
                 type: object
                 properties:

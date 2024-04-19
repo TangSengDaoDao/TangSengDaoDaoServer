@@ -324,11 +324,14 @@ func (cn *Common) appConfig(c *wkhttp.Context) {
 	}
 
 	c.JSON(http.StatusOK, &appConfigResp{
-		Version:        appConfigM.Version,
-		PhoneSearchOff: phoneSearchOff,
-		ShortnoEditOff: shortnoEditOff,
-		WebURL:         cn.ctx.GetConfig().External.WebLoginURL,
-		RevokeSecond:   revokeSecond,
+		Version:                        appConfigM.Version,
+		PhoneSearchOff:                 phoneSearchOff,
+		ShortnoEditOff:                 shortnoEditOff,
+		WebURL:                         cn.ctx.GetConfig().External.WebLoginURL,
+		RevokeSecond:                   revokeSecond,
+		RegisterInviteOn:               appConfigM.RegisterInviteOn,
+		SendWelcomeMessageOn:           appConfigM.SendWelcomeMessageOn,
+		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
 	})
 }
 
@@ -478,12 +481,15 @@ type chatBgResp struct {
 }
 
 type appConfigResp struct {
-	Version        int    `json:"version"`
-	WebURL         string `json:"web_url"`
-	PhoneSearchOff int    `json:"phone_search_off"`
-	ShortnoEditOff int    `json:"shortno_edit_off"`
-	RevokeSecond   int    `json:"revoke_second"`
-	AppleSignIn    int    `json:"apple_sign_in"`
+	Version                        int    `json:"version"`
+	WebURL                         string `json:"web_url"`
+	PhoneSearchOff                 int    `json:"phone_search_off"`
+	ShortnoEditOff                 int    `json:"shortno_edit_off"`
+	RevokeSecond                   int    `json:"revoke_second"`
+	AppleSignIn                    int    `json:"apple_sign_in"`
+	RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
+	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
+	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
 }
 
 type appVersionReq struct {

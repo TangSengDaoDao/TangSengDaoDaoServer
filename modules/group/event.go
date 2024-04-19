@@ -12,6 +12,46 @@ import (
 	"go.uber.org/zap"
 )
 
+// handleGroupDisbandEvent 群解散
+func (g *Group) handleGroupDisbandEvent(data []byte, commit config.EventCommit) {
+	var req config.MsgGroupDisband
+	err := util.ReadJsonByByte(data, &req)
+	if err != nil {
+		g.Error("解析JSON失败！", zap.Error(err))
+		commit(nil)
+		return
+	}
+
+	content := "{0}已解散该群聊"
+	err = g.ctx.SendMessage(&config.MsgSendReq{
+		Header: config.MsgHeader{
+			NoPersist: 0,
+			RedDot:    1,
+			SyncOnce:  0, // 只同步一次
+		},
+		ChannelID:   req.GroupNo,
+		ChannelType: common.ChannelTypeGroup.Uint8(),
+		Payload: []byte(util.ToJson(map[string]interface{}{
+			"from_uid":  req.Operator,
+			"from_name": req.OperatorName,
+			"content":   content,
+			"extra": []config.UserBaseVo{
+				{
+					UID:  req.Operator,
+					Name: req.OperatorName,
+				},
+			},
+			"type": common.Tip,
+		})),
+	})
+	if err != nil {
+		g.Error("发送解散群消息错误", zap.Error(err))
+		commit(err)
+		return
+	}
+	// 删除channel
+}
+
 // handleRegisterUserEvent 用户注册时加入系统群
 func (g *Group) handleRegisterUserEvent(data []byte, commit config.EventCommit) {
 	appconfig, _ := g.commonService.GetAppConfig()

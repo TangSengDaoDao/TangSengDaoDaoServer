@@ -94,6 +94,23 @@ func init() {
 					}
 					return newChannelRespWithGroupResp(groupResp), nil
 				},
+				IsShowShortNo: func(groupNO, uid, loginUID string) (bool, error) {
+					if groupNO == "" || uid == "" || loginUID == "" {
+						return false, nil
+					}
+					groupInfo, err := api.groupService.GetGroupWithGroupNo(groupNO)
+					if err != nil {
+						return false, err
+					}
+					if groupInfo == nil {
+						return false, nil
+					}
+					if groupInfo.ForbiddenAddFriend == 0 {
+						return true, nil
+					}
+					isCreatorOrManager, err := api.groupService.IsCreatorOrManager(groupNO, loginUID)
+					return isCreatorOrManager, err
+				},
 			},
 		}
 	})

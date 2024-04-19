@@ -72,6 +72,12 @@ func (d *DB) DeleteMember(groupNo string, uid string, version int64) error {
 	return err
 }
 
+// 真实删除群成员
+func (d *DB) deleteMembersWithGroupNOTx(groupNo string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("group_member").Where("group_no=?", groupNo).Exec()
+	return err
+}
+
 // QuerySecondOldestMember 查询群里第二长老
 func (d *DB) QuerySecondOldestMember(groupNo string) (*MemberModel, error) {
 	var memberModel *MemberModel

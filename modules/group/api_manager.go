@@ -46,7 +46,7 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.PUT("/groups/:group_no/forbidden/:on", m.forbidden)     // 群全员禁言
 		auth.GET("/groups/:group_no/members", m.members)             // 群成员
 		auth.GET("/groups/:group_no/members/blacklist", m.blacklist) // 群黑名单成员
-		auth.DELETE("/groups/:group_no/members", m.removeMember)     //移除群成员
+		auth.DELETE("/groups/:group_no/members", m.removeMember)     // 移除群成员
 	}
 }
 
