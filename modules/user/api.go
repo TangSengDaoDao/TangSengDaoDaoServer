@@ -704,23 +704,31 @@ func (u *User) get(c *wkhttp.Context) {
 		return
 	}
 	isShowShortNo := false
+	vercode := ""
 	if groupNo != "" {
 		modules := register.GetModules(u.ctx)
 		for _, m := range modules {
 			if m.BussDataSource.IsShowShortNo != nil {
-				tempShowShortNo, _ := m.BussDataSource.IsShowShortNo(groupNo, uid, loginUID)
+				tempShowShortNo, tempVercode, _ := m.BussDataSource.IsShowShortNo(groupNo, uid, loginUID)
 				if tempShowShortNo {
 					isShowShortNo = tempShowShortNo
+					vercode = tempVercode
 					break
 				}
 			}
 		}
 	}
+
 	if userDetailResp.Follow == 1 {
 		isShowShortNo = true
 	}
 	if !isShowShortNo {
 		userDetailResp.ShortNo = ""
+		userDetailResp.Vercode = ""
+	} else {
+		if groupNo != "" {
+			userDetailResp.Vercode = vercode
+		}
 	}
 	c.Response(userDetailResp)
 }

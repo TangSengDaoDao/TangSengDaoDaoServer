@@ -433,7 +433,6 @@ func (g *Group) groupDetailGet(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询成员数量失败！"))
 		return
 	}
-
 	c.Response(groupDetailResp{}.from(groupModel, memberCount))
 }
 
@@ -468,7 +467,26 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
-
+	// 判断是否允许系统账号进入群聊
+	appConfig, err := g.commonService.GetAppConfig()
+	if err != nil {
+		g.Error("查询应用设置错误", zap.Error(err))
+		c.ResponseError(errors.New("查询应用设置错误"))
+		return
+	}
+	if appConfig != nil && appConfig.InviteSystemAccountJoinGroupOn == 0 {
+		isContainSystemAccount := false
+		for _, uid := range req.Members {
+			if uid == g.ctx.GetConfig().Account.FileHelperUID {
+				isContainSystemAccount = true
+				break
+			}
+		}
+		if isContainSystemAccount {
+			c.ResponseError(errors.New("不支持将`文件助手`加入群聊"))
+			return
+		}
+	}
 	creatorUser, err := g.userDB.QueryByUID(creator)
 	if err != nil {
 		g.Error("查询创建者信息失败！", zap.Error(err))
@@ -795,6 +813,26 @@ func (g *Group) memberAdd(c *wkhttp.Context) {
 	if err != nil {
 		c.ResponseError(err)
 		return
+	}
+	// 判断是否允许系统账号进入群聊
+	appConfig, err := g.commonService.GetAppConfig()
+	if err != nil {
+		g.Error("查询应用设置错误", zap.Error(err))
+		c.ResponseError(errors.New("查询应用设置错误"))
+		return
+	}
+	if appConfig != nil && appConfig.InviteSystemAccountJoinGroupOn == 0 {
+		isContainSystemAccount := false
+		for _, uid := range req.Members {
+			if uid == g.ctx.GetConfig().Account.FileHelperUID {
+				isContainSystemAccount = true
+				break
+			}
+		}
+		if isContainSystemAccount {
+			c.ResponseError(errors.New("不支持将`文件助手`加入群聊"))
+			return
+		}
 	}
 	/**
 	判断群是否开启了邀请模式 如果开启了 再判断邀请的人是否是群主或管理员 如果不是则不允许直接添加群成员
@@ -2693,16 +2731,16 @@ type memberDetailResp struct {
 
 func (r memberDetailResp) from(model *MemberDetailModel) memberDetailResp {
 	return memberDetailResp{
-		ID:                 uint64(model.Id),
-		UID:                model.UID,
-		GroupNo:            model.GroupNo,
-		Name:               model.Name,
-		Remark:             model.Remark,
-		Role:               model.Role,
-		Version:            model.Version,
-		IsDeleted:          model.IsDeleted,
-		Status:             model.Status,
-		Vercode:            model.Vercode,
+		ID:        uint64(model.Id),
+		UID:       model.UID,
+		GroupNo:   model.GroupNo,
+		Name:      model.Name,
+		Remark:    model.Remark,
+		Role:      model.Role,
+		Version:   model.Version,
+		IsDeleted: model.IsDeleted,
+		Status:    model.Status,
+		// Vercode:            model.Vercode,
 		InviteUID:          model.InviteUID,
 		Robot:              model.Robot,
 		ForbiddenExpirTime: model.ForbiddenExpirTime,
