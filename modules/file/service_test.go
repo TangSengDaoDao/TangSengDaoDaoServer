@@ -1,8 +1,11 @@
 package file
 
 import (
+	"crypto/sha512"
+	"encoding/base64"
 	"image/png"
 	"io"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -47,4 +50,16 @@ func TestMakeCompose(t *testing.T) {
 	err = png.Encode(result, img)
 	assert.NoError(t, err)
 
+}
+
+func TestUploadPCFile(t *testing.T) {
+	file, err := os.Open("../../assets/assets/TangSengDaoDao-mac-1.0.5-arm64.zip")
+	assert.NoError(t, err)
+	bytes, err := ioutil.ReadAll(file)
+	assert.NoError(t, err)
+	hash := sha512.Sum512(bytes)
+	// hash := sha512.New().Sum(bytes[:1024*1024])
+	encoded := base64.StdEncoding.EncodeToString(hash[:])
+	println("编码结果")
+	println(encoded)
 }

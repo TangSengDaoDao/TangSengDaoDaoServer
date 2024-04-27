@@ -47,6 +47,11 @@ func (m *messageExtraDB) insertOrUpdateContentEdit(md *messageExtraModel) error 
 	return err
 }
 
+func (m *messageExtraDB) insertOrUpdateContentEditTx(md *messageExtraModel, tx *dbr.Tx) error {
+	_, err := tx.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,content_edit,content_edit_hash,edited_at,version) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE content_edit=VALUES(content_edit),content_edit_hash=VALUES(content_edit_hash),edited_at=VALUES(edited_at),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.ContentEdit, md.ContentEditHash, md.EditedAt, md.Version).Exec()
+	return err
+}
+
 // 是否存在相同编辑内容
 func (m *messageExtraDB) existContentEdit(messageID string, contentEditHash string) (bool, error) {
 	var count int

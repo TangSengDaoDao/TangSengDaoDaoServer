@@ -38,6 +38,8 @@ type IService interface {
 	// -------------------- 群成员 --------------------
 	// 获取指定群的群成员列表
 	GetMembers(groupNo string) ([]*MemberResp, error)
+	// 获取指定群的指定成员信息
+	GetMember(groupNo, uid string) (*MemberResp, error)
 	// 获取黑明单成员uid集合
 	GetBlacklistMemberUIDs(groupNo string) ([]string, error)
 	// 查询管理员成员uid列表（包括创建者）
@@ -263,6 +265,17 @@ func (s *Service) GetMembers(groupNo string) ([]*MemberResp, error) {
 		}
 	}
 	return memberResps, nil
+}
+func (s *Service) GetMember(groupNo, uid string) (*MemberResp, error) {
+	memberDetail, err := s.db.queryMemberWithGroupNoAndUID(groupNo, uid)
+	if err != nil {
+		return nil, err
+	}
+	if memberDetail == nil || memberDetail.IsDeleted == 1 {
+		return nil, nil
+	}
+	memberResp := newMemberResp(memberDetail)
+	return memberResp, nil
 }
 
 func (s *Service) GetBlacklistMemberUIDs(groupNo string) ([]string, error) {

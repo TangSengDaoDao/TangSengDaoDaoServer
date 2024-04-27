@@ -357,6 +357,7 @@ func (m *Manager) addUser(c *wkhttp.Context) {
 	userModel.Status = int(common.UserAvailable)
 	err = m.userDB.insertTx(userModel, tx)
 	if err != nil {
+		tx.Rollback()
 		m.Error("添加用户错误", zap.String("username", req.Phone))
 		c.ResponseError(err)
 		return

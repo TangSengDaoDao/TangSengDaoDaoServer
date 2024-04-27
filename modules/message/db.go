@@ -6,6 +6,7 @@ import (
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/db"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/gocraft/dbr/v2"
 )
 
@@ -61,6 +62,12 @@ func (d *DB) queryProhibitWordsWithVersion(version int64) ([]*ProhibitWordModel,
 	return list, err
 }
 
+// 新增消息
+func (d *DB) insertMessage(m *messageModel) error {
+	_, err := d.session.InsertInto(d.getTable(m.ChannelID)).Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
+	return err
+}
+
 // 通过频道ID获取表
 func (d *DB) getTable(channelID string) string {
 	tableIndex := crc32.ChecksumIEEE([]byte(channelID)) % uint32(d.ctx.GetConfig().TablePartitionConfig.MessageTableCount)
@@ -89,9 +96,9 @@ type messageModel struct {
 	ChannelID   string
 	ChannelType uint8
 	Timestamp   int64
-	Type        int
-	Payload     []byte
-	IsDeleted   int
-	Signal      int
+	// Type        int
+	Payload   []byte
+	IsDeleted int
+	Signal    int
 	db.BaseModel
 }

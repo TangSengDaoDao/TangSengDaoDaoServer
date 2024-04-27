@@ -65,6 +65,11 @@ paths:
           type: file
           description: "文件"
           required: true
+        - in: "query"
+          name: "signature"
+          type: integer
+          description: "是否返回文件签名"
+          required: false
       responses:
         200:
           description: "返回"
@@ -74,6 +79,9 @@ paths:
               path:
                 type: string
                 description: "文件预览地址"
+              sha512:
+                type: string
+                description: "signature == 1时返回"
         400:
           description: "错误"
           schema:

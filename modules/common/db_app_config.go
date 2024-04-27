@@ -36,14 +36,17 @@ func (a *appConfigDB) updateWithMap(configMap map[string]interface{}, id int64) 
 }
 
 type appConfigModel struct {
-	RSAPrivateKey          string
-	RSAPublicKey           string
-	Version                int
-	SuperToken             string
-	SuperTokenOn           int
-	RevokeSecond           int    // 消息可撤回时长
-	WelcomeMessage         string // 登录欢迎语
-	NewUserJoinSystemGroup int    // 新用户是否加入系统群聊
-	SearchByPhone          int    // 是否可通过手机号搜索
+	RSAPrivateKey                  string
+	RSAPublicKey                   string
+	Version                        int
+	SuperToken                     string
+	SuperTokenOn                   int
+	RevokeSecond                   int    // 消息可撤回时长
+	WelcomeMessage                 string // 登录欢迎语
+	NewUserJoinSystemGroup         int    // 新用户是否加入系统群聊
+	SearchByPhone                  int    // 是否可通过手机号搜索
+	RegisterInviteOn               int    // 开启注册邀请机制
+	SendWelcomeMessageOn           int    // 开启注册登录发送欢迎语
+	InviteSystemAccountJoinGroupOn int    // 开启系统账号加入群聊
 	ldb.BaseModel
 }

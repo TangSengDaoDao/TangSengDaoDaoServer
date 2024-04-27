@@ -30,16 +30,14 @@ const (
 	GroupAvatarUpdate string = "group.avatar.update"
 	// GroupMemberRemove 群成员移除
 	GroupMemberRemove string = "group.memberremove"
+	// GroupDisband 群解散
+	GroupDisband string = "group.disband"
 	// FriendApply 好友申请
 	FriendApply string = "friend.apply"
 	// GroupMemberInviteRequest 群邀请请求
 	GroupMemberInviteRequest string = "group.member.invite"
 	// ConversationDelete 删除最近会话
 	ConversationDelete string = "conversation.delete"
-	// EventTransfer 转账
-	EventTransfer string = "transfer"
-	// EventRedpacketReceive 领取红包
-	EventRedpacketReceive string = "redpacket.receive"
 	// EventUserRegister 用户注册
 	EventUserRegister string = "user.register"
 	// EventUserPublishMoment 用户发布动态
@@ -56,6 +54,8 @@ const (
 	OrgOrDeptEmployeeUpdate string = "organization_department.employee.update"
 	// OrgEmployeeExit 组织成员退出
 	OrgEmployeeExit string = "organization.employee.exit"
+	// EventUpdateSearchMessage 修改搜索消息内容
+	EventUpdateSearchMessage string = "message.update.search.data"
 )
 
 // Event 事件

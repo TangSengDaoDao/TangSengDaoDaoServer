@@ -76,6 +76,8 @@ type IService interface {
 	ExistBlacklist(uid string, toUID string) (bool, error)
 	// 更新用户消息过期时长
 	UpdateUserMsgExpireSecond(uid string, msgExpireSecond int64) error
+	// 搜索好友
+	SearchFriendsWithKeyword(uid string, keyword string) ([]*FriendResp, error)
 }
 
 // Service Service
@@ -400,6 +402,7 @@ func (s *Service) AddUser(user *AddUserReq) error {
 		Phone:    user.Phone,
 		Username: username,
 		Email:    user.Email,
+		ShortNo:  util.Ten2Hex(time.Now().UnixNano()),
 		Status:   1,
 	}
 	if user.Password != "" {
@@ -720,6 +723,26 @@ func (s *Service) UpdateUserMsgExpireSecond(uid string, msgExpireSecond int64) e
 	return s.db.updateUserMsgExpireSecond(uid, msgExpireSecond)
 }
 
+// 搜索好友
+func (s *Service) SearchFriendsWithKeyword(uid string, keyword string) ([]*FriendResp, error) {
+	friends, err := s.friendDB.QueryFriendsWithKeyword(uid, keyword)
+	if err != nil {
+		s.Error("查询好友数据失败！", zap.Error(err))
+		return nil, errors.New("查询好友数据失败！")
+	}
+	list := make([]*FriendResp, 0)
+	if len(friends) > 0 {
+		for _, friend := range friends {
+			list = append(list, &FriendResp{
+				UID:    friend.ToUID,
+				Name:   friend.ToName,
+				Remark: friend.Remark,
+			})
+		}
+	}
+	return list, nil
+}
+
 // Resp 用户返回
 type Resp struct {
 	UID             string
@@ -756,6 +779,7 @@ type FriendResp struct {
 	Name    string
 	UID     string
 	IsAlone int // 是否为单项好友
+	Remark  string
 }
 
 // FriendReq FriendReq

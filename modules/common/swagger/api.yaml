@@ -42,6 +42,15 @@ paths:
                 search_by_phone:
                   type: integer
                   description: "是否开启手机号搜索 1.是"
+                register_invite_on:
+                  type: integer
+                  description: "是否开启注册邀请机制 1.开启"
+                send_welcome_message_on:
+                  type: integer
+                  description: "是否开启注册登录发送欢迎语 1.开启"
+                invite_system_account_join_group_on:
+                  type: integer
+                  description: "是否开启系统账号加入群聊 1.开启"
         400:
           description: '错误'
           schema:
@@ -78,6 +87,15 @@ paths:
               search_by_phone:
                   type: integer
                   description: "是否开启手机号搜索 1.是"
+              register_invite_on:
+                type: integer
+                description: "是否开启注册邀请机制 1.开启"
+              send_welcome_message_on:
+                type: integer
+                description: "是否开启注册登录发送欢迎语 1.开启"
+              invite_system_account_join_group_on:
+                type: integer
+                description: "是否开启系统账号加入群聊 1.开启"
       responses:
         200:
           description: "返回"
@@ -235,6 +253,54 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /common/appversion:
+    post:
+      tags:
+        - "common"
+      summary: "添加最新版本"
+      description: "添加最新版本"
+      operationId: "add new version"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "req"
+          description: "添加应用版本"
+          required: true
+          schema:
+            type: object
+            properties:
+              app_version:
+                type: string
+                description: "版本号"
+              os:
+                type: string
+                description: "平台"
+              is_force:
+                  type: integer
+                  description: "是否强制更新 1.是"
+              update_desc: 
+                type: string
+                description: "更新说明"
+              download_url:
+                type: string
+                description: "下载地址"
+              signature:
+                type: string
+                description: "文件签名"
+      responses:
+        200:
+          description: "返回"
+          schema:
+             $ref: '#/definitions/response'
+        400:
+          description: '错误'
+          schema:
+            $ref: '#/definitions/response'
+      security:
+        - token: [] 
   /common/appversion/{os}/{version}:
     get:
       tags:
@@ -450,6 +516,15 @@ paths:
                 revoke_second:
                   type: integer
                   description: "消息撤回限制时长"
+                register_invite_on:
+                  type: integer
+                  description: "是否开启注册邀请机制 1.开启"
+                send_welcome_message_on:
+                  type: integer
+                  description: "是否开启注册登录发送欢迎语 1.开启"
+                invite_system_account_join_group_on:
+                  type: integer
+                  description: "是否开启系统账号加入群聊 1.开启"
         400:
           description: '错误'
           schema:

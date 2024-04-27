@@ -6,12 +6,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/group"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -145,8 +147,10 @@ func (m *Manager) delete(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
+	msgIds := make([]string, 0)
 	for _, msg := range req.List {
 		version := m.genMessageExtraSeq(fakeChannelID)
+		msgIds = append(msgIds, msg.MessageID)
 		err := m.managerDB.updateMsgExtraVersionAndDeletedTx(&messageExtraModel{
 			ChannelID:   fakeChannelID,
 			ChannelType: req.ChannelType,
@@ -162,12 +166,27 @@ func (m *Manager) delete(c *wkhttp.Context) {
 			return
 		}
 	}
+	eventID, err := m.ctx.EventBegin(&wkevent.Data{
+		Event: event.EventUpdateSearchMessage,
+		Data: &config.UpdateSearchMessageReq{
+			MessageIDs: msgIds,
+			ChannelID:  req.ChannelID,
+		},
+		Type: wkevent.None,
+	}, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("开启事件失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事件失败！"))
+		return
+	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		m.Error("提交事务失败！", zap.Error(err))
 		c.ResponseError(errors.New("提交事务失败！"))
 		return
 	}
+	m.ctx.EventCommit(eventID)
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		err = m.ctx.SendCMD(config.MsgCMDReq{
 			NoPersist:   false,

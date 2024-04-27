@@ -6,6 +6,8 @@ const (
 	GroupStatusDisabled = 0
 	// GroupStatusNormal 正常
 	GroupStatusNormal = 1
+	// GroupStatusDisband 解散
+	GroupStatusDisband = 2
 )
 
 // 群成员角色
