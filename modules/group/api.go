@@ -535,7 +535,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		channelService = channelServiceObj.(chservice.IService)
 	}
 	if channelService != nil {
-		if creatorUser != nil && creatorUser.MsgExpireSecond > 0 {
+		if creatorUser.MsgExpireSecond > 0 {
 			err = channelService.CreateOrUpdateMsgAutoDelete(groupNo, common.ChannelTypeGroup.Uint8(), creatorUser.MsgExpireSecond)
 			if err != nil {
 				g.Warn("更新消息自动删除失败！", zap.Error(err))
