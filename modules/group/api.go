@@ -159,13 +159,13 @@ func (g *Group) disband(c *wkhttp.Context) {
 		c.ResponseError(errors.New("修改群状态错误"))
 		return
 	}
-	err = g.db.deleteMembersWithGroupNOTx(groupNo, tx)
-	if err != nil {
-		tx.Rollback()
-		g.Error("删除群成员错误", zap.Error(err))
-		c.ResponseError(errors.New("删除群成员错误"))
-		return
-	}
+	// err = g.db.deleteMembersWithGroupNOTx(groupNo, tx)
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	g.Error("删除群成员错误", zap.Error(err))
+	// 	c.ResponseError(errors.New("删除群成员错误"))
+	// 	return
+	// }
 	// 发布群解散事件
 	eventID, err := g.ctx.EventBegin(&wkevent.Data{
 		Event: event.GroupDisband,
