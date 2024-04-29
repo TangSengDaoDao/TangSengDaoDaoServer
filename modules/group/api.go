@@ -182,13 +182,13 @@ func (g *Group) disband(c *wkhttp.Context) {
 		c.ResponseError(errors.New("开启事件失败！"))
 		return
 	}
-	g.ctx.EventCommit(eventID)
 	if err := tx.Commit(); err != nil {
 		tx.RollbackUnlessCommitted()
 		g.Error("提交事务失败！", zap.Error(err))
 		c.ResponseError(errors.New("提交事务失败！"))
 		return
 	}
+	g.ctx.EventCommit(eventID)
 	c.ResponseOK()
 }
 
