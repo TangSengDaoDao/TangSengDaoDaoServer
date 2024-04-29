@@ -53,7 +53,7 @@ func New(ctx *config.Context) *Group {
 		fileService:   file.NewService(ctx),
 		commonService: common2.NewService(ctx),
 	}
-	// g.ctx.AddEventListener(event.GroupDisband, g.handleGroupDisbandEvent)
+	g.ctx.AddEventListener(event.GroupDisband, g.handleGroupDisbandEvent)
 	g.ctx.AddEventListener(event.EventUserRegister, g.handleRegisterUserEvent)
 	g.ctx.AddEventListener(event.GroupMemberAdd, g.handleGroupMemberAddEvent)
 	g.ctx.AddEventListener(event.OrgOrDeptCreate, g.handleOrgOrDeptCreateEvent)
@@ -94,7 +94,7 @@ func (g *Group) Route(r *wkhttp.WKHttp) {
 		groups.POST("/:group_no/blacklist/:action", g.blacklist)                           // 添加或移除黑名单
 		groups.POST("/:group_no/forbidden_with_member", g.forbiddenWithGroupMember)        // 禁言或解禁某个群成员
 		groups.POST("/:group_no/avatar", g.avatarUpload)                                   // 上传群头像
-		// groups.DELETE("/:group_no/disband", g.disband)                                     // 解散群
+		groups.DELETE("/:group_no/disband", g.disband)                                     // 解散群
 	}
 	openGroups := r.Group("/v1/groups")
 	{ // 获取群头像
