@@ -2201,9 +2201,18 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 func (g *Group) groupExit(c *wkhttp.Context) {
 	loginUID := c.MustGet("uid").(string)
 	groupNo := c.Param("group_no")
-
+	groupInfo, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		g.Error("查询群资料错误", zap.Error(err))
+		c.ResponseError(errors.New("查询群资料错误"))
+		return
+	}
+	if groupInfo == nil {
+		c.ResponseError(errors.New("群不存在"))
+		return
+	}
 	// 调用IM的移除订阅者
-	err := g.ctx.IMRemoveSubscriber(&config.SubscriberRemoveReq{
+	err = g.ctx.IMRemoveSubscriber(&config.SubscriberRemoveReq{
 		ChannelID:   groupNo,
 		ChannelType: common.ChannelTypeGroup.Uint8(),
 		Subscribers: []string{loginUID},
@@ -2322,13 +2331,13 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 	if showName == "" {
 		showName = c.GetLoginName()
 	}
-
-	// 发送群成员退出群聊消息
-	err = g.ctx.SendGroupExit(groupNo, loginUID, showName)
-	if err != nil {
-		g.Error("发送成员退出群聊错误", zap.Error(err))
+	if groupInfo.Status != GroupStatusDisband {
+		// 发送群成员退出群聊消息
+		err = g.ctx.SendGroupExit(groupNo, loginUID, showName)
+		if err != nil {
+			g.Error("发送成员退出群聊错误", zap.Error(err))
+		}
 	}
-
 	c.ResponseOK()
 
 }
