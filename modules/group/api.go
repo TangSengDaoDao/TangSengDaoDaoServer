@@ -126,7 +126,7 @@ func (g *Group) disband(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询群资料错误"))
 		return
 	}
-	if group == nil {
+	if group == nil || group.Status == GroupStatusDisband {
 		c.ResponseOK()
 		return
 	}
