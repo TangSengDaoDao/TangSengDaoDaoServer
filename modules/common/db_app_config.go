@@ -48,5 +48,6 @@ type appConfigModel struct {
 	RegisterInviteOn               int    // 开启注册邀请机制
 	SendWelcomeMessageOn           int    // 开启注册登录发送欢迎语
 	InviteSystemAccountJoinGroupOn int    // 开启系统账号加入群聊
+	RegisterUserMustCompleteInfoOn int    // 注册用户是否必须完善个人信息
 	ldb.BaseModel
 }

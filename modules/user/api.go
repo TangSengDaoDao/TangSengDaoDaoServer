@@ -2402,7 +2402,16 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 	if createUser.Name != "" {
 		userModel.Name = createUser.Name
 	} else {
-		userModel.Name = Names[rand.Intn(len(Names)-1)]
+		appconfig, err := u.commonService.GetAppConfig()
+		if err != nil {
+			u.Error("获取应用配置失败！", zap.Error(err))
+			return nil, err
+		}
+		if appconfig != nil && appconfig.RegisterUserMustCompleteInfoOn == 1 {
+			userModel.Name = ""
+		} else {
+			userModel.Name = Names[rand.Intn(len(Names)-1)]
+		}
 	}
 	userModel.Sex = createUser.Sex
 	userModel.Vercode = fmt.Sprintf("%s@%d", util.GenerUUID(), common.User)
