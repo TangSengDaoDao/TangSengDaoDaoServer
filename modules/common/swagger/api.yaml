@@ -51,6 +51,9 @@ paths:
                 invite_system_account_join_group_on:
                   type: integer
                   description: "是否开启系统账号加入群聊 1.开启"
+                register_user_must_complete_info_on:
+                  type: integer
+                  description: "是否开启注册用户必须填写完整信息 1.开启"
         400:
           description: '错误'
           schema:
