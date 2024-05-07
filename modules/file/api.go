@@ -138,10 +138,6 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 	if !strings.HasPrefix(path, "/") {
 		path = fmt.Sprintf("/%s", path)
 	}
-	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), contentType, func(w io.Writer) error {
-		_, err := io.Copy(w, file)
-		return err
-	})
 	var sign [64]byte
 	if signatureInt == 1 {
 		bytes, err := ioutil.ReadAll(file)
@@ -152,6 +148,11 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 		}
 		sign = sha512.Sum512(bytes)
 	}
+	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), contentType, func(w io.Writer) error {
+		_, err := io.Copy(w, file)
+		return err
+	})
+
 	defer file.Close()
 	if err != nil {
 		f.Error("上传文件失败！", zap.Error(err))
@@ -160,6 +161,7 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 	}
 	if signatureInt == 1 {
 		encoded := base64.StdEncoding.EncodeToString(sign[:])
+		fmt.Print("编码文件", encoded)
 		c.Response(map[string]interface{}{
 			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
 			"sha512": encoded,
