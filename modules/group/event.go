@@ -50,6 +50,16 @@ func (g *Group) handleGroupDisbandEvent(data []byte, commit config.EventCommit) 
 		return
 	}
 	// 删除channel
+	err = g.ctx.IMDelChannel(&config.ChannelDeleteReq{
+		ChannelID:   req.GroupNo,
+		ChannelType: common.ChannelTypeGroup.Uint8(),
+	})
+	if err != nil {
+		g.Error("删除IM频道失败", zap.Error(err))
+		commit(err)
+		return
+	}
+	commit(nil)
 }
 
 // handleRegisterUserEvent 用户注册时加入系统群

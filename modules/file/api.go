@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -138,20 +137,35 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 	if !strings.HasPrefix(path, "/") {
 		path = fmt.Sprintf("/%s", path)
 	}
-	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), contentType, func(w io.Writer) error {
-		_, err := io.Copy(w, file)
-		return err
-	})
-	var sign [64]byte
+	var sign []byte
 	if signatureInt == 1 {
-		bytes, err := ioutil.ReadAll(file)
+		// bytes, err := ioutil.ReadAll(file)
+		// if err != nil {
+		// 	f.Error("读取文件错误", zap.Error(err))
+		// 	c.ResponseError(errors.New("读取文件错误"))
+		// 	return
+		// }
+		h := sha512.New()
+		_, err := io.Copy(h, file)
 		if err != nil {
-			f.Error("读取文件错误", zap.Error(err))
-			c.ResponseError(errors.New("读取文件错误"))
+			f.Error("签名复制文件错误", zap.Error(err))
+			c.ResponseError(errors.New("签名复制文件错误"))
 			return
 		}
-		sign = sha512.Sum512(bytes)
+		sign = h.Sum(nil)
+		//	sign = sha512.Sum512(bytes)
+
 	}
+	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), contentType, func(w io.Writer) error {
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			f.Error("设置文件偏移量错误", zap.Error(err))
+			return err
+		}
+		_, err = io.Copy(w, file)
+		return err
+	})
+
 	defer file.Close()
 	if err != nil {
 		f.Error("上传文件失败！", zap.Error(err))
@@ -160,6 +174,7 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 	}
 	if signatureInt == 1 {
 		encoded := base64.StdEncoding.EncodeToString(sign[:])
+		fmt.Print("编码文件", encoded)
 		c.Response(map[string]interface{}{
 			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
 			"sha512": encoded,

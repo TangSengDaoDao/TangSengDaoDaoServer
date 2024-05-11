@@ -332,6 +332,7 @@ func (cn *Common) appConfig(c *wkhttp.Context) {
 		RegisterInviteOn:               appConfigM.RegisterInviteOn,
 		SendWelcomeMessageOn:           appConfigM.SendWelcomeMessageOn,
 		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
+		RegisterUserMustCompleteInfoOn: appConfigM.RegisterUserMustCompleteInfoOn,
 	})
 }
 
@@ -490,6 +491,7 @@ type appConfigResp struct {
 	RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
 	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
 	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
+	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
 }
 
 type appVersionReq struct {

@@ -53,7 +53,7 @@ func New(ctx *config.Context) *Group {
 		fileService:   file.NewService(ctx),
 		commonService: common2.NewService(ctx),
 	}
-	// g.ctx.AddEventListener(event.GroupDisband, g.handleGroupDisbandEvent)
+	g.ctx.AddEventListener(event.GroupDisband, g.handleGroupDisbandEvent)
 	g.ctx.AddEventListener(event.EventUserRegister, g.handleRegisterUserEvent)
 	g.ctx.AddEventListener(event.GroupMemberAdd, g.handleGroupMemberAddEvent)
 	g.ctx.AddEventListener(event.OrgOrDeptCreate, g.handleOrgOrDeptCreateEvent)
@@ -94,7 +94,7 @@ func (g *Group) Route(r *wkhttp.WKHttp) {
 		groups.POST("/:group_no/blacklist/:action", g.blacklist)                           // 添加或移除黑名单
 		groups.POST("/:group_no/forbidden_with_member", g.forbiddenWithGroupMember)        // 禁言或解禁某个群成员
 		groups.POST("/:group_no/avatar", g.avatarUpload)                                   // 上传群头像
-		// groups.DELETE("/:group_no/disband", g.disband)                                     // 解散群
+		groups.DELETE("/:group_no/disband", g.disband)                                     // 解散群
 	}
 	openGroups := r.Group("/v1/groups")
 	{ // 获取群头像
@@ -126,7 +126,7 @@ func (g *Group) disband(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询群资料错误"))
 		return
 	}
-	if group == nil {
+	if group == nil || group.Status == GroupStatusDisband {
 		c.ResponseOK()
 		return
 	}
@@ -159,13 +159,13 @@ func (g *Group) disband(c *wkhttp.Context) {
 		c.ResponseError(errors.New("修改群状态错误"))
 		return
 	}
-	err = g.db.deleteMembersWithGroupNOTx(groupNo, tx)
-	if err != nil {
-		tx.Rollback()
-		g.Error("删除群成员错误", zap.Error(err))
-		c.ResponseError(errors.New("删除群成员错误"))
-		return
-	}
+	// err = g.db.deleteMembersWithGroupNOTx(groupNo, tx)
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	g.Error("删除群成员错误", zap.Error(err))
+	// 	c.ResponseError(errors.New("删除群成员错误"))
+	// 	return
+	// }
 	// 发布群解散事件
 	eventID, err := g.ctx.EventBegin(&wkevent.Data{
 		Event: event.GroupDisband,
@@ -182,13 +182,13 @@ func (g *Group) disband(c *wkhttp.Context) {
 		c.ResponseError(errors.New("开启事件失败！"))
 		return
 	}
-	g.ctx.EventCommit(eventID)
 	if err := tx.Commit(); err != nil {
 		tx.RollbackUnlessCommitted()
 		g.Error("提交事务失败！", zap.Error(err))
 		c.ResponseError(errors.New("提交事务失败！"))
 		return
 	}
+	g.ctx.EventCommit(eventID)
 	c.ResponseOK()
 }
 
@@ -535,7 +535,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		channelService = channelServiceObj.(chservice.IService)
 	}
 	if channelService != nil {
-		if creatorUser != nil && creatorUser.MsgExpireSecond > 0 {
+		if creatorUser.MsgExpireSecond > 0 {
 			err = channelService.CreateOrUpdateMsgAutoDelete(groupNo, common.ChannelTypeGroup.Uint8(), creatorUser.MsgExpireSecond)
 			if err != nil {
 				g.Warn("更新消息自动删除失败！", zap.Error(err))
@@ -2201,9 +2201,18 @@ func (g *Group) groupSettingUpdate(c *wkhttp.Context) {
 func (g *Group) groupExit(c *wkhttp.Context) {
 	loginUID := c.MustGet("uid").(string)
 	groupNo := c.Param("group_no")
-
+	groupInfo, err := g.getGroupInfo(groupNo)
+	if err != nil {
+		g.Error("查询群资料错误", zap.Error(err))
+		c.ResponseError(errors.New("查询群资料错误"))
+		return
+	}
+	if groupInfo == nil {
+		c.ResponseError(errors.New("群不存在"))
+		return
+	}
 	// 调用IM的移除订阅者
-	err := g.ctx.IMRemoveSubscriber(&config.SubscriberRemoveReq{
+	err = g.ctx.IMRemoveSubscriber(&config.SubscriberRemoveReq{
 		ChannelID:   groupNo,
 		ChannelType: common.ChannelTypeGroup.Uint8(),
 		Subscribers: []string{loginUID},
@@ -2322,13 +2331,13 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 	if showName == "" {
 		showName = c.GetLoginName()
 	}
-
-	// 发送群成员退出群聊消息
-	err = g.ctx.SendGroupExit(groupNo, loginUID, showName)
-	if err != nil {
-		g.Error("发送成员退出群聊错误", zap.Error(err))
+	if groupInfo.Status != GroupStatusDisband {
+		// 发送群成员退出群聊消息
+		err = g.ctx.SendGroupExit(groupNo, loginUID, showName)
+		if err != nil {
+			g.Error("发送成员退出群聊错误", zap.Error(err))
+		}
 	}
-
 	c.ResponseOK()
 
 }

@@ -1420,6 +1420,7 @@ func (m *Message) synccProhibitWords(c *wkhttp.Context) {
 				Content:   word.Content,
 				IsDeleted: word.IsDeleted,
 				CreatedAt: word.CreatedAt.String(),
+				Version:   word.Version,
 			})
 		}
 	}

@@ -48,7 +48,9 @@ func init() {
 						if groupInfo.GroupType == GroupTypeSuper {
 							channelInfoMap["large"] = 1
 						}
-
+						if groupInfo.Status == GroupStatusDisband {
+							channelInfoMap["disband"] = 1
+						}
 					}
 					return channelInfoMap, nil
 				},
