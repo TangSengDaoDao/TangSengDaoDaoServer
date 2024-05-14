@@ -43,7 +43,12 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("消息seq不合法"))
 		return
 	}
-	message, err := m.db.queryMessageWithMessageID(req.ChannelID, req.ChannelType, req.MessageID)
+
+	fakeChannelID := req.ChannelID
+	if req.ChannelType == common.ChannelTypePerson.Uint8() {
+		fakeChannelID = common.GetFakeChannelIDWith(loginUID, req.ChannelID)
+	}
+	message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.ChannelType, req.MessageID)
 	if err != nil {
 		m.Error("查询消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询消息错误"))
@@ -70,15 +75,11 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		return
 	}
 
-	pinnedMessage, err := m.pinnedDB.queryWithMessageId(req.ChannelID, req.ChannelType, req.MessageID)
+	pinnedMessage, err := m.pinnedDB.queryWithMessageId(fakeChannelID, req.ChannelType, req.MessageID)
 	if err != nil {
 		m.Error("查询置顶消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询置顶消息错误"))
 		return
-	}
-	fakeChannelID := req.ChannelID
-	if req.ChannelType == common.ChannelTypePerson.Uint8() {
-		fakeChannelID = common.GetFakeChannelIDWith(loginUID, req.ChannelID)
 	}
 	tx, _ := m.db.session.Begin()
 	defer func() {
@@ -177,7 +178,7 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 				RedDot:    1,
 				SyncOnce:  0, // 只同步一次
 			},
-			ChannelID:   fakeChannelID,
+			ChannelID:   req.ChannelID,
 			ChannelType: req.ChannelType,
 			Payload: []byte(util.ToJson(map[string]interface{}{
 				"from_uid":  loginUID,
@@ -345,7 +346,7 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		messageIds = append(messageIds, msg.MessageId)
 	}
 
-	resp, err := m.ctx.IMGetWithChannelAndSeqs(req.ChannelID, req.ChannelType, messageSeqs)
+	resp, err := m.ctx.IMGetWithChannelAndSeqs(fakeChannelID, req.ChannelType, messageSeqs)
 	if err != nil {
 		m.Error("查询频道内的消息失败！", zap.Error(err), zap.String("req", util.ToJson(req)))
 		c.ResponseError(errors.New("查询频道内的消息失败！"))
