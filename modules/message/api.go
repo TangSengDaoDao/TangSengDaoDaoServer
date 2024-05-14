@@ -1854,6 +1854,7 @@ type messageExtraResp struct {
 	ReadedCount     int                    `json:"readed_count,omitempty"`      // 已读数量
 	ReadedAt        int64                  `json:"readed_at,omitempty"`         // 已读时间
 	IsMutualDeleted int                    `json:"is_mutual_deleted,omitempty"` // 双向删除
+	IsPinned        int                    `json:"is_pinned,omitempty"`         // 是否置顶
 	ContentEdit     map[string]interface{} `json:"content_edit,omitempty"`      // 编辑后的正文
 	EditedAt        int                    `json:"edited_at,omitempty"`         // 编辑时间 例如 12:23
 	ExtraVersion    int64                  `json:"extra_version"`               // 数据版本
@@ -1887,6 +1888,7 @@ func newMessageExtraResp(m *messageExtraDetailModel) *messageExtraResp {
 		ContentEdit:     contentEditMap,
 		EditedAt:        m.EditedAt,
 		IsMutualDeleted: m.IsDeleted,
+		IsPinned:        m.IsPinned,
 		ExtraVersion:    m.Version,
 	}
 }
