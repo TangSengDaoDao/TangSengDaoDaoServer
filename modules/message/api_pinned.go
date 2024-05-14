@@ -428,10 +428,11 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		if channelOffsetM != nil && msg.MessageSeq <= channelOffsetM.MessageSeq {
 			msg.IsDeleted = 1
 		}
+		toChannelID := common.GetToChannelIDWithFakeChannelID(msg.ChannelID, loginUID)
 		pinnedMessageList = append(pinnedMessageList, &pinnedMessageResp{
 			MessageID:   msg.MessageId,
 			MessageSeq:  msg.MessageSeq,
-			ChannelID:   msg.ChannelID,
+			ChannelID:   toChannelID,
 			ChannelType: msg.ChannelType,
 			IsDeleted:   msg.IsDeleted,
 			Version:     msg.Version,
