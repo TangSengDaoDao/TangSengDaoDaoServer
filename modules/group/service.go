@@ -450,64 +450,66 @@ func toSettingResp(m *Setting) *SettingResp {
 }
 
 type GroupResp struct {
-	GroupNo             string    `json:"group_no"`               // 群编号
-	GroupType           GroupType `json:"group_type"`             // 群类型
-	Category            string    `json:"category"`               // 群分类
-	Name                string    `json:"name"`                   // 群名称
-	Remark              string    `json:"remark"`                 // 群备注
-	Notice              string    `json:"notice"`                 // 群公告
-	Mute                int       `json:"mute"`                   // 免打扰
-	Top                 int       `json:"top"`                    // 置顶
-	ShowNick            int       `json:"show_nick"`              // 显示昵称
-	Save                int       `json:"save"`                   // 是否保存
-	Forbidden           int       `json:"forbidden"`              // 是否全员禁言
-	Invite              int       `json:"invite"`                 // 群聊邀请确认
-	ChatPwdOn           int       `json:"chat_pwd_on"`            //是否开启聊天密码
-	Screenshot          int       `json:"screenshot"`             //截屏通知
-	RevokeRemind        int       `json:"revoke_remind"`          //撤回提醒
-	JoinGroupRemind     int       `json:"join_group_remind"`      //进群提醒
-	ForbiddenAddFriend  int       `json:"forbidden_add_friend"`   //群内禁止加好友
-	Status              int       `json:"status"`                 //群状态
-	Receipt             int       `json:"receipt"`                //消息是否回执
-	Flame               int       `json:"flame"`                  // 阅后即焚
-	FlameSecond         int       `json:"flame_second"`           // 阅后即焚秒数
-	AllowViewHistoryMsg int       `json:"allow_view_history_msg"` // 是否允许新成员查看历史消息
-	MemberCount         int       `json:"member_count"`           // 成员数量
-	OnlineCount         int       `json:"online_count"`           // 在线数量
-	Quit                int       `json:"quit"`                   // 我是否已退出群聊
-	Role                int       `json:"role"`                   // 我在群聊里的角色
-	ForbiddenExpirTime  int64     `json:"forbidden_expir_time"`   // 我在此群的禁言过期时间
-	CreatedAt           string    `json:"created_at"`
-	UpdatedAt           string    `json:"updated_at"`
-	Version             int64     `json:"version"` // 群数据版本
+	GroupNo                  string    `json:"group_no"`                    // 群编号
+	GroupType                GroupType `json:"group_type"`                  // 群类型
+	Category                 string    `json:"category"`                    // 群分类
+	Name                     string    `json:"name"`                        // 群名称
+	Remark                   string    `json:"remark"`                      // 群备注
+	Notice                   string    `json:"notice"`                      // 群公告
+	Mute                     int       `json:"mute"`                        // 免打扰
+	Top                      int       `json:"top"`                         // 置顶
+	ShowNick                 int       `json:"show_nick"`                   // 显示昵称
+	Save                     int       `json:"save"`                        // 是否保存
+	Forbidden                int       `json:"forbidden"`                   // 是否全员禁言
+	Invite                   int       `json:"invite"`                      // 群聊邀请确认
+	ChatPwdOn                int       `json:"chat_pwd_on"`                 //是否开启聊天密码
+	Screenshot               int       `json:"screenshot"`                  //截屏通知
+	RevokeRemind             int       `json:"revoke_remind"`               //撤回提醒
+	JoinGroupRemind          int       `json:"join_group_remind"`           //进群提醒
+	ForbiddenAddFriend       int       `json:"forbidden_add_friend"`        //群内禁止加好友
+	Status                   int       `json:"status"`                      //群状态
+	Receipt                  int       `json:"receipt"`                     //消息是否回执
+	Flame                    int       `json:"flame"`                       // 阅后即焚
+	FlameSecond              int       `json:"flame_second"`                // 阅后即焚秒数
+	AllowViewHistoryMsg      int       `json:"allow_view_history_msg"`      // 是否允许新成员查看历史消息
+	MemberCount              int       `json:"member_count"`                // 成员数量
+	OnlineCount              int       `json:"online_count"`                // 在线数量
+	Quit                     int       `json:"quit"`                        // 我是否已退出群聊
+	Role                     int       `json:"role"`                        // 我在群聊里的角色
+	ForbiddenExpirTime       int64     `json:"forbidden_expir_time"`        // 我在此群的禁言过期时间
+	AllowMemberPinnedMessage int       `json:"allow_member_pinned_message"` //是否允许群成员置顶消息
+	CreatedAt                string    `json:"created_at"`
+	UpdatedAt                string    `json:"updated_at"`
+	Version                  int64     `json:"version"` // 群数据版本
 }
 
 func (g *GroupResp) from(model *DetailModel) *GroupResp {
 	return &GroupResp{
-		GroupNo:             model.GroupNo,
-		GroupType:           GroupType(model.GroupType),
-		Category:            model.Category,
-		Name:                model.Name,
-		Notice:              model.Notice,
-		Mute:                model.Mute,
-		Top:                 model.Top,
-		ShowNick:            model.ShowNick,
-		Save:                model.Save,
-		Remark:              model.Remark,
-		Version:             model.Version,
-		Forbidden:           model.Forbidden,
-		Invite:              model.Invite,
-		ChatPwdOn:           model.ChatPwdOn,
-		Screenshot:          model.Screenshot,
-		RevokeRemind:        model.RevokeRemind,
-		JoinGroupRemind:     model.JoinGroupRemind,
-		ForbiddenAddFriend:  model.ForbiddenAddFriend,
-		Receipt:             model.Receipt,
-		Flame:               model.Flame,
-		FlameSecond:         model.FlameSecond,
-		Status:              model.Status,
-		AllowViewHistoryMsg: model.AllowViewHistoryMsg,
-		CreatedAt:           model.CreatedAt.String(),
-		UpdatedAt:           model.UpdatedAt.String(),
+		GroupNo:                  model.GroupNo,
+		GroupType:                GroupType(model.GroupType),
+		Category:                 model.Category,
+		Name:                     model.Name,
+		Notice:                   model.Notice,
+		Mute:                     model.Mute,
+		Top:                      model.Top,
+		ShowNick:                 model.ShowNick,
+		Save:                     model.Save,
+		Remark:                   model.Remark,
+		Version:                  model.Version,
+		Forbidden:                model.Forbidden,
+		Invite:                   model.Invite,
+		ChatPwdOn:                model.ChatPwdOn,
+		Screenshot:               model.Screenshot,
+		RevokeRemind:             model.RevokeRemind,
+		JoinGroupRemind:          model.JoinGroupRemind,
+		ForbiddenAddFriend:       model.ForbiddenAddFriend,
+		Receipt:                  model.Receipt,
+		Flame:                    model.Flame,
+		FlameSecond:              model.FlameSecond,
+		Status:                   model.Status,
+		AllowViewHistoryMsg:      model.AllowViewHistoryMsg,
+		AllowMemberPinnedMessage: model.AllowMemberPinnedMessage,
+		CreatedAt:                model.CreatedAt.String(),
+		UpdatedAt:                model.UpdatedAt.String(),
 	}
 }

@@ -26,6 +26,7 @@ type Manager struct {
 	userService  user.IService
 	groupService group.IService
 	managerDB    *managerDB
+	pinnedDB     *pinnedDB
 }
 
 // NewManager NewManager
@@ -36,6 +37,7 @@ func NewManager(ctx *config.Context) *Manager {
 		userService:  user.NewService(ctx),
 		groupService: group.NewService(ctx),
 		managerDB:    newManagerDB(ctx),
+		pinnedDB:     newPinnedDB(ctx),
 	}
 }
 
@@ -107,6 +109,7 @@ func (m *Manager) sendMessageToFriends(toUids []string, fromUID string, content 
 	return nil
 }
 func (m *Manager) delete(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
 	err := c.CheckLoginRoleIsSuperAdmin()
 	if err != nil {
 		c.ResponseError(err)
@@ -164,6 +167,43 @@ func (m *Manager) delete(c *wkhttp.Context) {
 			m.Error(common.ErrData.Error(), zap.Error(err))
 			c.ResponseError(errors.New("删除消息错误"))
 			return
+		}
+	}
+	pinnedMsgs, err := m.pinnedDB.queryWithMessageIds(fakeChannelID, req.ChannelType, msgIds)
+	if err != nil {
+		tx.Rollback()
+		m.Error("查询置顶消息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询置顶消息错误"))
+		return
+	}
+	isSendSyncPinnedMsgCMD := false
+	if len(pinnedMsgs) > 0 {
+		for _, pinnedMsg := range pinnedMsgs {
+			if pinnedMsg.IsDeleted == 0 {
+				pinnedMsg.IsDeleted = 1
+				pinnedMsg.Version = time.Now().UnixMilli()
+				isSendSyncPinnedMsgCMD = true
+				err = m.pinnedDB.updateTx(pinnedMsg, tx)
+				if err != nil {
+					tx.Rollback()
+					m.Error("删除置顶消息错误", zap.Error(err))
+					c.ResponseError(errors.New("删除置顶消息错误"))
+					return
+				}
+			}
+		}
+	}
+	if isSendSyncPinnedMsgCMD {
+		err = m.ctx.SendCMD(config.MsgCMDReq{
+			NoPersist:   true,
+			ChannelID:   req.ChannelID,
+			ChannelType: req.ChannelType,
+			FromUID:     loginUID,
+			CMD:         common.CMDSyncPinnedMessage,
+		})
+
+		if err != nil {
+			m.Warn("发送cmd失败！", zap.Error(err))
 		}
 	}
 	eventID, err := m.ctx.EventBegin(&wkevent.Data{

@@ -467,35 +467,37 @@ func (d *DB) queryGroupAvatarIsUpload(groupNo string) (int, error) {
 // DetailModel 群详情
 type DetailModel struct {
 	Model
-	Mute            int    // 免打扰
-	Top             int    // 置顶
-	ShowNick        int    // 显示昵称
-	Save            int    // 是否保存
-	ChatPwdOn       int    //是否开启聊天密码
-	RevokeRemind    int    //撤回提醒
-	JoinGroupRemind int    // 进群提醒
-	Screenshot      int    //截屏通知
-	Receipt         int    //消息是否回执
-	Flame           int    // 是否开启阅后即焚
-	FlameSecond     int    // 阅后即焚秒数
-	Remark          string // 群备注
+	Mute                     int    // 免打扰
+	Top                      int    // 置顶
+	ShowNick                 int    // 显示昵称
+	Save                     int    // 是否保存
+	ChatPwdOn                int    //是否开启聊天密码
+	RevokeRemind             int    //撤回提醒
+	JoinGroupRemind          int    // 进群提醒
+	Screenshot               int    //截屏通知
+	Receipt                  int    //消息是否回执
+	Flame                    int    // 是否开启阅后即焚
+	FlameSecond              int    // 阅后即焚秒数
+	Remark                   string // 群备注
+	AllowMemberPinnedMessage int    // 是否允许群成员置顶消息
 }
 
 // Model 群db model
 type Model struct {
-	GroupNo             string // 群编号
-	GroupType           int    // 群类型 0.普通群 1.超大群
-	Name                string // 群名称
-	Avatar              string // 群头像
-	Notice              string // 群公告
-	Creator             string // 创建者uid
-	Status              int    // 群状态
-	Version             int64  // 版本号
-	Forbidden           int    // 是否全员禁言
-	Invite              int    // 是否开启邀请确认 0.否 1.是
-	ForbiddenAddFriend  int    //群内禁止加好友
-	AllowViewHistoryMsg int    // 是否允许新成员查看历史消息
-	Category            string // 群分类
+	GroupNo                  string // 群编号
+	GroupType                int    // 群类型 0.普通群 1.超大群
+	Name                     string // 群名称
+	Avatar                   string // 群头像
+	Notice                   string // 群公告
+	Creator                  string // 创建者uid
+	Status                   int    // 群状态
+	Version                  int64  // 版本号
+	Forbidden                int    // 是否全员禁言
+	Invite                   int    // 是否开启邀请确认 0.否 1.是
+	ForbiddenAddFriend       int    //群内禁止加好友
+	AllowViewHistoryMsg      int    // 是否允许新成员查看历史消息
+	AllowMemberPinnedMessage int    // 是否允许群成员置顶消息
+	Category                 string // 群分类
 	db.BaseModel
 }
 

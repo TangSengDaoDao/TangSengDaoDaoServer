@@ -66,6 +66,7 @@ func (s *service) GetAppConfig() (*AppConfigResp, error) {
 		SendWelcomeMessageOn:           appConfigM.SendWelcomeMessageOn,
 		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
 		RegisterUserMustCompleteInfoOn: appConfigM.RegisterUserMustCompleteInfoOn,
+		ChannelPinnedMessageMaxCount:   appConfigM.ChannelPinnedMessageMaxCount,
 	}, nil
 }
 
@@ -138,4 +139,5 @@ type AppConfigResp struct {
 	SendWelcomeMessageOn           int    // 是否发送登录欢迎语
 	InviteSystemAccountJoinGroupOn int    // 是否允许邀请系统账号进入群聊
 	RegisterUserMustCompleteInfoOn int    // 是否要求注册用户必须填写完整信息
+	ChannelPinnedMessageMaxCount   int    // 频道置顶消息最大数量
 }

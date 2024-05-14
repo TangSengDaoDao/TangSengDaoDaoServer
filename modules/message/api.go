@@ -43,6 +43,7 @@ type Message struct {
 	conversationExtradb *conversationExtraDB
 	messageUserExtraDB  *messageUserExtraDB
 	remindersDB         *remindersDB
+	pinnedDB            *pinnedDB
 	userService         user.IService
 	groupService        group.IService
 	commonService       commonapi.IService
@@ -69,6 +70,7 @@ func New(ctx *config.Context) *Message {
 		channelOffsetDB:     newChannelOffsetDB(ctx),
 		deviceOffsetDB:      newDeviceOffsetDB(ctx.DB()),
 		remindersDB:         newRemindersDB(ctx),
+		pinnedDB:            newPinnedDB(ctx),
 		userService:         user.NewService(ctx),
 		commonService:       commonapi.NewService(ctx),
 		fileService:         file.NewService(ctx),
@@ -98,6 +100,9 @@ func (m *Message) Route(r *wkhttp.WKHttp) {
 		message.POST("/reminder/sync", m.reminderSync)            // 同步提醒
 		message.POST("/reminder/done", m.reminderDone)            // 提醒已处理完成
 		message.GET("/prohibit_words/sync", m.synccProhibitWords) // 同步违禁词
+		message.POST("/pinned", m.pinnedMessage)                  // 置顶消息
+		message.POST("/pinned/sync", m.syncPinnedMessage)         // 同步置顶消息
+		message.POST("/pinned/clear", m.clearPinnedMessage)       // 删除所有置顶消息
 	}
 	messages := r.Group("/v1/messages", m.ctx.AuthMiddleware(r))
 	{
@@ -1360,6 +1365,11 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		tx.Rollback()
 		m.Error("开启事件失败！", zap.Error(err))
 		c.ResponseError(errors.New("开启事件失败！"))
+		return
+	}
+	err = m.deletePinnedMessage(channelID, uint8(channelTypeI), messageIDs, loginUID, tx)
+	if err != nil {
+		c.ResponseError(err)
 		return
 	}
 	if err := tx.Commit(); err != nil {

@@ -100,5 +100,6 @@ type messageModel struct {
 	Payload   []byte
 	IsDeleted int
 	Signal    int
+	Expire    uint32
 	db.BaseModel
 }
