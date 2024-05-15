@@ -60,6 +60,12 @@ func (d *pinnedDB) queryWithChannelIDAndVersion(channelID string, channelType ui
 	return list, err
 }
 
+func (d *pinnedDB) queryCountWithChannel(channelID string, channelType uint8) (int64, error) {
+	var cn int64
+	_, err := d.session.Select("count(*)").From("pinned_message").Where("channel_id=? and channel_type=? and is_deleted=0", channelID, channelType).Load(&cn)
+	return cn, err
+}
+
 type pinnedMessageModel struct {
 	MessageId   string
 	ChannelID   string
