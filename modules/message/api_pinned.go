@@ -108,7 +108,13 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		isSendSystemMsg = true
 		isPinned = 1
 	} else {
-		pinnedMessage.IsDeleted = 1
+		if pinnedMessage.IsDeleted == 1 {
+			pinnedMessage.IsDeleted = 0
+			isPinned = 1
+		} else {
+			pinnedMessage.IsDeleted = 1
+			isPinned = 0
+		}
 		pinnedMessage.Version = time.Now().UnixMilli()
 		err = m.pinnedDB.update(pinnedMessage)
 		if err != nil {
@@ -117,7 +123,6 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 			c.ResponseError(errors.New("取消置顶消息错误"))
 			return
 		}
-		isPinned = 0
 	}
 	version := m.genMessageExtraSeq(fakeChannelID)
 	err = m.messageExtraDB.insertOrUpdatePinnedTx(&messageExtraModel{
