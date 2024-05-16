@@ -42,5 +42,6 @@ func newChannelSettingResp(m *channelSettingModel) *chservice.ChannelSettingResp
 		ChannelType:       m.ChannelType,
 		ParentChannelID:   m.ParentChannelID,
 		ParentChannelType: m.ParentChannelType,
+		OffsetMessageSeq:  m.OffsetMessageSeq,
 	}
 }

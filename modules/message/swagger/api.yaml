@@ -478,6 +478,48 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
+  /message/mutual:
+    delete:
+      tags:
+        - "message"
+      summary: "双向删除消息"
+      description: "双向删除消息 仅限自己发送成功和在群内是管理员群主身份的消息"
+      operationId: "mutual delete msgs"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "mutual delete msgs"
+          description: "删除消息数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              message_id:
+                type: string
+                description: "消息message ID"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              message_seq:
+                type: integer
+                description: "消息序号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /message/revoke:
     post:
       tags:

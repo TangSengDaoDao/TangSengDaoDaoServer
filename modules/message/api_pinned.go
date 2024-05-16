@@ -204,6 +204,7 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 			},
 			ChannelID:   req.ChannelID,
 			ChannelType: req.ChannelType,
+			FromUID:     loginUID,
 			Payload: []byte(util.ToJson(map[string]interface{}{
 				"from_uid":  loginUID,
 				"from_name": loginName,
@@ -309,7 +310,24 @@ func (m *Message) clearPinnedMessage(c *wkhttp.Context) {
 			c.ResponseError(errors.New("删除置顶消息错误"))
 			return
 		}
+
+		version := m.genMessageExtraSeq(fakeChannelID)
+		err = m.messageExtraDB.insertOrUpdatePinnedTx(&messageExtraModel{
+			MessageID:   msg.MessageId,
+			MessageSeq:  msg.MessageSeq,
+			ChannelID:   fakeChannelID,
+			ChannelType: req.ChannelType,
+			IsPinned:    0,
+			Version:     version,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("修改消息扩展置顶状态错误", zap.Error(err))
+			c.ResponseErrorf("修改消息扩展置顶状态错误", err)
+			return
+		}
 	}
+
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		c.ResponseErrorf("事务提交失败！", err)
@@ -370,7 +388,7 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		messageIds = append(messageIds, msg.MessageId)
 	}
 
-	resp, err := m.ctx.IMGetWithChannelAndSeqs(fakeChannelID, req.ChannelType, messageSeqs)
+	resp, err := m.ctx.IMGetWithChannelAndSeqs(req.ChannelID, req.ChannelType, loginUID, messageSeqs)
 	if err != nil {
 		m.Error("查询频道内的消息失败！", zap.Error(err), zap.String("req", util.ToJson(req)))
 		c.ResponseError(errors.New("查询频道内的消息失败！"))
@@ -431,7 +449,19 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询频道偏移量失败！"))
 		return
 	}
-
+	// 频道偏移
+	channelIds := make([]string, 0)
+	channelIds = append(channelIds, fakeChannelID)
+	channelSettings, err := m.channelService.GetChannelSettings(channelIds)
+	if err != nil {
+		m.Error("查询频道设置错误", zap.Error(err), zap.String("req", util.ToJson(req)))
+		c.ResponseError(errors.New("查询频道设置错误"))
+		return
+	}
+	var channelOffsetMessageSeq uint32 = 0
+	if len(channelSettings) > 0 && channelSettings[0].OffsetMessageSeq > 0 {
+		channelOffsetMessageSeq = channelSettings[0].OffsetMessageSeq
+	}
 	for _, message := range resp.Messages {
 		if channelOffsetM != nil && message.MessageSeq <= channelOffsetM.MessageSeq {
 			continue
@@ -440,7 +470,7 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		messageIDStr := strconv.FormatInt(message.MessageID, 10)
 		messageExtra := messageExtraMap[messageIDStr]
 		messageUserExtra := messageUserExtraMap[messageIDStr]
-		msgResp.from(message, loginUID, messageExtra, messageUserExtra, messageReactionMap[messageIDStr])
+		msgResp.from(message, loginUID, messageExtra, messageUserExtra, messageReactionMap[messageIDStr], channelOffsetMessageSeq)
 		list = append(list, msgResp)
 	}
 	pinnedMessageList := make([]*pinnedMessageResp, 0)

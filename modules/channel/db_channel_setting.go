@@ -35,11 +35,17 @@ func (c *channelSettingDB) insertOrAddMsgAutoDelete(channelID string, channelTyp
 	return err
 }
 
+func (c *channelSettingDB) insertOrAddOffsetMessageSeq(channelID string, channelType uint8, offsetMessageSeq uint32) error {
+	_, err := c.session.InsertBySql("insert into channel_setting (channel_id, channel_type, offset_message_seq) values (?, ?, ?) ON DUPLICATE KEY UPDATE offset_message_seq=VALUES(offset_message_seq)", channelID, channelType, offsetMessageSeq).Exec()
+	return err
+}
+
 type channelSettingModel struct {
 	ChannelID         string
 	ChannelType       uint8
 	ParentChannelID   string
 	ParentChannelType uint8
 	MsgAutoDelete     int64
+	OffsetMessageSeq  uint32
 	db.BaseModel
 }

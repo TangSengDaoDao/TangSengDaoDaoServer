@@ -57,6 +57,11 @@ func (m *messageExtraDB) insertOrUpdatePinnedTx(md *messageExtraModel, tx *dbr.T
 	return err
 }
 
+func (m *messageExtraDB) insertOrUpdateDeleted(md *messageExtraModel) error {
+	_, err := m.session.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,is_deleted,version) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE is_deleted=VALUES(is_deleted),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.IsDeleted, md.Version).Exec()
+	return err
+}
+
 // 是否存在相同编辑内容
 func (m *messageExtraDB) existContentEdit(messageID string, contentEditHash string) (bool, error) {
 	var count int
