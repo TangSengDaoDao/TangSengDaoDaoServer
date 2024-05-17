@@ -378,8 +378,12 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 	messageSeqs := make([]uint32, 0)
 	messageIds := make([]string, 0)
 	list := make([]*MsgSyncResp, 0)
+	pinnedMessageList := make([]*pinnedMessageResp, 0)
 	if len(pinnedMsgs) <= 0 {
-		c.Response(list)
+		c.Response(map[string]interface{}{
+			"pinned_messages": pinnedMessageList,
+			"messages":        list,
+		})
 		return
 	}
 
@@ -396,7 +400,10 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 	}
 
 	if resp == nil || len(resp.Messages) == 0 {
-		c.Response(list)
+		c.Response(map[string]interface{}{
+			"pinned_messages": pinnedMessageList,
+			"messages":        list,
+		})
 		return
 	}
 	// 消息全局扩张
@@ -473,7 +480,7 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		msgResp.from(message, loginUID, messageExtra, messageUserExtra, messageReactionMap[messageIDStr], channelOffsetMessageSeq)
 		list = append(list, msgResp)
 	}
-	pinnedMessageList := make([]*pinnedMessageResp, 0)
+
 	for _, msg := range pinnedMsgs {
 		messageUserExtra := messageUserExtraMap[msg.MessageId]
 		if messageUserExtra != nil && messageUserExtra.MessageIsDeleted == 1 {
