@@ -174,7 +174,12 @@ func (f *Friend) delete(c *wkhttp.Context) {
 	}
 	tx, err := f.ctx.DB().Begin()
 	util.CheckErr(err)
-
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 	version := f.ctx.GenSeq(common.FriendSeqKey)
 	// err = f.db.updateRelationshipTx(loginUID, uid, 1, 1, "", version, tx) // 不能删除sourceVercode 如果删除了 已有会话发起加好友会提示验证码不为空
 	err = f.db.updateRelationship2Tx(loginUID, uid, 1, 1, version, tx)

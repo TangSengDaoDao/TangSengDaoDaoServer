@@ -55,13 +55,18 @@ func (s *service) GetAppConfig() (*AppConfigResp, error) {
 	}
 
 	return &AppConfigResp{
-		RSAPublicKey:           appConfigM.RSAPublicKey,
-		Version:                appConfigM.Version,
-		SuperToken:             appConfigM.SuperToken,
-		SuperTokenOn:           appConfigM.SuperTokenOn,
-		WelcomeMessage:         appConfigM.WelcomeMessage,
-		NewUserJoinSystemGroup: appConfigM.NewUserJoinSystemGroup,
-		SearchByPhone:          appConfigM.SearchByPhone,
+		RSAPublicKey:                   appConfigM.RSAPublicKey,
+		Version:                        appConfigM.Version,
+		SuperToken:                     appConfigM.SuperToken,
+		SuperTokenOn:                   appConfigM.SuperTokenOn,
+		WelcomeMessage:                 appConfigM.WelcomeMessage,
+		NewUserJoinSystemGroup:         appConfigM.NewUserJoinSystemGroup,
+		SearchByPhone:                  appConfigM.SearchByPhone,
+		RegisterInviteOn:               appConfigM.RegisterInviteOn,
+		SendWelcomeMessageOn:           appConfigM.SendWelcomeMessageOn,
+		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
+		RegisterUserMustCompleteInfoOn: appConfigM.RegisterUserMustCompleteInfoOn,
+		ChannelPinnedMessageMaxCount:   appConfigM.ChannelPinnedMessageMaxCount,
 	}, nil
 }
 
@@ -123,11 +128,16 @@ func generateNums(len int, count int) []string {
 }
 
 type AppConfigResp struct {
-	RSAPublicKey           string
-	Version                int
-	SuperToken             string
-	SuperTokenOn           int
-	WelcomeMessage         string // 登录欢迎语
-	NewUserJoinSystemGroup int    // 新用户是否加入系统群聊
-	SearchByPhone          int    // 是否可通过手机号搜索
+	RSAPublicKey                   string
+	Version                        int
+	SuperToken                     string
+	SuperTokenOn                   int
+	WelcomeMessage                 string // 登录欢迎语
+	NewUserJoinSystemGroup         int    // 新用户是否加入系统群聊
+	SearchByPhone                  int    // 是否可通过手机号搜索
+	RegisterInviteOn               int    // 是否开启注册邀请
+	SendWelcomeMessageOn           int    // 是否发送登录欢迎语
+	InviteSystemAccountJoinGroupOn int    // 是否允许邀请系统账号进入群聊
+	RegisterUserMustCompleteInfoOn int    // 是否要求注册用户必须填写完整信息
+	ChannelPinnedMessageMaxCount   int    // 频道置顶消息最大数量
 }

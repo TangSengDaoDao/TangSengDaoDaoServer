@@ -80,7 +80,7 @@ func New(ctx *config.Context) *Webhook {
 	}
 	if firebase.PackageName != "" {
 		pushMap[common.DeviceTypeFirebase] = map[string]Push{
-			ctx.GetConfig().Push.FIREBASE.PackageName: NewFIREBASEPush(firebase.PackageName, firebase.JsonPath, firebase.ProjectId, ""),
+			ctx.GetConfig().Push.FIREBASE.PackageName: NewFIREBASEPush(firebase.JsonPath, firebase.PackageName, firebase.ProjectId, ""),
 		}
 	}
 	return &Webhook{

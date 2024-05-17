@@ -187,7 +187,7 @@ paths:
               channel_id:
                 type: string
                 description: "频道ID"
-              from_uid: 
+              from_uid:
                 type: string
                 description: "发送者 群聊为空 单聊则为消息发送者uid，注意channel_id和from_uid不能相同"
               channel_type:
@@ -196,11 +196,11 @@ paths:
               list:
                 type: array
                 items:
-                  properties: 
-                    message_id: 
+                  properties:
+                    message_id:
                       type: string
                       description: "消息ID"
-                    message_seq: 
+                    message_seq:
                       type: integer
                       description: "消息序号"
       responses:
@@ -467,6 +467,48 @@ paths:
                 message_seq:
                   type: integer
                   description: "消息序号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /message/mutual:
+    delete:
+      tags:
+        - "message"
+      summary: "双向删除消息"
+      description: "双向删除消息 仅限自己发送成功和在群内是管理员群主身份的消息"
+      operationId: "mutual delete msgs"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "mutual delete msgs"
+          description: "删除消息数据"
+          required: true
+          schema:
+            type: object
+            properties:
+              message_id:
+                type: string
+                description: "消息message ID"
+              channel_id:
+                type: string
+                description: "频道ID"
+              channel_type:
+                type: integer
+                description: "频道类型"
+              message_seq:
+                type: integer
+                description: "消息序号"
       responses:
         200:
           description: "返回"
@@ -1311,7 +1353,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-  /message/send: 
+  /message/send:
     post:
       tags:
         - "message"
@@ -1340,7 +1382,7 @@ paths:
                 type: integer
                 format: int
                 description: "接受channel类型"
-              payload: 
+              payload:
                 type: object
                 description: "消息正文"
               is_verify:
@@ -1350,7 +1392,133 @@ paths:
         200:
           description: "返回"
           schema:
-             $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /message/pinned:
+    post:
+      tags:
+        - "message"
+      summary: "置顶或取消置顶消息"
+      description: "置顶或取消置顶消息"
+      operationId: "pin or unpin message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "object"
+          description: "置顶或取消置顶消息参数"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "聊天频道ID"
+              channel_type:
+                type: integer
+                description: "聊天频道类型"
+              message_id:
+                type: string
+                description: "被置顶或取消置顶的消息ID"
+              message_seq:
+                type: integer
+                description: "被置顶或取消置顶的消息序号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /message/pinned/sync:
+    post:
+      tags:
+        - "message"
+      summary: "同步置顶消息"
+      description: "同步置顶消息"
+      operationId: "sync pinned message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "object"
+          description: "置顶或取消置顶消息参数"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "聊天频道ID"
+              channel_type:
+                type: integer
+                description: "聊天频道类型"
+              version:
+                type: integer
+                description: "增量同步版本号"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  $ref: "#/definitions/syncMessage"
+              pinned_messages:
+                type: array
+                items:
+                  $ref: "#/definitions/pinnedMessage"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  /message/pinned/clear:
+    post:
+      tags:
+        - "message"
+      summary: "删除所有置顶消息"
+      description: "删除所有置顶消息"
+      operationId: "clear pinned message"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "object"
+          description: "删除所有置顶消息参数"
+          required: true
+          schema:
+            type: object
+            properties:
+              channel_id:
+                type: string
+                description: "聊天频道ID"
+              channel_type:
+                type: integer
+                description: "聊天频道类型"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -1607,6 +1775,33 @@ definitions:
       created_at:
         type: string
         description: "操作时间"
+  pinnedMessage:
+    type: "object"
+    properties:
+      channel_id:
+        type: string
+        description: "频道ID"
+      channel_type:
+        type: integer
+        description: "频道类型"
+      message_id:
+        type: string
+        description: "消息ID"
+      message_seq:
+        type: integer
+        description: "消息序号"
+      is_deleted:
+        type: integer
+        description: "是否已删除 1.是"
+      version:
+        type: integer
+        description: "版本号"
+      created_at:
+        type: string
+        description: "置顶时间"
+      updated_at:
+        type: string
+        description: "更新时间"
   response:
     type: "object"
     properties:

@@ -18,6 +18,8 @@ const (
 	TypeCommon Type = "common"
 	// TypeChatBg 聊天背景
 	TypeChatBg Type = "chatbg"
+	// TypeDownload 下载文件目录
+	TypeDownload = "download"
 	// TypeWorkplaceBanner
 	TypeWorkplaceBanner Type = "workplacebanner"
 	// TypeWorkplaceAppIcon

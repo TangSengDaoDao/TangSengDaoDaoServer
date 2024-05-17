@@ -139,7 +139,7 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		}
 	}()
 	publicIP := util.GetClientPublicIP(c.Request)
-	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, tx, func() error {
+	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, "", tx, func() error {
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()

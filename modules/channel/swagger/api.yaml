@@ -87,6 +87,39 @@ paths:
           schema:
             $ref: "#/definitions/response"
       security:
+        - token: []     
+  /channels/{channel_id}/{channel_type}/message/clear:
+    post:
+      tags:
+        - "channel"
+      summary: "清空频道消息"
+      description: "清空频道消息【群仅管理员和群主可操作】"
+      operationId: "clearChannelMessage"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "path"
+          name: "channel_id"
+          type: string
+          description: "频道ID"
+          required: true
+        - in: "path"
+          name: "channel_type"
+          type: integer
+          description: "channel类型"
+          required: true
+      responses:
+        200:
+          description: "返回"
+          schema:
+              $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
         - token: []      
 securityDefinitions:
   token:

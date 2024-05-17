@@ -255,4 +255,13 @@ var groupUpdateActionMap = map[string]groupUpdateActionFnc{
 		// 通知群内成员更新频道
 		return ctx.g.ctx.SendChannelUpdateToGroup(groupNo)
 	},
+	common.GroupAllowMemberPinnedMessage: func(ctx *groupUpdateContext, value interface{}) error {
+		if err := ctx.checkPermissions(); err != nil {
+			return err
+		}
+		ctx.groupModel.AllowMemberPinnedMessage = int(value.(float64))
+		groupNo := ctx.groupModel.GroupNo
+		// 通知群内成员更新频道
+		return ctx.g.ctx.SendChannelUpdateToGroup(groupNo)
+	},
 }

@@ -72,6 +72,12 @@ func (d *DB) DeleteMember(groupNo string, uid string, version int64) error {
 	return err
 }
 
+// 真实删除群成员
+func (d *DB) deleteMembersWithGroupNOTx(groupNo string, tx *dbr.Tx) error {
+	_, err := tx.DeleteFrom("group_member").Where("group_no=?", groupNo).Exec()
+	return err
+}
+
 // QuerySecondOldestMember 查询群里第二长老
 func (d *DB) QuerySecondOldestMember(groupNo string) (*MemberModel, error) {
 	var memberModel *MemberModel
@@ -362,6 +368,11 @@ func (d *DB) queryMembersWithGroupNo(groupNo string) ([]*MemberDetailModel, erro
 	return details, err
 }
 
+func (d *DB) queryMemberWithGroupNoAndUID(groupNo, uid string) (*MemberDetailModel, error) {
+	var detail *MemberDetailModel
+	_, err := d.session.Select("group_member.id,group_member.vercode,group_member.uid,group_member.status,group_member.group_no,group_member.remark,group_member.role,IFNULL(user.name,'') name,group_member.is_deleted,group_member.version,group_member.created_at,group_member.updated_at").From("group_member").LeftJoin("user", "group_member.uid=user.uid").Where("group_member.group_no=? and group_member.uid=? and group_member.is_deleted=0", groupNo, uid).Load(&detail)
+	return detail, err
+}
 func (d *DB) queryBlacklistMemberUIDsWithGroupNo(groupNo string) ([]string, error) {
 	var uids []string
 	_, err := d.session.Select("group_member.uid").From("group_member").Where("group_member.group_no=? and group_member.is_deleted=0 and status=?", groupNo, common.GroupMemberStatusBlacklist).Load(&uids)
@@ -456,35 +467,37 @@ func (d *DB) queryGroupAvatarIsUpload(groupNo string) (int, error) {
 // DetailModel 群详情
 type DetailModel struct {
 	Model
-	Mute            int    // 免打扰
-	Top             int    // 置顶
-	ShowNick        int    // 显示昵称
-	Save            int    // 是否保存
-	ChatPwdOn       int    //是否开启聊天密码
-	RevokeRemind    int    //撤回提醒
-	JoinGroupRemind int    // 进群提醒
-	Screenshot      int    //截屏通知
-	Receipt         int    //消息是否回执
-	Flame           int    // 是否开启阅后即焚
-	FlameSecond     int    // 阅后即焚秒数
-	Remark          string // 群备注
+	Mute                     int    // 免打扰
+	Top                      int    // 置顶
+	ShowNick                 int    // 显示昵称
+	Save                     int    // 是否保存
+	ChatPwdOn                int    //是否开启聊天密码
+	RevokeRemind             int    //撤回提醒
+	JoinGroupRemind          int    // 进群提醒
+	Screenshot               int    //截屏通知
+	Receipt                  int    //消息是否回执
+	Flame                    int    // 是否开启阅后即焚
+	FlameSecond              int    // 阅后即焚秒数
+	Remark                   string // 群备注
+	AllowMemberPinnedMessage int    // 是否允许群成员置顶消息
 }
 
 // Model 群db model
 type Model struct {
-	GroupNo             string // 群编号
-	GroupType           int    // 群类型 0.普通群 1.超大群
-	Name                string // 群名称
-	Avatar              string // 群头像
-	Notice              string // 群公告
-	Creator             string // 创建者uid
-	Status              int    // 群状态
-	Version             int64  // 版本号
-	Forbidden           int    // 是否全员禁言
-	Invite              int    // 是否开启邀请确认 0.否 1.是
-	ForbiddenAddFriend  int    //群内禁止加好友
-	AllowViewHistoryMsg int    // 是否允许新成员查看历史消息
-	Category            string // 群分类
+	GroupNo                  string // 群编号
+	GroupType                int    // 群类型 0.普通群 1.超大群
+	Name                     string // 群名称
+	Avatar                   string // 群头像
+	Notice                   string // 群公告
+	Creator                  string // 创建者uid
+	Status                   int    // 群状态
+	Version                  int64  // 版本号
+	Forbidden                int    // 是否全员禁言
+	Invite                   int    // 是否开启邀请确认 0.否 1.是
+	ForbiddenAddFriend       int    //群内禁止加好友
+	AllowViewHistoryMsg      int    // 是否允许新成员查看历史消息
+	AllowMemberPinnedMessage int    // 是否允许群成员置顶消息
+	Category                 string // 群分类
 	db.BaseModel
 }
 

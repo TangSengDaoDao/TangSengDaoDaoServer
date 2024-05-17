@@ -548,6 +548,9 @@ paths:
               name:
                 type: string
                 description: "昵称"
+              invite_code:
+                type: string
+                description: "邀请码 开启邀请码注册后必填"
               device:
                 type: object
                 properties:
@@ -1643,7 +1646,7 @@ paths:
         - "user"
       summary: "客服列表"
       description: "客服列表"
-      operationId: "userGet"
+      operationId: "customerservices list"
       consumes:
         - "application/json"
       produces:
@@ -1816,6 +1819,11 @@ paths:
           name: "uid"
           type: string
           description: "用户uid"
+          required: true
+        - in: "query"
+          name: "group_no"
+          type: string
+          description: "查看在某个群内的用户资料时需传入"
           required: true
       responses:
         200:

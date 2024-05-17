@@ -194,10 +194,15 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 		return
 	}
 	type reqVO struct {
-		RevokeSecond           int    `json:"revoke_second"`
-		WelcomeMessage         string `json:"welcome_message"`
-		NewUserJoinSystemGroup int    `json:"new_user_join_system_group"`
-		SearchByPhone          int    `json:"search_by_phone"`
+		RevokeSecond                   int    `json:"revoke_second"`
+		WelcomeMessage                 string `json:"welcome_message"`
+		NewUserJoinSystemGroup         int    `json:"new_user_join_system_group"`
+		SearchByPhone                  int    `json:"search_by_phone"`
+		RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
+		SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
+		InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
+		RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
+		ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
@@ -215,6 +220,11 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 	configMap["welcome_message"] = req.WelcomeMessage
 	configMap["new_user_join_system_group"] = req.NewUserJoinSystemGroup
 	configMap["search_by_phone"] = req.SearchByPhone
+	configMap["register_invite_on"] = req.RegisterInviteOn
+	configMap["send_welcome_message_on"] = req.SendWelcomeMessageOn
+	configMap["invite_system_account_join_group_on"] = req.InviteSystemAccountJoinGroupOn
+	configMap["register_user_must_complete_info_on"] = req.RegisterUserMustCompleteInfoOn
+	configMap["channel_pinned_message_max_count"] = req.ChannelPinnedMessageMaxCount
 	err = m.appconfigDB.updateWithMap(configMap, appConfigM.Id)
 	if err != nil {
 		m.Error("修改app配置信息错误", zap.Error(err))
@@ -239,11 +249,21 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 	var newUserJoinSystemGroup = 1
 	var welcomeMessage = ""
 	var searchByPhone = 1
+	var registerInviteOn = 0
+	var sendWelcomeMessageOn = 0
+	var inviteSystemAccountJoinGroupOn = 0
+	var registerUserMustCompleteInfoOn = 0
+	var channelPinnedMessageMaxCount = 10
 	if appconfig != nil {
 		revokeSecond = appconfig.RevokeSecond
 		welcomeMessage = appconfig.WelcomeMessage
 		newUserJoinSystemGroup = appconfig.NewUserJoinSystemGroup
 		searchByPhone = appconfig.SearchByPhone
+		registerInviteOn = appconfig.RegisterInviteOn
+		sendWelcomeMessageOn = appconfig.SendWelcomeMessageOn
+		inviteSystemAccountJoinGroupOn = appconfig.InviteSystemAccountJoinGroupOn
+		registerUserMustCompleteInfoOn = appconfig.RegisterUserMustCompleteInfoOn
+		channelPinnedMessageMaxCount = appconfig.ChannelPinnedMessageMaxCount
 	}
 	if revokeSecond == 0 {
 		revokeSecond = 120
@@ -252,18 +272,28 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 		welcomeMessage = m.ctx.GetConfig().WelcomeMessage
 	}
 	c.Response(&managerAppConfigResp{
-		RevokeSecond:           revokeSecond,
-		WelcomeMessage:         welcomeMessage,
-		NewUserJoinSystemGroup: newUserJoinSystemGroup,
-		SearchByPhone:          searchByPhone,
+		RevokeSecond:                   revokeSecond,
+		WelcomeMessage:                 welcomeMessage,
+		NewUserJoinSystemGroup:         newUserJoinSystemGroup,
+		SearchByPhone:                  searchByPhone,
+		RegisterInviteOn:               registerInviteOn,
+		SendWelcomeMessageOn:           sendWelcomeMessageOn,
+		InviteSystemAccountJoinGroupOn: inviteSystemAccountJoinGroupOn,
+		RegisterUserMustCompleteInfoOn: registerUserMustCompleteInfoOn,
+		ChannelPinnedMessageMaxCount:   channelPinnedMessageMaxCount,
 	})
 }
 
 type managerAppConfigResp struct {
-	RevokeSecond           int    `json:"revoke_second"`
-	WelcomeMessage         string `json:"welcome_message"`
-	NewUserJoinSystemGroup int    `json:"new_user_join_system_group"`
-	SearchByPhone          int    `json:"search_by_phone"`
+	RevokeSecond                   int    `json:"revoke_second"`
+	WelcomeMessage                 string `json:"welcome_message"`
+	NewUserJoinSystemGroup         int    `json:"new_user_join_system_group"`
+	SearchByPhone                  int    `json:"search_by_phone"`
+	RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
+	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
+	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
+	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
+	ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
 }
 
 type managerAppModule struct {

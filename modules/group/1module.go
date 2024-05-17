@@ -48,7 +48,9 @@ func init() {
 						if groupInfo.GroupType == GroupTypeSuper {
 							channelInfoMap["large"] = 1
 						}
-
+						if groupInfo.Status == GroupStatusDisband {
+							channelInfoMap["disband"] = 1
+						}
 					}
 					return channelInfoMap, nil
 				},
@@ -94,6 +96,30 @@ func init() {
 					}
 					return newChannelRespWithGroupResp(groupResp), nil
 				},
+				IsShowShortNo: func(groupNO, uid, loginUID string) (bool, string, error) {
+					if groupNO == "" || uid == "" || loginUID == "" {
+						return false, "", nil
+					}
+					groupInfo, err := api.groupService.GetGroupWithGroupNo(groupNO)
+					if err != nil {
+						return false, "", err
+					}
+					if groupInfo == nil {
+						return false, "", nil
+					}
+					member, err := api.groupService.GetMember(groupNO, uid)
+					if err != nil {
+						return false, "", err
+					}
+					if member == nil {
+						return false, "", nil
+					}
+					if groupInfo.ForbiddenAddFriend == 0 {
+						return true, member.Vercode, nil
+					}
+					isCreatorOrManager, err := api.groupService.IsCreatorOrManager(groupNO, loginUID)
+					return isCreatorOrManager, member.Vercode, err
+				},
 			},
 		}
 	})
@@ -135,7 +161,7 @@ func newChannelRespWithGroupResp(groupResp *GroupResp) *model.ChannelResp {
 	extraMap["chat_pwd_on"] = groupResp.ChatPwdOn
 	extraMap["allow_view_history_msg"] = groupResp.AllowViewHistoryMsg
 	extraMap["group_type"] = groupResp.GroupType
-
+	extraMap["allow_member_pinned_message"] = groupResp.AllowMemberPinnedMessage
 	if groupResp.MemberCount != 0 {
 		extraMap["member_count"] = groupResp.MemberCount
 	}

@@ -30,6 +30,8 @@ const (
 	GroupAvatarUpdate string = "group.avatar.update"
 	// GroupMemberRemove 群成员移除
 	GroupMemberRemove string = "group.memberremove"
+	// GroupDisband 群解散
+	GroupDisband string = "group.disband"
 	// FriendApply 好友申请
 	FriendApply string = "friend.apply"
 	// GroupMemberInviteRequest 群邀请请求

@@ -357,6 +357,7 @@ func (m *Manager) addUser(c *wkhttp.Context) {
 	userModel.Status = int(common.UserAvailable)
 	err = m.userDB.insertTx(userModel, tx)
 	if err != nil {
+		tx.Rollback()
 		m.Error("添加用户错误", zap.String("username", req.Phone))
 		c.ResponseError(err)
 		return
@@ -687,16 +688,10 @@ func (m *Manager) liftBanUser(c *wkhttp.Context) {
 		c.ResponseError(errors.New("更新IM的token失败！"))
 		return
 	}
-	token := util.GenerUUID()
-	_, err = m.ctx.UpdateIMToken(config.UpdateIMTokenReq{
-		UID:         userInfo.UID,
-		Token:       token,
-		DeviceFlag:  config.APP,
-		DeviceLevel: config.DeviceLevelMaster,
-	})
+	err = m.ctx.QuitUserDevice(userInfo.UID, -1)
 	if err != nil {
-		m.Error("更新用户的ban状态失败！", zap.Error(err), zap.String("uid", uid))
-		c.ResponseError(errors.New("更新用户的ban状态失败！"))
+		m.Error("下线用户所有登录设备错误", zap.Error(err), zap.String("uid", uid))
+		c.ResponseError(errors.New("下线用户所有登录设备错误"))
 		return
 	}
 	c.ResponseOK()

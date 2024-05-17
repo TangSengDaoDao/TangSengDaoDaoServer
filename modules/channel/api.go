@@ -43,7 +43,90 @@ func (ch *Channel) Route(r *wkhttp.WKHttp) {
 		auth.GET("/channel/state", ch.state)
 		auth.GET("/channels/:channel_id/:channel_type", ch.channelGet)                                  // 获取频道信息
 		auth.POST("/channels/:channel_id/:channel_type/message/autodelete", ch.setAutoDeleteForMessage) // 设置消息定时删除时间
+		auth.POST("/channels/:channel_id/:channel_type/message/clear", ch.clearChannelMessages)         // 清空频道消息
 	}
+}
+
+func (ch *Channel) clearChannelMessages(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	channelID := c.Param("channel_id")
+	channelTypeI64, _ := strconv.ParseInt(c.Param("channel_type"), 10, 64)
+	channelType := uint8(channelTypeI64)
+	if channelID == "" {
+		c.ResponseError(errors.New("频道Id不能为空"))
+		return
+	}
+	modules := register.GetModules(ch.ctx)
+	var err error
+	var channelResp *model.ChannelResp
+	for _, m := range modules {
+		if m.BussDataSource.ChannelGet != nil {
+			channelResp, err = m.BussDataSource.ChannelGet(channelID, channelType, loginUID)
+			if err != nil {
+				if errors.Is(err, register.ErrDatasourceNotProcess) {
+					continue
+				}
+				ch.Error("查询频道失败！", zap.Error(err))
+				c.ResponseError(err)
+				return
+			}
+			break
+		}
+	}
+	if channelResp == nil {
+		ch.Error("频道不存在！", zap.String("channel_id", channelID), zap.Uint8("channelType", channelType))
+		c.ResponseError(errors.New("频道不存在！"))
+		return
+	}
+	fakeChannelID := channelID
+	if channelType == common.ChannelTypePerson.Uint8() {
+		fakeChannelID = common.GetFakeChannelIDWith(loginUID, channelID)
+	} else {
+		isCreatorOrManager, err := ch.groupService.IsCreatorOrManager(channelID, loginUID)
+		if err != nil {
+			c.ResponseError(errors.New("查询群的创建者或管理员错误"))
+			ch.Error("查询群的创建者或管理员错误", zap.Error(err))
+			return
+		}
+		if !isCreatorOrManager {
+			c.ResponseError(errors.New("没有权限设置"))
+			return
+		}
+	}
+	channelMaxSeqResp, err := ch.ctx.IMGetChannelMaxSeq(channelID, channelType)
+	if err != nil {
+		ch.Error("查询频道最大序列号失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询频道最大序列号失败！"))
+		return
+	}
+	var maxSeq uint32 = 0
+	if channelMaxSeqResp != nil {
+		maxSeq = channelMaxSeqResp.MessageSeq
+	}
+	if err := ch.channelSettingDB.insertOrAddOffsetMessageSeq(fakeChannelID, channelType, maxSeq); err != nil {
+		ch.Error("设置频道最大偏移序列号失败", zap.Error(err))
+		c.ResponseError(errors.New("设置频道最大偏移序列号失败"))
+		return
+	}
+	err = ch.ctx.SendCMD(config.MsgCMDReq{
+		NoPersist:   false,
+		ChannelID:   channelID,
+		ChannelType: channelType,
+		FromUID:     loginUID,
+		CMD:         common.CMDMessageErase,
+		Param: map[string]interface{}{
+			"erase_type":   "all", // "all" | "from"
+			"channel_id":   channelID,
+			"channel_type": channelType,
+			"from_uid":     loginUID,
+		},
+	})
+	if err != nil {
+		ch.Error("发送清空频道聊天记录命令失败！", zap.String("channel_id", channelID), zap.Error(err))
+		c.ResponseError(errors.New("发送清空频道聊天记录命令失败！"))
+		return
+	}
+	c.ResponseOK()
 }
 
 func (ch *Channel) channelGet(c *wkhttp.Context) {

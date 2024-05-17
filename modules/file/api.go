@@ -1,10 +1,13 @@
 package file
 
 import (
+	"crypto/sha512"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -113,6 +116,11 @@ func (f *File) getFilePath(c *wkhttp.Context) {
 func (f *File) uploadFile(c *wkhttp.Context) {
 	uploadPath := c.Query("path")
 	fileType := c.Query("type")
+	signature := c.Query("signature") // 是否返回签名
+	var signatureInt int64 = 0
+	if signature != "" {
+		signatureInt, _ = strconv.ParseInt(signature, 10, 64)
+	}
 	contentType := c.DefaultPostForm("contenttype", "application/octet-stream")
 	err := f.checkReq(Type(fileType), uploadPath)
 	if err != nil {
@@ -129,20 +137,53 @@ func (f *File) uploadFile(c *wkhttp.Context) {
 	if !strings.HasPrefix(path, "/") {
 		path = fmt.Sprintf("/%s", path)
 	}
+	var sign []byte
+	if signatureInt == 1 {
+		// bytes, err := ioutil.ReadAll(file)
+		// if err != nil {
+		// 	f.Error("读取文件错误", zap.Error(err))
+		// 	c.ResponseError(errors.New("读取文件错误"))
+		// 	return
+		// }
+		h := sha512.New()
+		_, err := io.Copy(h, file)
+		if err != nil {
+			f.Error("签名复制文件错误", zap.Error(err))
+			c.ResponseError(errors.New("签名复制文件错误"))
+			return
+		}
+		sign = h.Sum(nil)
+		//	sign = sha512.Sum512(bytes)
+
+	}
 	_, err = f.service.UploadFile(fmt.Sprintf("%s%s", fileType, path), contentType, func(w io.Writer) error {
-		_, err := io.Copy(w, file)
+		_, err := file.Seek(0, io.SeekStart)
+		if err != nil {
+			f.Error("设置文件偏移量错误", zap.Error(err))
+			return err
+		}
+		_, err = io.Copy(w, file)
 		return err
 	})
+
 	defer file.Close()
 	if err != nil {
 		f.Error("上传文件失败！", zap.Error(err))
 		c.ResponseError(errors.New("上传文件失败！"))
 		return
 	}
-
-	c.Response(map[string]string{
-		"path": fmt.Sprintf("file/preview/%s%s", fileType, path),
-	})
+	if signatureInt == 1 {
+		encoded := base64.StdEncoding.EncodeToString(sign[:])
+		fmt.Print("编码文件", encoded)
+		c.Response(map[string]interface{}{
+			"path":   fmt.Sprintf("file/preview/%s%s", fileType, path),
+			"sha512": encoded,
+		})
+	} else {
+		c.Response(map[string]string{
+			"path": fmt.Sprintf("file/preview/%s%s", fileType, path),
+		})
+	}
 }
 
 // 获取文件
@@ -174,7 +215,7 @@ func (f *File) checkReq(fileType Type, path string) error {
 	if path == "" && fileType != TypeMomentCover && fileType != TypeSticker {
 		return errors.New("上传路径不能为空")
 	}
-	if fileType != TypeChat && fileType != TypeMoment && fileType != TypeMomentCover && fileType != TypeSticker && fileType != TypeReport && fileType != TypeChatBg && fileType != TypeCommon {
+	if fileType != TypeChat && fileType != TypeMoment && fileType != TypeMomentCover && fileType != TypeSticker && fileType != TypeReport && fileType != TypeChatBg && fileType != TypeCommon && fileType != TypeDownload {
 		return errors.New("文件类型错误")
 	}
 	return nil

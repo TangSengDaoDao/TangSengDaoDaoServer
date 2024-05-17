@@ -44,7 +44,7 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	common := r.Group("/v1/common", cn.ctx.AuthMiddleware(r))
 	{
 		common.POST("/appversion", cn.addAppVersion)             // 添加APP版本
-		common.GET("/appversion/:os/:version", cn.getNewVersion) //获取最新版本
+		common.GET("/appversion/:os/:version", cn.getNewVersion) // 获取最新版本
 		common.GET("/appversion/list", cn.appVersionList)        // 版本列表
 		common.GET("/chatbg", cn.chatBgList)                     // 聊天背景列表
 		common.GET("/appmodule", cn.appModule)                   // app模块列表
@@ -53,9 +53,10 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	{
 		commonNoAuth.GET("/countries", cn.countriesList)
 
-		commonNoAuth.GET("/appconfig", cn.appConfig)          // app配置
-		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)  // 获取后台运行引导视频
-		commonNoAuth.GET("/updater/:os/:version", cn.updater) // 版本更新检查（兼容tauri）
+		commonNoAuth.GET("/appconfig", cn.appConfig)           // app配置
+		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)   // 获取后台运行引导视频
+		commonNoAuth.GET("/updater/:os/:version", cn.updater)  // 版本更新检查（兼容tauri）
+		commonNoAuth.GET("/pcupdater/:os", cn.getPCNewVersion) // pc版本更新检查
 	}
 
 	r.GET("/v1/health", func(c *wkhttp.Context) {
@@ -117,6 +118,40 @@ func (cn *Common) getKeepAliveVideo(c *wkhttp.Context) {
 	c.Writer.Write(videoBytes)
 }
 
+// 获取pc最新版本
+func (cn *Common) getPCNewVersion(c *wkhttp.Context) {
+	os := c.Param("os")
+	tempOS := ""
+	if os == "latest-mac.yml" {
+		tempOS = "mac"
+	}
+	if os == "latest-linux.yml" {
+		tempOS = "linx"
+	}
+	if os == "latest.yml" {
+		tempOS = "windows"
+	}
+	model, err := cn.db.queryNewVersion(tempOS)
+	if err != nil {
+		cn.Error("查询最新版本错误", zap.Error(err))
+		c.ResponseError(errors.New("查询最新版本错误"))
+		return
+	}
+	if model == nil {
+		c.Status(http.StatusNoContent)
+		return
+	}
+	downloadURL := fmt.Sprintf("%s/%s", cn.ctx.GetConfig().External.APIBaseURL, model.DownloadURL)
+	c.JSON(http.StatusOK, gin.H{
+		"version":      model.AppVersion,
+		"path":         downloadURL,
+		"sha512":       model.Signature,
+		"releaseNotes": model.UpdateDesc,
+	})
+	// if os == "latest-mac.yml" || os == "latest-linux.yml" || os == "latest.yml" {
+
+	// }
+}
 func (cn *Common) updater(c *wkhttp.Context) {
 	os := c.Param("os")
 	oldVersion := c.Param("version")
@@ -131,7 +166,15 @@ func (cn *Common) updater(c *wkhttp.Context) {
 		c.Status(http.StatusNoContent)
 		return
 	}
-
+	if os == "latest-mac.yml" || os == "latest-linux.yml" || os == "latest.yml" {
+		c.JSON(http.StatusOK, gin.H{
+			"version":      model.AppVersion,
+			"path":         model.DownloadURL,
+			"sha512":       model.Signature,
+			"releaseNotes": model.UpdateDesc,
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"url":       model.DownloadURL,
 		"version":   model.AppVersion,
@@ -281,11 +324,15 @@ func (cn *Common) appConfig(c *wkhttp.Context) {
 	}
 
 	c.JSON(http.StatusOK, &appConfigResp{
-		Version:        appConfigM.Version,
-		PhoneSearchOff: phoneSearchOff,
-		ShortnoEditOff: shortnoEditOff,
-		WebURL:         cn.ctx.GetConfig().External.WebLoginURL,
-		RevokeSecond:   revokeSecond,
+		Version:                        appConfigM.Version,
+		PhoneSearchOff:                 phoneSearchOff,
+		ShortnoEditOff:                 shortnoEditOff,
+		WebURL:                         cn.ctx.GetConfig().External.WebLoginURL,
+		RevokeSecond:                   revokeSecond,
+		RegisterInviteOn:               appConfigM.RegisterInviteOn,
+		SendWelcomeMessageOn:           appConfigM.SendWelcomeMessageOn,
+		InviteSystemAccountJoinGroupOn: appConfigM.InviteSystemAccountJoinGroupOn,
+		RegisterUserMustCompleteInfoOn: appConfigM.RegisterUserMustCompleteInfoOn,
 	})
 }
 
@@ -316,6 +363,7 @@ func (cn *Common) addAppVersion(c *wkhttp.Context) {
 		IsForce:     req.IsForce,
 		UpdateDesc:  req.UpdateDesc,
 		DownloadURL: req.DownloadURL,
+		Signature:   req.Signature,
 	})
 	if err != nil {
 		cn.Error("添加更新记录错误", zap.Error(err))
@@ -434,12 +482,16 @@ type chatBgResp struct {
 }
 
 type appConfigResp struct {
-	Version        int    `json:"version"`
-	WebURL         string `json:"web_url"`
-	PhoneSearchOff int    `json:"phone_search_off"`
-	ShortnoEditOff int    `json:"shortno_edit_off"`
-	RevokeSecond   int    `json:"revoke_second"`
-	AppleSignIn    int    `json:"apple_sign_in"`
+	Version                        int    `json:"version"`
+	WebURL                         string `json:"web_url"`
+	PhoneSearchOff                 int    `json:"phone_search_off"`
+	ShortnoEditOff                 int    `json:"shortno_edit_off"`
+	RevokeSecond                   int    `json:"revoke_second"`
+	AppleSignIn                    int    `json:"apple_sign_in"`
+	RegisterInviteOn               int    `json:"register_invite_on"`                  // 开启注册邀请机制
+	SendWelcomeMessageOn           int    `json:"send_welcome_message_on"`             // 开启注册登录发送欢迎语
+	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
+	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
 }
 
 type appVersionReq struct {
@@ -448,6 +500,7 @@ type appVersionReq struct {
 	IsForce     int    `json:"is_force"`     // 是否强制更新
 	UpdateDesc  string `json:"update_desc"`  // 更新说明
 	DownloadURL string `json:"download_url"` // 下载地址
+	Signature   string `json:"signature"`    // 文件签名
 }
 
 type appVersionResp struct {
