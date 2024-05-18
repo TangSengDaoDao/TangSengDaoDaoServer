@@ -47,6 +47,27 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 	fakeChannelID := req.ChannelID
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(loginUID, req.ChannelID)
+	} else {
+		groupInfo, err := m.groupService.GetGroupDetail(req.ChannelID, loginUID)
+		if err != nil {
+			m.Error("查询群组信息错误", zap.Error(err))
+			c.ResponseError(errors.New("查询群组信息错误"))
+			return
+		}
+		if groupInfo == nil || groupInfo.Status != 1 {
+			c.ResponseError(errors.New("群不存在或已删除"))
+			return
+		}
+		isCreatorOrManager, err := m.groupService.IsCreatorOrManager(req.ChannelID, loginUID)
+		if err != nil {
+			m.Error("查询用户在群内权限错误", zap.Error(err))
+			c.ResponseError(errors.New("查询用户在群内权限错误"))
+			return
+		}
+		if !isCreatorOrManager && groupInfo.AllowMemberPinnedMessage == 0 {
+			c.ResponseError(errors.New("普通成员不允许置顶消息"))
+			return
+		}
 	}
 	message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.ChannelType, req.MessageID)
 	if err != nil {
@@ -243,6 +264,18 @@ func (m *Message) clearPinnedMessage(c *wkhttp.Context) {
 	fakeChannelID := req.ChannelID
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(loginUID, req.ChannelID)
+	} else {
+		// 查询权限
+		isCreatorOrManager, err := m.groupService.IsCreatorOrManager(req.ChannelID, loginUID)
+		if err != nil {
+			m.Error("查询用户在群内权限错误", zap.Error(err))
+			c.ResponseError(errors.New("查询用户在群内权限错误"))
+			return
+		}
+		if !isCreatorOrManager {
+			c.ResponseError(errors.New("用户无权清空置顶消息"))
+			return
+		}
 	}
 	pinnedMsgs, err := m.pinnedDB.queryWithUnDeletedMessage(fakeChannelID, req.ChannelType)
 	if err != nil {
