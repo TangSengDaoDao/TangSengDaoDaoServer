@@ -1080,7 +1080,7 @@ func (m *Message) sync(c *wkhttp.Context) {
 func (m *Message) mutualDelete(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
 	var req deleteReq
-	if err := c.BindJSON(req); err != nil {
+	if err := c.BindJSON(&req); err != nil {
 		m.Error("数据格式有误！", zap.Error(err))
 		c.ResponseError(errors.New("数据格式有误！"))
 		return
