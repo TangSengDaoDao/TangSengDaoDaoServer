@@ -2232,6 +2232,25 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 		c.ResponseError(errors.New("群成员不存在群内！"))
 		return
 	}
+	// 查询群的管理员和群主
+	adminAndCreatorUIDS, err := g.db.QueryGroupManagerOrCreatorUIDS(groupNo)
+	if err != nil {
+		g.Error("查询群管理员失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询群管理员失败！"))
+		return
+	}
+	visiblesUids := make([]string, 0)
+	if len(adminAndCreatorUIDS) > 0 {
+		var index = 0
+		for i, uid := range adminAndCreatorUIDS {
+			if uid == loginUID {
+				index = i
+				break
+			}
+		}
+		visiblesUids = append(adminAndCreatorUIDS[:index], adminAndCreatorUIDS[index+1:]...)
+	}
+
 	/**
 	如果退出的人是群主，则选择第二个入群的人作为群主。
 	**/
@@ -2331,9 +2350,9 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 	if showName == "" {
 		showName = c.GetLoginName()
 	}
-	if groupInfo.Status != GroupStatusDisband {
+	if groupInfo.Status != GroupStatusDisband && len(visiblesUids) > 0 {
 		// 发送群成员退出群聊消息
-		err = g.ctx.SendGroupExit(groupNo, loginUID, showName)
+		err = g.ctx.SendGroupExit(groupNo, loginUID, showName, visiblesUids)
 		if err != nil {
 			g.Error("发送成员退出群聊错误", zap.Error(err))
 		}
