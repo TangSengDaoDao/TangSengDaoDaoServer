@@ -260,6 +260,10 @@ var groupUpdateActionMap = map[string]groupUpdateActionFnc{
 			return err
 		}
 		ctx.groupModel.AllowMemberPinnedMessage = int(value.(float64))
+		err := ctx.updateGroup()
+		if err != nil {
+			return err
+		}
 		groupNo := ctx.groupModel.GroupNo
 		// 通知群内成员更新频道
 		return ctx.g.ctx.SendChannelUpdateToGroup(groupNo)

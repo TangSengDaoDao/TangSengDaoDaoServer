@@ -260,15 +260,16 @@ func (d *DB) UpdateTx(model *Model, tx *dbr.Tx) error {
 // Update 更新群信息
 func (d *DB) Update(model *Model) error {
 	_, err := d.session.Update("group").SetMap(map[string]interface{}{
-		"name":                   model.Name,
-		"notice":                 model.Notice,
-		"creator":                model.Creator,
-		"status":                 model.Status,
-		"version":                model.Version,
-		"forbidden":              model.Forbidden,
-		"invite":                 model.Invite,
-		"forbidden_add_friend":   model.ForbiddenAddFriend,
-		"allow_view_history_msg": model.AllowViewHistoryMsg,
+		"name":                        model.Name,
+		"notice":                      model.Notice,
+		"creator":                     model.Creator,
+		"status":                      model.Status,
+		"version":                     model.Version,
+		"forbidden":                   model.Forbidden,
+		"invite":                      model.Invite,
+		"forbidden_add_friend":        model.ForbiddenAddFriend,
+		"allow_view_history_msg":      model.AllowViewHistoryMsg,
+		"allow_member_pinned_message": model.AllowMemberPinnedMessage,
 	}).Where("id=?", model.Id).Exec()
 	return err
 }
