@@ -468,19 +468,18 @@ func (d *DB) queryGroupAvatarIsUpload(groupNo string) (int, error) {
 // DetailModel 群详情
 type DetailModel struct {
 	Model
-	Mute                     int    // 免打扰
-	Top                      int    // 置顶
-	ShowNick                 int    // 显示昵称
-	Save                     int    // 是否保存
-	ChatPwdOn                int    //是否开启聊天密码
-	RevokeRemind             int    //撤回提醒
-	JoinGroupRemind          int    // 进群提醒
-	Screenshot               int    //截屏通知
-	Receipt                  int    //消息是否回执
-	Flame                    int    // 是否开启阅后即焚
-	FlameSecond              int    // 阅后即焚秒数
-	Remark                   string // 群备注
-	AllowMemberPinnedMessage int    // 是否允许群成员置顶消息
+	Mute            int    // 免打扰
+	Top             int    // 置顶
+	ShowNick        int    // 显示昵称
+	Save            int    // 是否保存
+	ChatPwdOn       int    //是否开启聊天密码
+	RevokeRemind    int    //撤回提醒
+	JoinGroupRemind int    // 进群提醒
+	Screenshot      int    //截屏通知
+	Receipt         int    //消息是否回执
+	Flame           int    // 是否开启阅后即焚
+	FlameSecond     int    // 阅后即焚秒数
+	Remark          string // 群备注
 }
 
 // Model 群db model
