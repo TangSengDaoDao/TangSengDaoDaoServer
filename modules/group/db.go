@@ -333,6 +333,13 @@ func (d *DB) QueryMembersWithStatus(groupNo string, status int) ([]*MemberModel,
 	return memberModels, err
 }
 
+// QueryMemberWithUIDAndGroupNos
+func (d *DB) QueryMemberWithUIDAndGroupNos(uid string, groupNos []string) ([]*MemberModel, error) {
+	var memberModels []*MemberModel
+	_, err := d.session.Select("*").From("group_member").Where("uid=? and group_no in ? and is_deleted=0", uid, groupNos).Load(&memberModels)
+	return memberModels, err
+}
+
 // SyncMembers 同步群成员
 func (d *DB) SyncMembers(groupNo string, version int64, limit uint64) ([]*MemberDetailModel, error) {
 

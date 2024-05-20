@@ -62,6 +62,8 @@ type IService interface {
 	GetUserSupers(uid string) ([]*InfoResp, error)
 	// 新增群成员
 	AddMember(model *AddMemberReq) error
+	// 获取指定一批群的指定成员信息
+	GetMembersWithUIDAndGroupIds(uid string, groupNos []string) ([]*MemberResp, error)
 }
 
 // Service Service
@@ -345,6 +347,27 @@ func (s *Service) GetSettingsWithUIDs(groupNo string, uids []string) ([]*Setting
 	return resps, nil
 }
 
+// GetMembersWithUIDAndGroupIds
+func (s *Service) GetMembersWithUIDAndGroupIds(uid string, groupNos []string) ([]*MemberResp, error) {
+	members, err := s.db.QueryMemberWithUIDAndGroupNos(uid, groupNos)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*MemberResp, 0, len(members))
+	if len(members) > 0 {
+		for _, member := range members {
+			list = append(list, &MemberResp{
+				UID:       member.UID,
+				GroupNo:   member.GroupNo,
+				Role:      member.Role,
+				Remark:    member.Remark,
+				CreatedAt: time.Time(member.CreatedAt).Unix(),
+			})
+		}
+	}
+	return list, err
+}
+
 // AddGroupReq 添加群
 type AddGroupReq struct {
 	GroupNo string
@@ -393,13 +416,14 @@ func toInfoResp(m *Model) *InfoResp {
 }
 
 type MemberResp struct {
-	GroupNo string // 群编号
-	UID     string // 成员uid
-	Name    string // 群成员名称
-	Remark  string // 成员备注
-	Role    int    // 成员角色
-	Version int64
-	Vercode string //验证码
+	GroupNo   string // 群编号
+	UID       string // 成员uid
+	Name      string // 群成员名称
+	Remark    string // 成员备注
+	Role      int    // 成员角色
+	Version   int64
+	Vercode   string //验证码
+	CreatedAt int64  // 注册时间 10位时间戳
 }
 
 func newMemberResp(m *MemberDetailModel) *MemberResp {

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/group"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
@@ -89,16 +90,33 @@ func (m *Message) reminderSync(c *wkhttp.Context) {
 		c.ResponseError(errors.New("同步提醒项失败！"))
 		return
 	}
-	userDetail, err := m.userService.GetUser(loginUID)
-	if err != nil {
-		m.Error("查询登录用户信息错误", zap.Error(err))
-		c.ResponseError(errors.New("查询登录用户信息错误"))
-		return
+
+	groupIds := make([]string, 0)
+	if len(reminders) > 0 {
+		for _, reminder := range reminders {
+			if reminder.ChannelType == common.ChannelTypeGroup.Uint8() {
+				groupIds = append(groupIds, reminder.ChannelID)
+			}
+		}
+	}
+	members := make([]*group.MemberResp, 0)
+	if len(groupIds) > 0 {
+		members, err = m.groupService.GetMembersWithUIDAndGroupIds(loginUID, groupIds)
+		if err != nil {
+			m.Error("查询登录用户加入群成员信息错误", zap.Error(err))
+			c.ResponseError(errors.New("查询登录用户加入群成员信息错误"))
+			return
+		}
 	}
 	reminderResps := make([]*reminderResp, 0, len(reminders))
 	for _, reminder := range reminders {
-		if time.Time(reminder.CreatedAt).Unix() < userDetail.CreatedAt {
-			reminder.Done = 1
+		if len(members) > 0 && reminder.ChannelType == common.ChannelTypeGroup.Uint8() {
+			for _, member := range members {
+				if member.GroupNo == reminder.ChannelID && time.Time(reminder.CreatedAt).Unix() < member.CreatedAt {
+					reminder.Done = 1
+					break
+				}
+			}
 		}
 		reminderResps = append(reminderResps, newReminderResp(reminder))
 	}
