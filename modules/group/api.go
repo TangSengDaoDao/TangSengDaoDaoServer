@@ -2349,7 +2349,6 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 		showName = c.GetLoginName()
 	}
 	if groupInfo.Status != GroupStatusDisband && len(visiblesUids) > 0 {
-		println("发送群成员退出群聊消息")
 		// 发送群成员退出群聊消息
 		err = g.ctx.SendGroupExit(groupNo, loginUID, showName, visiblesUids)
 		if err != nil {

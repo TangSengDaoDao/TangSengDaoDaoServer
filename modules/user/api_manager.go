@@ -48,9 +48,9 @@ func NewManager(ctx *config.Context) *Manager {
 
 // Route 配置路由规则
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	friend := r.Group("/v1/manager")
+	user := r.Group("/v1/manager")
 	{
-		friend.POST("/login", m.login) // 账号登录
+		user.POST("/login", m.login) // 账号登录
 	}
 	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
 	{
