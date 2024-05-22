@@ -104,7 +104,7 @@ func (m *Message) Route(r *wkhttp.WKHttp) {
 		message.POST("/edit", m.messageEdit)                      // 消息编辑
 		message.POST("/reminder/sync", m.reminderSync)            // 同步提醒
 		message.POST("/reminder/done", m.reminderDone)            // 提醒已处理完成
-		message.GET("/prohibit_words/sync", m.synccProhibitWords) // 同步违禁词
+		message.GET("/prohibit_words/sync", m.syncProhibitWords)  // 同步违禁词
 		message.POST("/pinned", m.pinnedMessage)                  // 置顶消息
 		message.POST("/pinned/sync", m.syncPinnedMessage)         // 同步置顶消息
 		message.POST("/pinned/clear", m.clearPinnedMessage)       // 删除所有置顶消息
@@ -1524,7 +1524,7 @@ func (m *Message) revoke(c *wkhttp.Context) {
 }
 
 // 同步违禁词
-func (m *Message) synccProhibitWords(c *wkhttp.Context) {
+func (m *Message) syncProhibitWords(c *wkhttp.Context) {
 	version := c.Query("version")
 	maxVersion, _ := strconv.ParseInt(version, 10, 64)
 	list, err := m.db.queryProhibitWordsWithVersion(maxVersion)
