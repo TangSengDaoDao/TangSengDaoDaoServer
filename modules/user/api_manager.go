@@ -336,7 +336,7 @@ func (m *Manager) addUser(c *wkhttp.Context) {
 		shortNo, err = m.commonService.GetShortno()
 		if err != nil {
 			m.Error("获取短编号失败！", zap.Error(err))
-			c.ResponseError(errors.New("该用户已存在"))
+			c.ResponseError(errors.New("获取短编号失败！"))
 			return
 		}
 	} else {
