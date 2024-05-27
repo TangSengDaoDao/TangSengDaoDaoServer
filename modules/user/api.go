@@ -719,7 +719,7 @@ func (u *User) get(c *wkhttp.Context) {
 		}
 	}
 
-	if userDetailResp.Follow == 1 {
+	if userDetailResp.Follow == 1 || uid == loginUID {
 		isShowShortNo = true
 	}
 	if !isShowShortNo {

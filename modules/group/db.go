@@ -470,6 +470,13 @@ func (d *DB) queryGroupAvatarIsUpload(groupNo string) (int, error) {
 	return result, err
 }
 
+// 查询用户当天建群数量
+func (d *DB) querySameDayCreateCountWitUID(uid string, day string) (int, error) {
+	var count int
+	err := d.session.SelectBySql("SELECT COUNT(*) AS count FROM `group` WHERE creator=? AND DATE(created_at)=?", uid, day).LoadOne(&count)
+	return count, err
+}
+
 // ---------- model ----------
 
 // DetailModel 群详情

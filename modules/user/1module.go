@@ -100,6 +100,23 @@ func init() {
 					return firendUIDs, nil
 				},
 			},
+			BussDataSource: register.BussDataSource{
+				GetFriends: func(uid string) ([]*model.FriendResp, error) {
+					friends, err := api.userService.GetFriends(uid)
+					if err != nil {
+						return nil, err
+					}
+					list := make([]*model.FriendResp, 0, len(friends))
+					for _, friend := range friends {
+						list = append(list, &model.FriendResp{
+							Remark:  friend.Remark,
+							ToUID:   friend.UID,
+							IsAlone: friend.IsAlone,
+						})
+					}
+					return list, nil
+				},
+			},
 		}
 	})
 

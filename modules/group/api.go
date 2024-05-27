@@ -18,6 +18,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
@@ -467,6 +468,50 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
+
+	count, err := g.db.querySameDayCreateCountWitUID(creator, util.Toyyyy_MM_dd(time.Now()))
+	if err != nil {
+		g.Error("查询用户当天建群数量失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询用户当天建群数量失败！"))
+		return
+	}
+	if g.ctx.GetConfig().Group.SameDayCreateMaxCount <= count {
+		c.ResponseError(errors.New("当天建群数量已达上限"))
+		return
+	}
+	realUids := make([]string, 0)
+	if g.ctx.GetConfig().Group.CreateGroupVerifyFriendOn {
+		friends := make([]*model.FriendResp, 0)
+		// 验证好友关系
+		modules := register.GetModules(g.ctx)
+		for _, m := range modules {
+			if m.BussDataSource.GetFriends != nil {
+				friends, err = m.BussDataSource.GetFriends(creator)
+				if err != nil {
+					g.Error("查询用户好友错误", zap.Error(err))
+					c.ResponseError(errors.New("查询用户好友错误"))
+					return
+				}
+				break
+			}
+		}
+		if len(friends) == 0 {
+			c.ResponseError(errors.New("改用户无好友信息"))
+			return
+		}
+		if len(req.Members) > 0 {
+			for _, uid := range req.Members {
+				for _, friend := range friends {
+					if uid == friend.ToUID {
+						realUids = append(realUids, uid)
+						break
+					}
+				}
+			}
+		}
+	} else {
+		realUids = req.Members
+	}
 	// 判断是否允许系统账号进入群聊
 	appConfig, err := g.commonService.GetAppConfig()
 	if err != nil {
@@ -476,7 +521,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 	}
 	if appConfig != nil && appConfig.InviteSystemAccountJoinGroupOn == 0 {
 		isContainSystemAccount := false
-		for _, uid := range req.Members {
+		for _, uid := range realUids {
 			if uid == g.ctx.GetConfig().Account.FileHelperUID {
 				isContainSystemAccount = true
 				break
@@ -499,12 +544,12 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		return
 	}
 
-	req.Members = util.RemoveRepeatedElement(append(req.Members, creator)) // 将创建者也加入成员内
+	realUids = util.RemoveRepeatedElement(append(realUids, creator)) // 将创建者也加入成员内
 
 	// 查询成员用户信息
-	memberUserModels, err := g.userDB.QueryByUIDs(req.Members)
+	memberUserModels, err := g.userDB.QueryByUIDs(realUids)
 	if err != nil {
-		g.Error("查询成员用户信息失败！", zap.Error(err), zap.Strings("members", req.Members))
+		g.Error("查询成员用户信息失败！", zap.Error(err), zap.Strings("members", realUids))
 		c.ResponseError(errors.New("查询成员用户信息失败！"))
 		return
 	}
