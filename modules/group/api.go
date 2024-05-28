@@ -496,7 +496,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			}
 		}
 		if len(friends) == 0 {
-			c.ResponseError(errors.New("改用户无好友信息"))
+			c.ResponseError(errors.New("添加用户非好友关系，请先添加好友"))
 			return
 		}
 		if len(req.Members) > 0 {
@@ -511,6 +511,10 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		}
 	} else {
 		realUids = req.Members
+	}
+	if len(realUids) == 0 {
+		c.ResponseError(errors.New("添加用户非好友关系，请先添加好友"))
+		return
 	}
 	// 判断是否允许系统账号进入群聊
 	appConfig, err := g.commonService.GetAppConfig()

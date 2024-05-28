@@ -449,6 +449,9 @@ func (s *Service) GetFriendsWithToUIDs(uid string, toUIDs []string) ([]*FriendRe
 
 // GetFriends 查询某个用户的所有好友
 func (s *Service) GetFriends(uid string) ([]*FriendResp, error) {
+	if uid == "" {
+		return nil, nil
+	}
 	friends, err := s.friendDB.QueryFriends(uid)
 	if err != nil {
 		s.Error("批量查询用户失败", zap.Error(err))

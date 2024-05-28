@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	firebase.google.com/go/v4 v4.13.0
-	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240527132148-3cdc02bae67b
+	github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240527133745-a46880f123bb
 	github.com/alibabacloud-go/darabonba-openapi v0.2.1
 	github.com/alibabacloud-go/sms-intl-20180501 v1.0.1
 	github.com/alibabacloud-go/tea v1.2.1

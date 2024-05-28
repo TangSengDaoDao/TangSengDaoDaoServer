@@ -285,6 +285,17 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 		c.ResponseError(errors.New("不能添加自己为好友！"))
 		return
 	}
+	loginUserInfo, err := f.userDB.QueryByUID(fromUID)
+	if err != nil {
+		f.Error("查询用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户信息错误"))
+		return
+	}
+	if loginUserInfo == nil || loginUserInfo.IsDestroy == 1 || loginUserInfo.Status != 1 {
+		f.Error("登录用户不存在！", zap.String("uid", fromUID))
+		c.ResponseError(errors.New("登录用户不存在！"))
+		return
+	}
 	// 是否是好友
 	isFriendLoginUser, err := f.db.IsFriend(fromUID, req.ToUID)
 	if err != nil {
