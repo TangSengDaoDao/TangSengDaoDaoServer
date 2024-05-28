@@ -57,6 +57,9 @@ paths:
               channel_pinned_message_max_count:
                 type: integer
                 description: "频道置顶消息最大数量"
+              can_modify_api_url:
+                type: integer
+                description: "是否允许修改api地址 1.允许"
         400:
           description: "错误"
           schema:
@@ -108,6 +111,9 @@ paths:
               channel_pinned_message_max_count:
                 type: integer
                 description: "频道置顶消息最大数量"
+              can_modify_api_url:
+                type: integer
+                description: "是否允许修改api地址 1.允许"
       responses:
         200:
           description: "返回"
@@ -542,6 +548,9 @@ paths:
               channel_pinned_message_max_count:
                 type: integer
                 description: "频道置顶消息最大数量"
+              can_modify_api_url:
+                type: integer
+                description: "是否允许修改api地址 1.允许"
         400:
           description: "错误"
           schema:

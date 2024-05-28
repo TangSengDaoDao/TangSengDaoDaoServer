@@ -203,6 +203,7 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 		InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
 		RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
 		ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
+		CanModifyApiUrl                int    `json:"can_modify_api_url"`                  // 是否可以修改api地址
 	}
 	var req reqVO
 	if err := c.BindJSON(&req); err != nil {
@@ -225,6 +226,7 @@ func (m *Manager) updateConfig(c *wkhttp.Context) {
 	configMap["invite_system_account_join_group_on"] = req.InviteSystemAccountJoinGroupOn
 	configMap["register_user_must_complete_info_on"] = req.RegisterUserMustCompleteInfoOn
 	configMap["channel_pinned_message_max_count"] = req.ChannelPinnedMessageMaxCount
+	configMap["can_modify_api_url"] = req.CanModifyApiUrl
 	err = m.appconfigDB.updateWithMap(configMap, appConfigM.Id)
 	if err != nil {
 		m.Error("修改app配置信息错误", zap.Error(err))
@@ -254,6 +256,7 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 	var inviteSystemAccountJoinGroupOn = 0
 	var registerUserMustCompleteInfoOn = 0
 	var channelPinnedMessageMaxCount = 10
+	var canModifyApiUrl = 0
 	if appconfig != nil {
 		revokeSecond = appconfig.RevokeSecond
 		welcomeMessage = appconfig.WelcomeMessage
@@ -264,6 +267,7 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 		inviteSystemAccountJoinGroupOn = appconfig.InviteSystemAccountJoinGroupOn
 		registerUserMustCompleteInfoOn = appconfig.RegisterUserMustCompleteInfoOn
 		channelPinnedMessageMaxCount = appconfig.ChannelPinnedMessageMaxCount
+		canModifyApiUrl = appconfig.CanModifyApiUrl
 	}
 	if revokeSecond == 0 {
 		revokeSecond = 120
@@ -281,6 +285,7 @@ func (m *Manager) appconfig(c *wkhttp.Context) {
 		InviteSystemAccountJoinGroupOn: inviteSystemAccountJoinGroupOn,
 		RegisterUserMustCompleteInfoOn: registerUserMustCompleteInfoOn,
 		ChannelPinnedMessageMaxCount:   channelPinnedMessageMaxCount,
+		CanModifyApiUrl:                canModifyApiUrl,
 	})
 }
 
@@ -294,6 +299,7 @@ type managerAppConfigResp struct {
 	InviteSystemAccountJoinGroupOn int    `json:"invite_system_account_join_group_on"` // 开启系统账号加入群聊
 	RegisterUserMustCompleteInfoOn int    `json:"register_user_must_complete_info_on"` // 注册用户必须填写完整信息
 	ChannelPinnedMessageMaxCount   int    `json:"channel_pinned_message_max_count"`    // 频道置顶消息最大数量
+	CanModifyApiUrl                int    `json:"can_modify_api_url"`                  // 是否可以修改api地址
 }
 
 type managerAppModule struct {
