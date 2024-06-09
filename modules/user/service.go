@@ -753,6 +753,8 @@ type Resp struct {
 	Zone            string
 	Phone           string
 	Email           string
+	Status          int // 用户状态 1 正常 2:黑名单 0 禁用
+	Password        string
 	IsUploadAvatar  int
 	NewMsgNotice    int
 	MsgShowDetail   int //显示消息通知详情0.否1.是
@@ -768,6 +770,8 @@ func newResp(m *Model) *Resp {
 		Zone:            m.Zone,
 		Phone:           m.Phone,
 		Email:           m.Email,
+		Status:          m.Status,
+		Password:        m.Password,
 		IsUploadAvatar:  m.IsUploadAvatar,
 		NewMsgNotice:    m.NewMsgNotice,
 		MsgShowDetail:   m.MsgShowDetail,
