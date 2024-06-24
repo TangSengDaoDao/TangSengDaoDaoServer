@@ -44,6 +44,7 @@ func NewFriend(ctx *config.Context) *Friend {
 	}
 	f.ctx.AddEventListener(event.FriendSure, f.handleFriendSure)
 	f.ctx.AddEventListener(event.FriendDelete, f.handleDeleteFriend)
+	f.ctx.AddEventListener(event.EventUserRegister, f.handleUserRegister)
 	return f
 }
 
@@ -682,8 +683,12 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		c.ResponseError(errors.New("发送消息失败！"))
 		return
 	}
+	content := "我们已经是好友了，可以愉快的聊天了！"
+	if f.ctx.GetConfig().Friend.AddedTipsText != "" {
+		content = f.ctx.GetConfig().Friend.AddedTipsText
+	}
 	payload := []byte(util.ToJson(map[string]interface{}{
-		"content": "我们已经是好友了，可以愉快的聊天了！",
+		"content": content,
 		"type":    common.Tip,
 	}))
 

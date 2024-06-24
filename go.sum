@@ -98,6 +98,12 @@ github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240527132148-3cdc02
 github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240527132148-3cdc02bae67b/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
 github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240527133745-a46880f123bb h1:X7m0erXqAwRst15mIbsGWCa4gX+A8oMjeKSJMHuzyGM=
 github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240527133745-a46880f123bb/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
+github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240624054623-f92082281692 h1:WHIyTB+c168RaT0KsyUfZT/dX2g5QVklnxTT7eT3fAQ=
+github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240624054623-f92082281692/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
+github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240624065237-2076802c08b3 h1:NB/pA4OnptJ9ii8ps1kwKLr81p17Ql20YJZ+mGnPkNg=
+github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240624065237-2076802c08b3/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
+github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240624071052-3926066b63da h1:UKJad6GD6YE7LNUuKQbWTxvXYNeBmern0rrqvxs5uhM=
+github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240624071052-3926066b63da/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4/go.mod h1:OMCwj8VM1Kc9e19TLln2VL61YJF0x1XFtfdL4JdbSyE=
 github.com/alibabacloud-go/alibabacloud-gateway-spi v0.0.4 h1:iC9YFYKDGEy3n/FtqJnOkZsene9olVspKmkX5A2YBEo=

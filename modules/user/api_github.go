@@ -133,7 +133,7 @@ func (u *User) githubOAuth(c *wkhttp.Context) {
 		}
 		// 发送登录消息
 		publicIP := util.GetClientPublicIP(c.Request)
-		loginResp, err = u.createUserWithRespAndTx(loginSpanCtx, model, publicIP, "", tx, func() error {
+		loginResp, err = u.createUserWithRespAndTx(loginSpanCtx, model, publicIP, nil, tx, func() error {
 			err := tx.Commit()
 			if err != nil {
 				tx.Rollback()
