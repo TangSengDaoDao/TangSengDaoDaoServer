@@ -105,6 +105,11 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 		commit(err)
 		return
 	}
+	inviteVercode := req["invite_vercode"].(string)
+	if inviteVercode == "" {
+		commit(nil)
+		return
+	}
 	uid := req["uid"].(string)
 	if uid == "" {
 		f.Error("好友处理用户注册uid不能为空")
@@ -115,12 +120,6 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 	if inviteUid == "" {
 		f.Error("好友处理用户注册邀请者uid不能为空")
 		commit(errors.New("好友处理用户注册邀请者uid不能为空"))
-		return
-	}
-	inviteVercode := req["invite_vercode"].(string)
-	if inviteVercode == "" {
-		f.Error("好友处理用户注册邀请码不能为空")
-		commit(errors.New("好友处理用户注册邀请码不能为空"))
 		return
 	}
 	// 是否是好友
