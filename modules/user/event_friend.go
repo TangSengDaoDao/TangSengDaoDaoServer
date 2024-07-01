@@ -105,6 +105,11 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 		commit(err)
 		return
 	}
+	if req == nil || req["invite_vercode"] == nil {
+		commit(nil)
+		return
+	}
+
 	inviteVercode := req["invite_vercode"].(string)
 	if inviteVercode == "" {
 		commit(nil)
