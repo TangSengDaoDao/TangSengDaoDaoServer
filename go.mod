@@ -26,6 +26,7 @@ require (
 	github.com/olivere/elastic v6.2.37+incompatible
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b
 	github.com/pkg/errors v0.9.1
+	github.com/qiniu/go-sdk/v7 v7.19.0
 	github.com/robfig/cron v1.2.0
 	github.com/rubenv/sql-migrate v1.5.2
 	github.com/sendgrid/rest v2.6.9+incompatible
