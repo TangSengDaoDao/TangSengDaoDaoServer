@@ -801,9 +801,13 @@ func (g *Group) groupUpdate(c *wkhttp.Context) {
 			group.Invite = int(invite)
 		}
 	}
-	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
-
+	tx, _ := g.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
 	err = g.db.UpdateTx(group, tx)
 	if err != nil {
 		tx.Rollback()
