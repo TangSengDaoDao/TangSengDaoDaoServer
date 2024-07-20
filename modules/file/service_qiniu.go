@@ -33,9 +33,8 @@ func (s *ServiceQiniu) UploadFile(filePath string, contentType string, copyFileW
 
 	bucket := qiniuCfg.BucketName
 	putPolicy := storage.PutPolicy{
-		Scope: bucket,
+		Scope: fmt.Sprintf("%s:%s", bucket, filePath),
 	}
-	putPolicy.Expires = 7200 //示例2小时有效期
 	mac := auth.New(qiniuCfg.AccessKey, qiniuCfg.SecretKey)
 	upToken := putPolicy.UploadToken(mac)
 
