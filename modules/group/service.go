@@ -64,6 +64,8 @@ type IService interface {
 	AddMember(model *AddMemberReq) error
 	// 获取指定一批群的指定成员信息
 	GetMembersWithUIDAndGroupIds(uid string, groupNos []string) ([]*MemberResp, error)
+	// 查询一批群的管理员及群主
+	GetManagersWithGroupNos(groupNos []string) ([]*MemberResp, error)
 }
 
 // Service Service
@@ -84,6 +86,27 @@ func NewService(ctx *config.Context) IService {
 		Log:       log.NewTLog("groupService"),
 		settingDB: newSettingDB(ctx),
 	}
+}
+
+// GetManagersWithGroupNos 查询一批群的管理员及群主
+func (s *Service) GetManagersWithGroupNos(groupNos []string) ([]*MemberResp, error) {
+	models, err := s.db.queryManagersWithGroupNos(groupNos)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*MemberResp, 0)
+	if len(models) > 0 {
+		for _, model := range models {
+			list = append(list, &MemberResp{
+				UID:     model.UID,
+				Name:    model.Name,
+				Role:    model.Role,
+				GroupNo: model.GroupNo,
+				Remark:  model.Remark,
+			})
+		}
+	}
+	return list, nil
 }
 
 // GetAllGroupCount 获取群总数
