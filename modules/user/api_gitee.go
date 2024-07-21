@@ -130,7 +130,7 @@ func (u *User) giteeOAuth(c *wkhttp.Context) {
 
 	var loginResp *loginUserDetailResp
 	if userInfoM != nil { // 存在就登录
-		if userInfo == nil || userInfoM.IsDestroy == 1 {
+		if userInfoM.IsDestroy == 1 {
 			c.ResponseError(errors.New("用户不存在"))
 			return
 		}
@@ -175,17 +175,17 @@ func (u *User) giteeOAuth(c *wkhttp.Context) {
 			}
 		}
 		tx, err := u.ctx.DB().Begin()
+		if err != nil {
+			u.Error("开启事务失败！", zap.Error(err))
+			c.ResponseError(errors.New("开启事务失败！"))
+			return
+		}
 		defer func() {
 			if err := recover(); err != nil {
 				tx.Rollback()
 				panic(err)
 			}
 		}()
-		if err != nil {
-			u.Error("开启事务失败！", zap.Error(err))
-			c.ResponseError(errors.New("开启事务失败！"))
-			return
-		}
 
 		err = u.giteeDB.insertTx(userInfo.toModel(), tx)
 		if err != nil {

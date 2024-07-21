@@ -174,7 +174,11 @@ func (f *Friend) delete(c *wkhttp.Context) {
 		return
 	}
 	tx, err := f.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		f.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -528,9 +532,7 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		return
 	}
 	if remark == "" {
-		if applyUser != nil {
-			remark = fmt.Sprintf("我是%s", applyUser.Name)
-		}
+		remark = fmt.Sprintf("我是%s", applyUser.Name)
 	}
 	if strings.TrimSpace(applyUID) == "" || strings.TrimSpace(vercode) == "" {
 		c.ResponseError(errors.New("好友申请无效或已过期！"))

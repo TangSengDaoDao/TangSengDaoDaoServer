@@ -121,7 +121,12 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询置顶消息错误"))
 		return
 	}
-	tx, _ := m.db.session.Begin()
+	tx, err := m.db.session.Begin()
+	if err != nil {
+		m.Error("开启事务错误", zap.Error(err))
+		c.ResponseError(errors.New("开启事务错误"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -328,7 +333,12 @@ func (m *Message) clearPinnedMessage(c *wkhttp.Context) {
 		c.ResponseOK()
 		return
 	}
-	tx, _ := m.db.session.Begin()
+	tx, err := m.db.session.Begin()
+	if err != nil {
+		m.Error("开启事务错误", zap.Error(err))
+		c.ResponseError(errors.New("开启事务错误"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()

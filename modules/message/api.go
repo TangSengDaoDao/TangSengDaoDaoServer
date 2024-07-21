@@ -278,7 +278,12 @@ func (m *Message) messageEdit(c *wkhttp.Context) {
 		return
 	}
 
-	tx, _ := m.db.session.Begin()
+	tx, err := m.db.session.Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -1438,7 +1443,12 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		messageIDs = append(messageIDs, messageID)
 	}
 
-	tx, _ := m.db.session.Begin()
+	tx, err := m.db.session.Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()

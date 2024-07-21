@@ -47,7 +47,12 @@ func (g *Group) groupMemberInviteAdd(c *wkhttp.Context) {
 
 	inviteNo := util.GenerUUID()
 
-	tx, _ := g.db.session.Begin()
+	tx, err := g.db.session.Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()

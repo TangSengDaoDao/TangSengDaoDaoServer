@@ -256,7 +256,11 @@ func (m *Message) handleGroupMemberAddEvent(data []byte, commit config.EventComm
 		})
 	}
 	tx, err := m.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		m.Error("开启事物错误", zap.Error(err))
+		commit(errors.New("开启事物错误"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()

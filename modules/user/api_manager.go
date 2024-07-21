@@ -345,7 +345,12 @@ func (m *Manager) addUser(c *wkhttp.Context) {
 	if m.ctx.GetConfig().ShortNo.EditOff {
 		shortNumStatus = 1
 	}
-	tx, _ := m.db.session.Begin()
+	tx, err := m.db.session.Begin()
+	if err != nil {
+		m.Error("开启事物错误", zap.Error(err))
+		c.ResponseError(errors.New("开启事物错误"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -826,7 +831,11 @@ func (m *Manager) addSystemFriend(uid string) error {
 		m.Error("查询用户关系失败")
 		return err
 	}
-	tx, _ := m.friendDB.session.Begin()
+	tx, err := m.friendDB.session.Begin()
+	if err != nil {
+		m.Error("开启事物错误", zap.Error(err))
+		return errors.New("开启事物错误")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()

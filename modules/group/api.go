@@ -145,7 +145,11 @@ func (g *Group) disband(c *wkhttp.Context) {
 
 	// todo
 	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -591,9 +595,13 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			}
 		}
 	}
-
+	// 事务
 	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1601,7 +1609,12 @@ func (g *Group) groupScanJoin(c *wkhttp.Context) {
 		Vercode:   fmt.Sprintf("%s@%d", util.GenerUUID(), common.GroupMember),
 	}
 
-	tx, _ := g.db.session.Begin()
+	tx, err := g.db.session.Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1776,7 +1789,12 @@ func (g *Group) transferGrouper(c *wkhttp.Context) {
 	/**
 	修改群主为普通成员，修改转让用户为群主
 	**/
-	tx, _ := g.db.session.Begin()
+	tx, err := g.db.session.Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -2041,7 +2059,11 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 	}
 
 	tx, err := g.db.session.Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -2322,11 +2344,16 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 
 	tx, err := g.db.session.Begin()
 	if err != nil {
-		tx.Rollback()
-		g.Error("开启数据库事务失败！", zap.Error(err))
-		c.ResponseError(errors.New("开启数据库事务失败！"))
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
 		return
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 	eventID, err := g.ctx.EventBegin(&wkevent.Data{
 		Event: event.ConversationDelete,
 		Type:  wkevent.CMD,
