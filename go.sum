@@ -68,8 +68,6 @@ github.com/RichardKnop/machinery/v2 v2.0.11 h1:BTfLGOmOju3W/OtlZmLX26OjYNZsU4PJo
 github.com/RichardKnop/machinery/v2 v2.0.11/go.mod h1:b5Q6cT/w7YLlIl4Vi+jpdEoyYiqhTgx+0USoKb1wzqU=
 github.com/RussellLuo/timingwheel v0.0.0-20220218152713-54845bda3108 h1:iPugyBI7oFtbDZXC4dnY093M1kZx6k/95sen92gafbY=
 github.com/RussellLuo/timingwheel v0.0.0-20220218152713-54845bda3108/go.mod h1:WAMLHwunr1hi3u7OjGV6/VWG9QbdMhGpEKjROiSFd10=
-github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240425063859-3c4a8dbd157c h1:FN8rCwZ7zbhOTSdojZpX/vlS6kiygJ1CctRdOXJo2gg=
-github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240425063859-3c4a8dbd157c/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
 github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240429112939-21ac1ff0fcc8 h1:JTC3Rw5tFsin6v6yoZSYgjamOsmdOgKZcPXDnykDhSA=
 github.com/TangSengDaoDao/TangSengDaoDaoServerLib v1.0.8-0.20240429112939-21ac1ff0fcc8/go.mod h1:47wmXX6Ny3ir4GNofoZ9zrEryOKve0/wgl4KMZeMnik=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
