@@ -29,7 +29,12 @@ func (u *User) addMaillist(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询登录用户信息错误"))
 		return
 	}
-	tx, _ := u.db.session.Begin()
+	tx, err := u.db.session.Begin()
+	if err != nil {
+		u.Error("数据库事物开启失败", zap.Error(err))
+		c.ResponseError(errors.New("数据库事物开启失败"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()

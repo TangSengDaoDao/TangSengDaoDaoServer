@@ -44,6 +44,7 @@ func NewFriend(ctx *config.Context) *Friend {
 	}
 	f.ctx.AddEventListener(event.FriendSure, f.handleFriendSure)
 	f.ctx.AddEventListener(event.FriendDelete, f.handleDeleteFriend)
+	f.ctx.AddEventListener(event.EventUserRegister, f.handleUserRegister)
 	return f
 }
 
@@ -173,7 +174,11 @@ func (f *Friend) delete(c *wkhttp.Context) {
 		return
 	}
 	tx, err := f.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		f.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -283,6 +288,17 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 	}
 	if fromUID == req.ToUID {
 		c.ResponseError(errors.New("不能添加自己为好友！"))
+		return
+	}
+	loginUserInfo, err := f.userDB.QueryByUID(fromUID)
+	if err != nil {
+		f.Error("查询用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户信息错误"))
+		return
+	}
+	if loginUserInfo == nil || loginUserInfo.IsDestroy == 1 || loginUserInfo.Status != 1 {
+		f.Error("登录用户不存在！", zap.String("uid", fromUID))
+		c.ResponseError(errors.New("登录用户不存在！"))
 		return
 	}
 	// 是否是好友
@@ -516,9 +532,7 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		return
 	}
 	if remark == "" {
-		if applyUser != nil {
-			remark = fmt.Sprintf("我是%s", applyUser.Name)
-		}
+		remark = fmt.Sprintf("我是%s", applyUser.Name)
 	}
 	if strings.TrimSpace(applyUID) == "" || strings.TrimSpace(vercode) == "" {
 		c.ResponseError(errors.New("好友申请无效或已过期！"))
@@ -671,8 +685,12 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		c.ResponseError(errors.New("发送消息失败！"))
 		return
 	}
+	content := "我们已经是好友了，可以愉快的聊天了！"
+	if f.ctx.GetConfig().Friend.AddedTipsText != "" {
+		content = f.ctx.GetConfig().Friend.AddedTipsText
+	}
 	payload := []byte(util.ToJson(map[string]interface{}{
-		"content": "我们已经是好友了，可以愉快的聊天了！",
+		"content": content,
 		"type":    common.Tip,
 	}))
 

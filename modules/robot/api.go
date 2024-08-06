@@ -551,7 +551,11 @@ func (rb *Robot) insertSystemRobot() {
 		panic(err)
 	}
 	if m == nil {
-		tx, _ := rb.db.session.Begin()
+		tx, err := rb.db.session.Begin()
+		if err != nil {
+			rb.Error("开启事物错误", zap.Error(err))
+			return
+		}
 		defer func() {
 			if err := recover(); err != nil {
 				tx.Rollback()

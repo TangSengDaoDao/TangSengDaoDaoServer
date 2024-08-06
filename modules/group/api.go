@@ -18,6 +18,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
@@ -144,7 +145,11 @@ func (g *Group) disband(c *wkhttp.Context) {
 
 	// todo
 	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -467,6 +472,54 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
+
+	count, err := g.db.querySameDayCreateCountWitUID(creator, util.Toyyyy_MM_dd(time.Now()))
+	if err != nil {
+		g.Error("查询用户当天建群数量失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询用户当天建群数量失败！"))
+		return
+	}
+	if g.ctx.GetConfig().Group.SameDayCreateMaxCount <= count {
+		c.ResponseError(errors.New("当天建群数量已达上限"))
+		return
+	}
+	realUids := make([]string, 0)
+	if g.ctx.GetConfig().Group.CreateGroupVerifyFriendOn {
+		friends := make([]*model.FriendResp, 0)
+		// 验证好友关系
+		modules := register.GetModules(g.ctx)
+		for _, m := range modules {
+			if m.BussDataSource.GetFriends != nil {
+				friends, err = m.BussDataSource.GetFriends(creator)
+				if err != nil {
+					g.Error("查询用户好友错误", zap.Error(err))
+					c.ResponseError(errors.New("查询用户好友错误"))
+					return
+				}
+				break
+			}
+		}
+		if len(friends) == 0 {
+			c.ResponseError(errors.New("添加用户非好友关系，请先添加好友"))
+			return
+		}
+		if len(req.Members) > 0 {
+			for _, uid := range req.Members {
+				for _, friend := range friends {
+					if uid == friend.ToUID {
+						realUids = append(realUids, uid)
+						break
+					}
+				}
+			}
+		}
+	} else {
+		realUids = req.Members
+	}
+	if len(realUids) == 0 {
+		c.ResponseError(errors.New("添加用户非好友关系，请先添加好友"))
+		return
+	}
 	// 判断是否允许系统账号进入群聊
 	appConfig, err := g.commonService.GetAppConfig()
 	if err != nil {
@@ -476,7 +529,7 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 	}
 	if appConfig != nil && appConfig.InviteSystemAccountJoinGroupOn == 0 {
 		isContainSystemAccount := false
-		for _, uid := range req.Members {
+		for _, uid := range realUids {
 			if uid == g.ctx.GetConfig().Account.FileHelperUID {
 				isContainSystemAccount = true
 				break
@@ -499,12 +552,12 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 		return
 	}
 
-	req.Members = util.RemoveRepeatedElement(append(req.Members, creator)) // 将创建者也加入成员内
+	realUids = util.RemoveRepeatedElement(append(realUids, creator)) // 将创建者也加入成员内
 
 	// 查询成员用户信息
-	memberUserModels, err := g.userDB.QueryByUIDs(req.Members)
+	memberUserModels, err := g.userDB.QueryByUIDs(realUids)
 	if err != nil {
-		g.Error("查询成员用户信息失败！", zap.Error(err), zap.Strings("members", req.Members))
+		g.Error("查询成员用户信息失败！", zap.Error(err), zap.Strings("members", realUids))
 		c.ResponseError(errors.New("查询成员用户信息失败！"))
 		return
 	}
@@ -542,9 +595,13 @@ func (g *Group) groupCreate(c *wkhttp.Context) {
 			}
 		}
 	}
-
+	// 事务
 	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -752,9 +809,13 @@ func (g *Group) groupUpdate(c *wkhttp.Context) {
 			group.Invite = int(invite)
 		}
 	}
-	tx, err := g.ctx.DB().Begin()
-	util.CheckErr(err)
-
+	tx, _ := g.ctx.DB().Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			panic(err)
+		}
+	}()
 	err = g.db.UpdateTx(group, tx)
 	if err != nil {
 		tx.Rollback()
@@ -1548,7 +1609,12 @@ func (g *Group) groupScanJoin(c *wkhttp.Context) {
 		Vercode:   fmt.Sprintf("%s@%d", util.GenerUUID(), common.GroupMember),
 	}
 
-	tx, _ := g.db.session.Begin()
+	tx, err := g.db.session.Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1723,7 +1789,12 @@ func (g *Group) transferGrouper(c *wkhttp.Context) {
 	/**
 	修改群主为普通成员，修改转让用户为群主
 	**/
-	tx, _ := g.db.session.Begin()
+	tx, err := g.db.session.Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1988,7 +2059,11 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 	}
 
 	tx, err := g.db.session.Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -2232,6 +2307,23 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 		c.ResponseError(errors.New("群成员不存在群内！"))
 		return
 	}
+	// 查询群的管理员和群主
+	adminAndCreatorUIDS, err := g.db.QueryGroupManagerOrCreatorUIDS(groupNo)
+	if err != nil {
+		g.Error("查询群管理员失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询群管理员失败！"))
+		return
+	}
+	visiblesUids := make([]string, 0)
+	if len(adminAndCreatorUIDS) > 0 {
+		for _, uid := range adminAndCreatorUIDS {
+			if uid != loginUID {
+				visiblesUids = append(visiblesUids, uid)
+				break
+			}
+		}
+	}
+
 	/**
 	如果退出的人是群主，则选择第二个入群的人作为群主。
 	**/
@@ -2252,11 +2344,16 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 
 	tx, err := g.db.session.Begin()
 	if err != nil {
-		tx.Rollback()
-		g.Error("开启数据库事务失败！", zap.Error(err))
-		c.ResponseError(errors.New("开启数据库事务失败！"))
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
 		return
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 	eventID, err := g.ctx.EventBegin(&wkevent.Data{
 		Event: event.ConversationDelete,
 		Type:  wkevent.CMD,
@@ -2331,9 +2428,9 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 	if showName == "" {
 		showName = c.GetLoginName()
 	}
-	if groupInfo.Status != GroupStatusDisband {
+	if groupInfo.Status != GroupStatusDisband && len(visiblesUids) > 0 {
 		// 发送群成员退出群聊消息
-		err = g.ctx.SendGroupExit(groupNo, loginUID, showName)
+		err = g.ctx.SendGroupExit(groupNo, loginUID, showName, visiblesUids)
 		if err != nil {
 			g.Error("发送成员退出群聊错误", zap.Error(err))
 		}

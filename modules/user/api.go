@@ -20,6 +20,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/file"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/source"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/gocraft/dbr/v2"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -556,7 +557,12 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 				return
 			}
 
-			tx, _ := u.db.session.Begin()
+			tx, err := u.db.session.Begin()
+			if err != nil {
+				u.Error("创建事务失败！", zap.Error(err))
+				c.ResponseError(errors.New("创建事务失败！"))
+				return
+			}
 			defer func() {
 				if err := recover(); err != nil {
 					tx.Rollback()
@@ -719,7 +725,7 @@ func (u *User) get(c *wkhttp.Context) {
 		}
 	}
 
-	if userDetailResp.Follow == 1 {
+	if userDetailResp.Follow == 1 || uid == loginUID {
 		isShowShortNo = true
 	}
 	if !isShowShortNo {
@@ -834,7 +840,7 @@ func (u *User) wxLogin(c *wkhttp.Context) {
 		return
 	}
 	if userInfo != nil {
-		if userInfo == nil || userInfo.IsDestroy == 1 {
+		if userInfo.IsDestroy == 1 {
 			c.ResponseError(errors.New("用户不存在"))
 			return
 		}
@@ -874,7 +880,7 @@ func (u *User) wxLogin(c *wkhttp.Context) {
 				}
 			}
 		}
-		u.createUser(loginSpanCtx, model, c, "")
+		u.createUser(loginSpanCtx, model, c, nil)
 	}
 }
 
@@ -962,18 +968,16 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 		}
 		var existDevice bool
 		var err error
-		if device != nil {
-			existDevice, err = u.deviceDB.existDeviceWithDeviceIDAndUIDCtx(loginSpanCtx, device.DeviceID, userInfo.UID)
+		existDevice, err = u.deviceDB.existDeviceWithDeviceIDAndUIDCtx(loginSpanCtx, device.DeviceID, userInfo.UID)
+		if err != nil {
+			u.Error("查询是否存在的设备失败", zap.Error(err))
+			return nil, errors.New("查询是否存在的设备失败")
+		}
+		if existDevice {
+			err = u.deviceDB.updateDeviceLastLoginCtx(loginSpanCtx, time.Now().Unix(), device.DeviceID, userInfo.UID)
 			if err != nil {
-				u.Error("查询是否存在的设备失败", zap.Error(err))
-				return nil, errors.New("查询是否存在的设备失败")
-			}
-			if existDevice {
-				err = u.deviceDB.updateDeviceLastLoginCtx(loginSpanCtx, time.Now().Unix(), device.DeviceID, userInfo.UID)
-				if err != nil {
-					u.Error("更新用户登录设备失败", zap.Error(err))
-					return nil, errors.New("更新用户登录设备失败")
-				}
+				u.Error("更新用户登录设备失败", zap.Error(err))
+				return nil, errors.New("更新用户登录设备失败")
 			}
 		}
 		if !existDevice {
@@ -1133,6 +1137,7 @@ func (u *User) register(c *wkhttp.Context) {
 	if appConfig != nil {
 		registerInviteOn = appConfig.RegisterInviteOn
 	}
+	var invite *model.Invite
 	if registerInviteOn == 1 {
 		if req.InviteCode == "" {
 			c.ResponseError(errors.New("邀请码不能为空"))
@@ -1141,10 +1146,10 @@ func (u *User) register(c *wkhttp.Context) {
 		var inviteCodeIsExist = false
 		modules := register.GetModules(u.ctx)
 		for _, m := range modules {
-			if m.BussDataSource.RegisterInviteCodeIsExist != nil {
-				isExist, _ := m.BussDataSource.RegisterInviteCodeIsExist(req.InviteCode)
-				if isExist {
-					inviteCodeIsExist = isExist
+			if m.BussDataSource.GetInviteCode != nil {
+				invite, _ = m.BussDataSource.GetInviteCode(req.InviteCode)
+				if invite == nil || invite.Uid == "" {
+					inviteCodeIsExist = false
 					break
 				}
 			}
@@ -1198,7 +1203,7 @@ func (u *User) register(c *wkhttp.Context) {
 		Flag:     int(req.Flag),
 		Device:   req.Device,
 	}
-	u.createUser(registerSpanCtx, model, c, req.InviteCode)
+	u.createUser(registerSpanCtx, model, c, invite)
 }
 
 // 搜索用户
@@ -2186,7 +2191,11 @@ func (u *User) addSystemFriend(uid string) error {
 		u.Error("查询用户关系失败")
 		return err
 	}
-	tx, _ := u.friendDB.session.Begin()
+	tx, err := u.friendDB.session.Begin()
+	if err != nil {
+		u.Error("创建数据库事物失败")
+		return errors.New("创建数据库事物失败")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -2344,8 +2353,13 @@ func allowUpdateUserField(field string) bool {
 	return false
 }
 
-func (u *User) createUser(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, inviteCode string) {
-	tx, _ := u.db.session.Begin()
+func (u *User) createUser(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, invite *model.Invite) {
+	tx, err := u.db.session.Begin()
+	if err != nil {
+		u.Error("创建数据库事物失败", zap.Error(err))
+		c.ResponseError(errors.New("创建数据库事物失败"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -2353,7 +2367,7 @@ func (u *User) createUser(registerSpanCtx context.Context, createUser *createUse
 		}
 	}()
 	publicIP := util.GetClientPublicIP(c.Request)
-	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, inviteCode, tx, func() error {
+	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, invite, tx, func() error {
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()
@@ -2371,9 +2385,9 @@ func (u *User) createUser(registerSpanCtx context.Context, createUser *createUse
 	c.Response(resp)
 }
 
-func (u *User) createUserTx(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, commitCallback func() error, inviteCode string, tx *dbr.Tx) {
+func (u *User) createUserTx(registerSpanCtx context.Context, createUser *createUserModel, c *wkhttp.Context, commitCallback func() error, invite *model.Invite, tx *dbr.Tx) {
 	publicIP := util.GetClientPublicIP(c.Request)
-	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, inviteCode, tx, commitCallback)
+	resp, err := u.createUserWithRespAndTx(registerSpanCtx, createUser, publicIP, invite, tx, commitCallback)
 	if err != nil {
 		c.ResponseError(errors.New("注册失败！"))
 		return
@@ -2381,7 +2395,7 @@ func (u *User) createUserTx(registerSpanCtx context.Context, createUser *createU
 	c.Response(resp)
 }
 
-func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUser *createUserModel, publicIP string, inviteCode string, tx *dbr.Tx, commitCallback func() error) (*loginUserDetailResp, error) {
+func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUser *createUserModel, publicIP string, invite *model.Invite, tx *dbr.Tx, commitCallback func() error) (*loginUserDetailResp, error) {
 	var (
 		shortNo = ""
 		err     error
@@ -2471,13 +2485,23 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 		u.Error("添加注册用户和文件助手为好友关系失败", zap.Error(err))
 		return nil, err
 	}
+	inviteCode := ""
+	inviteUID := ""
+	vercode := ""
+	if invite != nil {
+		inviteCode = invite.InviteCode
+		inviteUID = invite.Uid
+		vercode = invite.Vercode
+	}
 	//发送用户注册事件
 	eventID, err := u.ctx.EventBegin(&wkevent.Data{
 		Event: event.EventUserRegister,
 		Type:  wkevent.Message,
 		Data: map[string]interface{}{
-			"uid":         createUser.UID,
-			"invite_code": inviteCode,
+			"uid":            createUser.UID,
+			"invite_code":    inviteCode,
+			"invite_uid":     inviteUID,
+			"invite_vercode": vercode,
 		},
 	}, tx)
 	if err != nil {

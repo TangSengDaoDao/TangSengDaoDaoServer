@@ -131,7 +131,12 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		Flag:     flag,
 		Device:   device,
 	}
-	tx, _ := u.db.session.Begin()
+	tx, err := u.db.session.Begin()
+	if err != nil {
+		u.Error("创建事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("创建事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -139,7 +144,7 @@ func (u *User) registerWithUsername(username string, name string, password strin
 		}
 	}()
 	publicIP := util.GetClientPublicIP(c.Request)
-	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, "", tx, func() error {
+	result, err := u.createUserWithRespAndTx(registerSpanCtx, model, publicIP, nil, tx, func() error {
 		err := tx.Commit()
 		if err != nil {
 			tx.Rollback()

@@ -7,7 +7,6 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"go.uber.org/zap"
 )
@@ -86,7 +85,16 @@ func (g *groupUpdateContext) updateGroup() error {
 
 func (g *groupUpdateContext) commmitGroupUpdateEvent(key, value string) error {
 	tx, err := g.g.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		g.g.Error("开启事务失败！", zap.Error(err))
+		return errors.New("开启事务失败！")
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 	groupNo := g.groupModel.GroupNo
 	// 发布群信息更新事件
 	eventID, err := g.g.ctx.EventBegin(&wkevent.Data{
@@ -247,6 +255,19 @@ var groupUpdateActionMap = map[string]groupUpdateActionFnc{
 		}
 		ctx.groupModel.AllowViewHistoryMsg = int(value.(float64))
 
+		err := ctx.updateGroup()
+		if err != nil {
+			return err
+		}
+		groupNo := ctx.groupModel.GroupNo
+		// 通知群内成员更新频道
+		return ctx.g.ctx.SendChannelUpdateToGroup(groupNo)
+	},
+	common.GroupAllowMemberPinnedMessage: func(ctx *groupUpdateContext, value interface{}) error {
+		if err := ctx.checkPermissions(); err != nil {
+			return err
+		}
+		ctx.groupModel.AllowMemberPinnedMessage = int(value.(float64))
 		err := ctx.updateGroup()
 		if err != nil {
 			return err

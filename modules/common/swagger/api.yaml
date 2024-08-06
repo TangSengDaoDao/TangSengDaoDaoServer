@@ -29,38 +29,44 @@ paths:
         200:
           description: "返回"
           schema:
-              properties:
-                revoke_second:
-                  type: integer
-                  description: "消息撤回时间限制（单位秒）"
-                welcome_message:
-                  type: string
-                  description: "登录欢迎语"
-                new_user_join_system_group:
-                  type: integer
-                  description: "注册用户是否加入系统群 1.是"
-                search_by_phone:
-                  type: integer
-                  description: "是否开启手机号搜索 1.是"
-                register_invite_on:
-                  type: integer
-                  description: "是否开启注册邀请机制 1.开启"
-                send_welcome_message_on:
-                  type: integer
-                  description: "是否开启注册登录发送欢迎语 1.开启"
-                invite_system_account_join_group_on:
-                  type: integer
-                  description: "是否开启系统账号加入群聊 1.开启"
-                register_user_must_complete_info_on:
-                  type: integer
-                  description: "是否开启注册用户必须填写完整信息 1.开启"
+            properties:
+              revoke_second:
+                type: integer
+                description: "消息撤回时间限制（单位秒）"
+              welcome_message:
+                type: string
+                description: "登录欢迎语"
+              new_user_join_system_group:
+                type: integer
+                description: "注册用户是否加入系统群 1.是"
+              search_by_phone:
+                type: integer
+                description: "是否开启手机号搜索 1.是"
+              register_invite_on:
+                type: integer
+                description: "是否开启注册邀请机制 1.开启"
+              send_welcome_message_on:
+                type: integer
+                description: "是否开启注册登录发送欢迎语 1.开启"
+              invite_system_account_join_group_on:
+                type: integer
+                description: "是否开启系统账号加入群聊 1.开启"
+              register_user_must_complete_info_on:
+                type: integer
+                description: "是否开启注册用户必须填写完整信息 1.开启"
+              channel_pinned_message_max_count:
+                type: integer
+                description: "频道置顶消息最大数量"
+              can_modify_api_url:
+                type: integer
+                description: "是否允许修改api地址 1.允许"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
       security:
-        - token: [] 
-    post: 
+        - token: []
+    post:
       tags:
         - "commonManager"
       summary: "修改app配置"
@@ -88,8 +94,8 @@ paths:
                 type: integer
                 description: "新用户是否加入群聊 1.是"
               search_by_phone:
-                  type: integer
-                  description: "是否开启手机号搜索 1.是"
+                type: integer
+                description: "是否开启手机号搜索 1.是"
               register_invite_on:
                 type: integer
                 description: "是否开启注册邀请机制 1.开启"
@@ -102,6 +108,12 @@ paths:
               register_user_must_complete_info_on:
                 type: integer
                 description: "是否开启注册用户必须填写完整信息 1.开启"
+              channel_pinned_message_max_count:
+                type: integer
+                description: "频道置顶消息最大数量"
+              can_modify_api_url:
+                type: integer
+                description: "是否允许修改api地址 1.允许"
       responses:
         200:
           description: "返回"
@@ -131,7 +143,7 @@ paths:
             type: array
             items:
               properties:
-                sid: 
+                sid:
                   type: string
                   description: "模块唯一ID"
                 name:
@@ -140,7 +152,7 @@ paths:
                 desc:
                   type: string
                   description: "模块说明"
-                status: 
+                status:
                   type: integer
                   description: "模块状态 1.可选 0.不可选 2.选中不可编辑"
         400:
@@ -149,7 +161,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-    put:  
+    put:
       tags:
         - "commonManager"
       summary: "修改app模块"
@@ -174,9 +186,9 @@ paths:
                 type: string
                 description: "模块名称"
               desc:
-                  type: string
-                  description: "模块说明"
-              status: 
+                type: string
+                description: "模块说明"
+              status:
                 type: integer
                 description: "模块状态 1.可选 0.不可选 2.选中不可编辑"
       responses:
@@ -190,7 +202,7 @@ paths:
             $ref: "#/definitions/response"
       security:
         - token: []
-    post: 
+    post:
       tags:
         - "commonManager"
       summary: "添加app模块"
@@ -215,9 +227,9 @@ paths:
                 type: string
                 description: "模块名称"
               desc:
-                  type: string
-                  description: "模块说明"
-              status: 
+                type: string
+                description: "模块说明"
+              status:
                 type: integer
                 description: "模块状态 1.可选 0.不可选 2.选中不可编辑"
       responses:
@@ -252,7 +264,7 @@ paths:
         200:
           description: "返回"
           schema:
-              $ref: "#/definitions/response"
+            $ref: "#/definitions/response"
         400:
           description: "错误"
           schema:
@@ -285,9 +297,9 @@ paths:
                 type: string
                 description: "平台"
               is_force:
-                  type: integer
-                  description: "是否强制更新 1.是"
-              update_desc: 
+                type: integer
+                description: "是否强制更新 1.是"
+              update_desc:
                 type: string
                 description: "更新说明"
               download_url:
@@ -300,13 +312,13 @@ paths:
         200:
           description: "返回"
           schema:
-             $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
       security:
-        - token: [] 
+        - token: []
   /common/appversion/{os}/{version}:
     get:
       tags:
@@ -323,41 +335,41 @@ paths:
           name: "os"
           type: string
           description: "平台类型android|ios"
-          required: true 
+          required: true
         - in: "path"
           name: "version"
           type: string
           description: "版本号"
-          required: true 
+          required: true
       responses:
         200:
           description: "返回"
           schema:
-              properties:
-                app_version:
-                  type: string
-                  description: "版本号"
-                os:
-                  type: string
-                  description: "平台 android|ios"
-                is_force:
-                  type: integer
-                  description: "是否强制更新 1.是"
-                update_desc:
-                  type: string
-                  description: "更新说明"
-                download_url:
-                  type: string
-                  description: "下载地址"
-                created_at:
-                  type: string
-                  description: "更新时间"
+            properties:
+              app_version:
+                type: string
+                description: "版本号"
+              os:
+                type: string
+                description: "平台 android|ios"
+              is_force:
+                type: integer
+                description: "是否强制更新 1.是"
+              update_desc:
+                type: string
+                description: "更新说明"
+              download_url:
+                type: string
+                description: "下载地址"
+              created_at:
+                type: string
+                description: "更新时间"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
       security:
-        - token: [] 
+        - token: []
   /common/updater/{os}/{version}:
     get:
       tags:
@@ -374,36 +386,36 @@ paths:
           name: "os"
           type: string
           description: "平台类型android|ios"
-          required: true 
+          required: true
         - in: "path"
           name: "version"
           type: string
           description: "版本号"
-          required: true 
+          required: true
       responses:
         200:
           description: "返回"
           schema:
-              properties:
-                url:
-                  type: string
-                  description: "下载地址"
-                version:
-                  type: string
-                  description: "版本号"
-                notes:
-                  type: string
-                  description: "更新说明"
-                signature:
-                  type: string
-                  description: "安装包签名"
-                pub_date:
-                  type: string
-                  description: "更新时间"
+            properties:
+              url:
+                type: string
+                description: "下载地址"
+              version:
+                type: string
+                description: "版本号"
+              notes:
+                type: string
+                description: "更新说明"
+              signature:
+                type: string
+                description: "安装包签名"
+              pub_date:
+                type: string
+                description: "更新时间"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
+            $ref: "#/definitions/response"
 
   /common/chatbg:
     get:
@@ -423,31 +435,31 @@ paths:
             type: array
             items:
               properties:
-               cover:
+                cover:
                   type: string
                   description: "封面"
-               url:
+                url:
                   type: string
                   description: "图片地址"
-               is_svg:
+                is_svg:
                   type: integer
                   description: "是否是svg图片 1.是"
-               light_colors:
+                light_colors:
                   type: array
                   items:
                     type: string
                     description: "亮色背景颜色数组"
-               dark_colors:
+                dark_colors:
                   type: array
                   items:
                     type: string
                     description: "暗色背景颜色数组"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response' 
+            $ref: "#/definitions/response"
       security:
-        - token: []      
+        - token: []
   /common/appmodule:
     get:
       tags:
@@ -458,7 +470,7 @@ paths:
       consumes:
         - "application/json"
       produces:
-        - "application/json"   
+        - "application/json"
       responses:
         200:
           description: "返回"
@@ -466,26 +478,25 @@ paths:
             type: array
             items:
               properties:
-               sid:
+                sid:
                   type: string
                   description: "模块ID"
-               name:
+                name:
                   type: string
                   description: "模块名称"
-               desc:
+                desc:
                   type: string
                   description: "模块说明"
-               status:
+                status:
                   type: integer
                   description: "模块状态 1.可选 0.不可选 2.默认选中不可编辑"
-                
-                
+
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response' 
+            $ref: "#/definitions/response"
       security:
-        - token: []       
+        - token: []
   /common/appconfig:
     get:
       tags:
@@ -496,7 +507,7 @@ paths:
       consumes:
         - "application/json"
       produces:
-        - "application/json"   
+        - "application/json"
       parameters:
         - in: "query"
           name: "version"
@@ -506,39 +517,45 @@ paths:
         200:
           description: "返回"
           schema:
-              properties:
-                version:
-                  type: string
-                  description: "版本号"
-                web_url:
-                  type: string
-                  description: "web 地址"
-                phone_search_off:
-                  type: integer
-                  description: "手机号搜索是否开启 1.是"
-                shortno_edit_off:
-                  type: integer
-                  description: "短号是否已编辑 1.是"
-                revoke_second:
-                  type: integer
-                  description: "消息撤回限制时长"
-                register_invite_on:
-                  type: integer
-                  description: "是否开启注册邀请机制 1.开启"
-                send_welcome_message_on:
-                  type: integer
-                  description: "是否开启注册登录发送欢迎语 1.开启"
-                invite_system_account_join_group_on:
-                  type: integer
-                  description: "是否开启系统账号加入群聊 1.开启"
-                register_user_must_complete_info_on:
-                  type: integer
-                  description: "是否开启注册用户必须填写完整信息 1.开启"
+            properties:
+              version:
+                type: string
+                description: "版本号"
+              web_url:
+                type: string
+                description: "web 地址"
+              phone_search_off:
+                type: integer
+                description: "手机号搜索是否开启 1.是"
+              shortno_edit_off:
+                type: integer
+                description: "短号是否已编辑 1.是"
+              revoke_second:
+                type: integer
+                description: "消息撤回限制时长"
+              register_invite_on:
+                type: integer
+                description: "是否开启注册邀请机制 1.开启"
+              send_welcome_message_on:
+                type: integer
+                description: "是否开启注册登录发送欢迎语 1.开启"
+              invite_system_account_join_group_on:
+                type: integer
+                description: "是否开启系统账号加入群聊 1.开启"
+              register_user_must_complete_info_on:
+                type: integer
+                description: "是否开启注册用户必须填写完整信息 1.开启"
+              channel_pinned_message_max_count:
+                type: integer
+                description: "频道置顶消息最大数量"
+              can_modify_api_url:
+                type: integer
+                description: "是否允许修改api地址 1.允许"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response'
-               
+            $ref: "#/definitions/response"
+
   /common/countries:
     get:
       tags:
@@ -549,7 +566,7 @@ paths:
       consumes:
         - "application/json"
       produces:
-        - "application/json"   
+        - "application/json"
       responses:
         200:
           description: "返回"
@@ -557,19 +574,19 @@ paths:
             type: array
             items:
               properties:
-               code:
+                code:
                   type: string
                   description: "区号"
-               name:
+                name:
                   type: string
                   description: "国家地区名称"
-               icon:
+                icon:
                   type: string
                   description: "emoji icon"
         400:
-          description: '错误'
+          description: "错误"
           schema:
-            $ref: '#/definitions/response' 
+            $ref: "#/definitions/response"
 
 securityDefinitions:
   token:

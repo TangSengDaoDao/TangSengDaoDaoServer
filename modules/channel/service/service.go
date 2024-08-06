@@ -12,4 +12,5 @@ type ChannelSettingResp struct {
 	ChannelType       uint8
 	ParentChannelID   string
 	ParentChannelType uint8
+	OffsetMessageSeq  uint32
 }

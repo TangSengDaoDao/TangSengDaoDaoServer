@@ -49,5 +49,7 @@ type appConfigModel struct {
 	SendWelcomeMessageOn           int    // 开启注册登录发送欢迎语
 	InviteSystemAccountJoinGroupOn int    // 开启系统账号加入群聊
 	RegisterUserMustCompleteInfoOn int    // 注册用户是否必须完善个人信息
+	ChannelPinnedMessageMaxCount   int    // 频道置顶消息最大数量
+	CanModifyApiUrl                int    // 是否可以修改API地址
 	ldb.BaseModel
 }

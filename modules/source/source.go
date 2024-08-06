@@ -35,6 +35,19 @@ type IGetUserProvider interface {
 	GetFriendByVercodes(vercodes []string) ([]*FriendModel, error)
 }
 
+// IGetInviteCodeProvider 获取邀请码提供者
+type IGetInviteCodeProvider interface {
+	// 查询邀请码是否存在
+	InviteCoceIsExist(code string) (bool, error)
+}
+
+var getInviteCodeProvide IGetInviteCodeProvider
+
+// SetInviteCodeProvide 设置获取邀请码提供者
+func SetInviteCodeProvide(inviteCodeProvide IGetInviteCodeProvider) {
+	getInviteCodeProvide = inviteCodeProvide
+}
+
 var getGroupMemberProvide IGetGroupMemberProvider
 
 // SetGroupMemberProvider 设置获取群成员提供者
@@ -57,7 +70,7 @@ func GetSoruce(code string) string {
 	strs := strings.Split(code, "@")
 	codeTypeStr, _ := strconv.Atoi(strs[1])
 	codeType := common.VercodeType(codeTypeStr)
-	if codeType != common.Friend && codeType != common.QRCode && codeType != common.User && codeType != common.GroupMember && codeType != common.MailList {
+	if codeType != common.Friend && codeType != common.QRCode && codeType != common.User && codeType != common.GroupMember && codeType != common.MailList && codeType != common.InvitationCode {
 		return ""
 	}
 	if codeType == common.Friend {
@@ -74,6 +87,8 @@ func GetSoruce(code string) string {
 		return "通过搜索添加"
 	} else if codeType == common.QRCode {
 		return "通过扫一扫添加"
+	} else if codeType == common.InvitationCode {
+		return "通过邀请码注册添加"
 	} else if codeType == common.GroupMember {
 		groupMember, err := getGroupMemberProvide.GetGroupMemberByVercode(code)
 		if err != nil || groupMember == nil {
@@ -141,6 +156,10 @@ func GetSources(codes []string) (map[string]string, error) {
 		} else if codeType == common.QRCode {
 			for _, code := range codes {
 				codeSourceMap[code] = "通过扫一扫添加"
+			}
+		} else if codeType == common.InvitationCode {
+			for _, code := range codes {
+				codeSourceMap[code] = "通过邀请码注册添加"
 			}
 		} else if codeType == common.GroupMember {
 			groupMembers, err := getGroupMemberProvide.GetGroupMemberByVercodes(codes)
@@ -213,7 +232,7 @@ func CheckSource(code string) error {
 	strs := strings.Split(code, "@")
 	codeTypeStr, _ := strconv.Atoi(strs[1])
 	codeType := common.VercodeType(codeTypeStr)
-	if codeType != common.Friend && codeType != common.QRCode && codeType != common.User && codeType != common.GroupMember && codeType != common.MailList {
+	if codeType != common.Friend && codeType != common.QRCode && codeType != common.User && codeType != common.GroupMember && codeType != common.MailList && codeType != common.InvitationCode {
 		return errors.New("来源错误")
 	}
 	if codeType == common.Friend {
@@ -259,6 +278,15 @@ func CheckSource(code string) error {
 			return err
 		}
 		if user == nil || user.MailListVercode != code {
+			return errors.New("来源不匹配")
+		}
+	} else if codeType == common.InvitationCode {
+		// 邀请码注册
+		isExist, err := getInviteCodeProvide.InviteCoceIsExist(code)
+		if err != nil {
+			return err
+		}
+		if !isExist {
 			return errors.New("来源不匹配")
 		}
 	}

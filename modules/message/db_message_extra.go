@@ -52,6 +52,16 @@ func (m *messageExtraDB) insertOrUpdateContentEditTx(md *messageExtraModel, tx *
 	return err
 }
 
+func (m *messageExtraDB) insertOrUpdatePinnedTx(md *messageExtraModel, tx *dbr.Tx) error {
+	_, err := tx.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,is_pinned,version) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE is_pinned=VALUES(is_pinned),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.IsPinned, md.Version).Exec()
+	return err
+}
+
+func (m *messageExtraDB) insertOrUpdateDeleted(md *messageExtraModel) error {
+	_, err := m.session.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,is_deleted,version) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE is_deleted=VALUES(is_deleted),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.IsDeleted, md.Version).Exec()
+	return err
+}
+
 // 是否存在相同编辑内容
 func (m *messageExtraDB) existContentEdit(messageID string, contentEditHash string) (bool, error) {
 	var count int
@@ -123,5 +133,6 @@ type messageExtraModel struct {
 	EditedAt        int // 编辑时间 时间戳（秒）
 	IsDeleted       int
 	Version         int64 // 数据版本
+	IsPinned        int   // 是否置顶
 	db.BaseModel
 }

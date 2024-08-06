@@ -18,6 +18,9 @@ func NewService(ctx *config.Context) chservice.IService {
 }
 
 func (s *service) GetChannelSettings(channelIDs []string) ([]*chservice.ChannelSettingResp, error) {
+	if len(channelIDs) == 0 {
+		return nil, nil
+	}
 	channelSettingModels, err := s.channelSettingDB.queryWithChannelIDs(channelIDs)
 	if err != nil {
 		return nil, err
@@ -42,5 +45,6 @@ func newChannelSettingResp(m *channelSettingModel) *chservice.ChannelSettingResp
 		ChannelType:       m.ChannelType,
 		ParentChannelID:   m.ParentChannelID,
 		ParentChannelType: m.ParentChannelType,
+		OffsetMessageSeq:  m.OffsetMessageSeq,
 	}
 }

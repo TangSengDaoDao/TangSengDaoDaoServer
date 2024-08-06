@@ -92,7 +92,6 @@ func (g *Group) handleRegisterUserEvent(data []byte, commit config.EventCommit) 
 	tx, err := g.db.session.Begin()
 	if err != nil {
 		g.Error("开启事物失败")
-		tx.Rollback()
 		commit(err)
 		return
 	}

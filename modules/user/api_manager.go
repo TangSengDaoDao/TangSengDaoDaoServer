@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
+	common2 "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 
@@ -28,6 +29,7 @@ type Manager struct {
 	deviceDB      *deviceDB
 	friendDB      *friendDB
 	onlineService IOnlineService
+	commonService common2.IService
 }
 
 // NewManager NewManager
@@ -41,6 +43,7 @@ func NewManager(ctx *config.Context) *Manager {
 		userDB:        NewDB(ctx),
 		userSettingDB: NewSettingDB(ctx.DB()),
 		onlineService: NewOnlineService(ctx),
+		commonService: common2.NewService(ctx),
 	}
 	m.createManagerAccount()
 	return m
@@ -48,9 +51,9 @@ func NewManager(ctx *config.Context) *Manager {
 
 // Route 配置路由规则
 func (m *Manager) Route(r *wkhttp.WKHttp) {
-	friend := r.Group("/v1/manager")
+	user := r.Group("/v1/manager")
 	{
-		friend.POST("/login", m.login) // 账号登录
+		user.POST("/login", m.login) // 账号登录
 	}
 	auth := r.Group("/v1/manager", m.ctx.AuthMiddleware(r))
 	{
@@ -327,15 +330,33 @@ func (m *Manager) addUser(c *wkhttp.Context) {
 		return
 	}
 	uid := util.GenerUUID()
-
-	tx, _ := m.db.session.Begin()
+	var shortNo = ""
+	var shortNumStatus = 0
+	if m.ctx.GetConfig().ShortNo.NumOn {
+		shortNo, err = m.commonService.GetShortno()
+		if err != nil {
+			m.Error("获取短编号失败！", zap.Error(err))
+			c.ResponseError(errors.New("获取短编号失败！"))
+			return
+		}
+	} else {
+		shortNo = util.Ten2Hex(time.Now().UnixNano())
+	}
+	if m.ctx.GetConfig().ShortNo.EditOff {
+		shortNumStatus = 1
+	}
+	tx, err := m.db.session.Begin()
+	if err != nil {
+		m.Error("开启事物错误", zap.Error(err))
+		c.ResponseError(errors.New("开启事物错误"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
 			panic(err)
 		}
 	}()
-
 	userModel := &Model{}
 	userModel.UID = uid
 	userModel.Name = req.Name
@@ -345,11 +366,12 @@ func (m *Manager) addUser(c *wkhttp.Context) {
 	userModel.Username = fmt.Sprintf("%s%s", req.Zone, req.Phone)
 	userModel.Zone = req.Zone
 	userModel.Password = util.MD5(util.MD5(req.Password))
-	userModel.ShortNo = util.Ten2Hex(time.Now().UnixNano())
+	userModel.ShortNo = shortNo
 	userModel.IsUploadAvatar = 0
 	userModel.NewMsgNotice = 1
 	userModel.MsgShowDetail = 1
 	userModel.SearchByPhone = 1
+	userModel.ShortStatus = shortNumStatus
 	userModel.SearchByShort = 1
 	userModel.VoiceOn = 1
 	userModel.ShockOn = 1
@@ -809,7 +831,11 @@ func (m *Manager) addSystemFriend(uid string) error {
 		m.Error("查询用户关系失败")
 		return err
 	}
-	tx, _ := m.friendDB.session.Begin()
+	tx, err := m.friendDB.session.Begin()
+	if err != nil {
+		m.Error("开启事物错误", zap.Error(err))
+		return errors.New("开启事物错误")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()

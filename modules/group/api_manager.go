@@ -10,7 +10,6 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
-	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"go.uber.org/zap"
@@ -244,7 +243,17 @@ func (m *Manager) leftbangroup(c *wkhttp.Context) {
 	//通知群成员更新群资料
 	// todo
 	tx, err := m.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 	groupMap := make(map[string]string)
 	groupMap["status"] = strconv.Itoa(groupStatus)
 	err = m.db.UpdateTx(group, tx)
@@ -327,7 +336,17 @@ func (m *Manager) forbidden(c *wkhttp.Context) {
 	}
 
 	tx, err := m.ctx.DB().Begin()
-	util.CheckErr(err)
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			tx.RollbackUnlessCommitted()
+			panic(err)
+		}
+	}()
 
 	err = m.db.UpdateTx(groupModel, tx)
 	if err != nil {

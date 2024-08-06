@@ -434,18 +434,18 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 	}
 
 	// ---------- 频道设置  ----------
-	// channelSettings, err := co.channelService.GetChannelSettings(channelIDs)
-	// if err != nil {
-	// 	co.Error("查询频道设置失败！", zap.Error(err))
-	// 	c.ResponseError(errors.New("查询频道设置失败！"))
-	// 	return
-	// }
-	// channelSettingMap := map[string]*channel.ChannelSettingResp{}
-	// if len(channelSettings) > 0 {
-	// 	for _, channelSetting := range channelSettings {
-	// 		channelSettingMap[fmt.Sprintf("%s-%d", channelSetting.ChannelID, channelSetting.ChannelType)] = channelSetting
-	// 	}
-	// }
+	channelSettings, err := co.channelService.GetChannelSettings(channelIDs)
+	if err != nil {
+		co.Error("查询频道设置失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询频道设置失败！"))
+		return
+	}
+	channelSettingMessageOffsetMap := make(map[string]uint32)
+	if len(channelSettings) > 0 {
+		for _, channelSetting := range channelSettings {
+			channelSettingMessageOffsetMap[fmt.Sprintf("%s-%d", channelSetting.ChannelID, channelSetting.ChannelType)] = channelSetting.OffsetMessageSeq
+		}
+	}
 
 	syncUserConversationResps := make([]*SyncUserConversationResp, 0, len(conversations))
 	userKey := loginUID
@@ -482,12 +482,12 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 
 			}
 			channelKey := fmt.Sprintf("%s-%d", conversation.ChannelID, conversation.ChannelType)
-
+			var channelOffsetMessageSeq = channelSettingMessageOffsetMap[channelKey]
 			// channelSetting := channelSettingMap[channelKey]
 			channelOffsetM := channelOffsetModelMap[channelKey]
 			deviceOffsetM := deviceOffsetModelMap[channelKey]
 			extra := conversationExtraMap[channelKey]
-			syncUserConversationResp := newSyncUserConversationResp(conversation, extra, loginUID, co.messageExtraDB, co.messageReactionDB, co.messageUserExtraDB, mute, stick, channelOffsetM, deviceOffsetM)
+			syncUserConversationResp := newSyncUserConversationResp(conversation, extra, loginUID, co.messageExtraDB, co.messageReactionDB, co.messageUserExtraDB, mute, stick, channelOffsetM, deviceOffsetM, channelOffsetMessageSeq)
 			if len(syncUserConversationResp.Recents) > 0 {
 				syncUserConversationResps = append(syncUserConversationResps, syncUserConversationResp)
 			}
@@ -709,9 +709,30 @@ func (co *Conversation) getConversations(c *wkhttp.Context) {
 		userUIDs := make([]string, 0)
 		groupNos := make([]string, 0)
 		visitorNos := make([]string, 0)
+		channelIds := make([]string, 0)
+		for _, resp := range resps {
+			fakeChannelID := resp.ChannelID
+			if resp.ChannelType == common.ChannelTypePerson.Uint8() {
+				fakeChannelID = common.GetFakeChannelIDWith(resp.ChannelID, loginUID)
+			}
+			channelIds = append(channelIds, fakeChannelID)
+		}
+		channelSettings, err := co.channelService.GetChannelSettings(channelIds)
+		if err != nil {
+			co.Error("查询频道设置错误！", zap.Error(err))
+			c.ResponseError(errors.New("查询频道设置错误！"))
+			return
+		}
+		channelSettingMessageOffsetMap := make(map[string]uint32)
+		if len(channelSettings) > 0 {
+			for _, channelSetting := range channelSettings {
+				channelSettingMessageOffsetMap[fmt.Sprintf("%s-%d", channelSetting.ChannelID, channelSetting.ChannelType)] = channelSetting.OffsetMessageSeq
+			}
+		}
 		for _, resp := range resps {
 			conversationResp := &conversationResp{}
-			conversationResp.from(resp, loginUID, nil, nil)
+			channelKey := fmt.Sprintf("%s-%d", resp.ChannelID, resp.ChannelType)
+			conversationResp.from(resp, loginUID, nil, nil, channelSettingMessageOffsetMap[channelKey])
 			conversationResps = append(conversationResps, *conversationResp)
 			if resp.ChannelType == common.ChannelTypePerson.Uint8() {
 				userUIDs = append(userUIDs, resp.ChannelID)
@@ -851,13 +872,13 @@ type conversationWrapResp struct {
 	Users         []userResp         `json:"users"`         // 好友集合
 }
 
-func (m *conversationResp) from(resp *config.ConversationResp, loginUID string, messageExtra *messageExtraDetailModel, messageUserExtraM *messageUserExtraModel) {
+func (m *conversationResp) from(resp *config.ConversationResp, loginUID string, messageExtra *messageExtraDetailModel, messageUserExtraM *messageUserExtraModel, channelOffsetMessageSeq uint32) {
 	m.ChannelID = resp.ChannelID
 	m.ChannelType = resp.ChannelType
 	m.Unread = resp.Unread
 	m.Timestamp = resp.Timestamp
 	msgSyncResp := &MsgSyncResp{}
-	msgSyncResp.from(resp.LastMessage, loginUID, messageExtra, messageUserExtraM, nil)
+	msgSyncResp.from(resp.LastMessage, loginUID, messageExtra, messageUserExtraM, nil, channelOffsetMessageSeq)
 	m.LastMessage = msgSyncResp
 }
 
@@ -1003,7 +1024,7 @@ type SyncUserConversationResp struct {
 	Extra           *conversationExtraResp `json:"extra,omitempty"`    // 扩展
 }
 
-func newSyncUserConversationResp(resp *config.SyncUserConversationResp, extra *conversationExtraResp, loginUID string, messageExtraDB *messageExtraDB, messageReactionDB *messageReactionDB, messageUserExtraDB *messageUserExtraDB, mute int, stick int, channelOffsetM *channelOffsetModel, deviceOffsetM *deviceOffsetModel) *SyncUserConversationResp {
+func newSyncUserConversationResp(resp *config.SyncUserConversationResp, extra *conversationExtraResp, loginUID string, messageExtraDB *messageExtraDB, messageReactionDB *messageReactionDB, messageUserExtraDB *messageUserExtraDB, mute int, stick int, channelOffsetM *channelOffsetModel, deviceOffsetM *deviceOffsetModel, channelOffsetMessageSeq uint32) *SyncUserConversationResp {
 	recents := make([]*MsgSyncResp, 0, len(resp.Recents))
 	lastClientMsgNo := "" // 最新未被删除的消息的clientMsgNo
 	if len(resp.Recents) > 0 {
@@ -1062,7 +1083,7 @@ func newSyncUserConversationResp(resp *config.SyncUserConversationResp, extra *c
 			messageExtra := messageExtraMap[messageIDStr]
 			messageUserExtra := messageUserExtraMap[messageIDStr]
 			msgResp := &MsgSyncResp{}
-			msgResp.from(message, loginUID, messageExtra, messageUserExtra, messageReactionMap[messageIDStr])
+			msgResp.from(message, loginUID, messageExtra, messageUserExtra, messageReactionMap[messageIDStr], channelOffsetMessageSeq)
 			recents = append(recents, msgResp)
 
 			if lastClientMsgNo == "" && msgResp.IsDeleted == 0 {

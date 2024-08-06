@@ -1,6 +1,7 @@
 package message
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
@@ -22,7 +23,10 @@ func newRemindersDB(ctx *config.Context) *remindersDB {
 }
 
 func (r *remindersDB) inserts(models []*remindersModel) error {
-	tx, _ := r.session.Begin()
+	tx, err := r.session.Begin()
+	if err != nil {
+		return errors.New("开启事物错误")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
