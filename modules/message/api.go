@@ -314,26 +314,32 @@ func (m *Message) messageEdit(c *wkhttp.Context) {
 	msgIds := make([]string, 0)
 	msgIds = append(msgIds, req.MessageID)
 	// 发布编辑事件
-	eventID, err := m.ctx.EventBegin(&wkevent.Data{
-		Event: event.EventUpdateSearchMessage,
-		Data: &config.UpdateSearchMessageReq{
-			MessageIDs: msgIds,
-			ChannelID:  req.ChannelID,
-		},
-		Type: wkevent.None,
-	}, tx)
-	if err != nil {
-		tx.Rollback()
-		m.Error("开启事件失败！", zap.Error(err))
-		c.ResponseError(errors.New("开启事件失败！"))
-		return
+	var eventID int64 = 0
+	if m.ctx.GetConfig().ZincSearch.SearchOn {
+		eventID, err = m.ctx.EventBegin(&wkevent.Data{
+			Event: event.EventUpdateSearchMessage,
+			Data: &config.UpdateSearchMessageReq{
+				MessageIDs: msgIds,
+				ChannelID:  req.ChannelID,
+			},
+			Type: wkevent.None,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("开启事件失败！", zap.Error(err))
+			c.ResponseError(errors.New("开启事件失败！"))
+			return
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		c.ResponseErrorf("事务提交失败！", err)
 		return
 	}
-	m.ctx.EventCommit(eventID)
+	if eventID > 0 {
+		m.ctx.EventCommit(eventID)
+	}
+
 	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
 		ChannelID:   req.ChannelID,
@@ -1474,19 +1480,22 @@ func (m *Message) revoke(c *wkhttp.Context) {
 	msgIds := make([]string, 0)
 	msgIds = append(msgIds, messageID)
 	// 发布撤回消息事件
-	eventID, err := m.ctx.EventBegin(&wkevent.Data{
-		Event: event.EventUpdateSearchMessage,
-		Data: &config.UpdateSearchMessageReq{
-			MessageIDs: msgIds,
-			ChannelID:  channelID,
-		},
-		Type: wkevent.None,
-	}, tx)
-	if err != nil {
-		tx.Rollback()
-		m.Error("开启事件失败！", zap.Error(err))
-		c.ResponseError(errors.New("开启事件失败！"))
-		return
+	var eventID int64 = 0
+	if m.ctx.GetConfig().ZincSearch.SearchOn {
+		eventID, err = m.ctx.EventBegin(&wkevent.Data{
+			Event: event.EventUpdateSearchMessage,
+			Data: &config.UpdateSearchMessageReq{
+				MessageIDs: msgIds,
+				ChannelID:  channelID,
+			},
+			Type: wkevent.None,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("开启事件失败！", zap.Error(err))
+			c.ResponseError(errors.New("开启事件失败！"))
+			return
+		}
 	}
 	err = m.deletePinnedMessage(channelID, uint8(channelTypeI), messageIDs, loginUID, tx)
 	if err != nil {
@@ -1498,7 +1507,9 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		c.ResponseErrorf("事务提交失败！", err)
 		return
 	}
-	m.ctx.EventCommit(eventID)
+	if eventID > 0 {
+		m.ctx.EventCommit(eventID)
+	}
 	// err = m.ctx.SendCMD(config.MsgCMDReq{
 	// 	NoPersist:   true,
 	// 	ChannelID:   channelID,

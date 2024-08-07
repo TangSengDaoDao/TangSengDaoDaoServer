@@ -35,6 +35,7 @@ func (e *Event) handleEvent(model *Model) {
 	if handler == nil {
 		listeners := e.ctx.GetEventListeners(model.Event)
 		if listeners == nil {
+			e.updateEventStatus(nil, model.VersionLock, model.Id)
 			e.Debug("不支持的事件!", zap.String("event", model.Event))
 			return
 		}
