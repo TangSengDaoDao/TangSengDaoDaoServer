@@ -238,6 +238,7 @@ func (d *DB) queryWithWXOpenIDAndWxUnionid(wxOpenid, wxUnionid string) (*Model, 
 
 // 通过gitee uid查询用户
 func (d *DB) queryWithGiteeUID(giteeUID string) (*Model, error) {
+
 	var model *Model
 	_, err := d.session.Select("*").From("user").Where("gitee_uid=?", giteeUID).Load(&model)
 	return model, err
