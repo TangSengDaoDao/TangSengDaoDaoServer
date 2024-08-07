@@ -114,6 +114,7 @@ func (sm *ServiceMinio) UploadFile(filePath string, contentType string, copyFile
 			"path": "",
 		}, err
 	}
+	println("上传文件结果", n.Key)
 	return map[string]interface{}{
 		"path": n.Key,
 	}, err
