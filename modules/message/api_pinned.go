@@ -111,16 +111,17 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询当前置顶消息数量错误"))
 		return
 	}
-	if currentCount >= int64(maxCount) {
-		c.ResponseError(errors.New("置顶数量已达到上限"))
-		return
-	}
 	pinnedMessage, err := m.pinnedDB.queryWithMessageId(fakeChannelID, req.ChannelType, req.MessageID)
 	if err != nil {
 		m.Error("查询置顶消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询置顶消息错误"))
 		return
 	}
+	if currentCount >= int64(maxCount) && (pinnedMessage == nil || pinnedMessage.IsDeleted == 1) {
+		c.ResponseError(errors.New("置顶数量已达到上限"))
+		return
+	}
+
 	tx, err := m.db.session.Begin()
 	if err != nil {
 		m.Error("开启事务错误", zap.Error(err))
