@@ -299,6 +299,21 @@ func (g *Group) groupMemberInviteDetail(c *wkhttp.Context) {
 		c.ResponseError(errors.New("获取邀请项失败！"))
 		return
 	}
+	var uids = make([]string, 0, len(inviteItems))
+	for _, item := range inviteItems {
+		uids = append(uids, item.UID)
+	}
+	// 查询被邀请的成员
+	members, err := g.db.QueryMembersWithUids(uids, inviteDetilModel.GroupNo)
+	if err != nil {
+		g.Error("查询成员信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询成员信息错误"))
+		return
+	}
+	if len(members) == len(inviteItems) {
+		inviteDetilModel.Status = 1
+	}
+
 	g.Debug("inviteItems-", zap.Int("len", len(inviteItems)))
 	c.Response(InviteDetailResp{}.From(inviteDetilModel, inviteItems))
 }
