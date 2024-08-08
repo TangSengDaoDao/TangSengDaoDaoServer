@@ -462,6 +462,7 @@ func newMemberResp(m *MemberDetailModel) *MemberResp {
 		Vercode:   m.Vercode,
 		InviteUID: m.InviteUID,
 		IsDeleted: m.IsDeleted,
+		CreatedAt: time.Time(m.CreatedAt).Unix(),
 	}
 }
 

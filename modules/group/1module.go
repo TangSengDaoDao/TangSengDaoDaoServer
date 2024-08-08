@@ -140,7 +140,7 @@ func init() {
 						InviteUID: member.InviteUID,
 						IsDeleted: member.IsDeleted,
 						Role:      member.Role,
-						CreatedAt: util.ToyyyyMMddHHmmss(time.Unix(member.CreatedAt, 0)),
+						CreatedAt: util.ToyyyyMMddHHmm(time.Unix(member.CreatedAt, 0)),
 					}, nil
 				},
 			},

@@ -287,7 +287,6 @@ func TestGroupUpdate(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 }
-
 func TestList(t *testing.T) {
 	s, ctx := testutil.NewTestServer()
 	f := New(ctx)
