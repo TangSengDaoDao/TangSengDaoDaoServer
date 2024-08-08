@@ -3,7 +3,9 @@ package group
 import (
 	"embed"
 	"fmt"
+	"time"
 
+	"github.com/TangSengDaoDao/TangSengDaoDaoServer/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
@@ -119,6 +121,27 @@ func init() {
 					}
 					isCreatorOrManager, err := api.groupService.IsCreatorOrManager(groupNO, loginUID)
 					return isCreatorOrManager, member.Vercode, err
+				},
+				GetGroupMember: func(groupNO, uid string) (*model.GroupMemberResp, error) {
+					if groupNO == "" || uid == "" {
+						return nil, nil
+					}
+
+					member, err := api.groupService.GetMember(groupNO, uid)
+					if err != nil {
+						return nil, err
+					}
+					if member == nil {
+						return nil, nil
+					}
+					return &model.GroupMemberResp{
+						UID:       member.UID,
+						GroupNo:   member.GroupNo,
+						InviteUID: member.InviteUID,
+						IsDeleted: member.IsDeleted,
+						Role:      member.Role,
+						CreatedAt: util.ToyyyyMMddHHmmss(time.Unix(member.CreatedAt, 0)),
+					}, nil
 				},
 			},
 		}
