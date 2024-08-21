@@ -97,8 +97,8 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 	}
 	appConfig, err := m.commonService.GetAppConfig()
 	if err != nil {
-		m.Error("查询一样配置错误", zap.Error(err))
-		c.ResponseError(errors.New("查询一样配置错误"))
+		m.Error("查询配置错误", zap.Error(err))
+		c.ResponseError(errors.New("查询配置错误"))
 		return
 	}
 	var maxCount = 10

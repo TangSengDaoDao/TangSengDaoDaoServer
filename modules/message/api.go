@@ -80,6 +80,7 @@ func New(ctx *config.Context) *Message {
 		channelService:      channel.NewService(ctx),
 	}
 	m.ctx.AddEventListener(event.GroupMemberAdd, m.handleGroupMemberAddEvent)
+	m.ctx.AddEventListener(event.GroupMemberScanJoin, m.handleGroupMemberScanJoinEvent)
 	return m
 }
 

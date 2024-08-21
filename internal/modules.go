@@ -15,4 +15,5 @@ import (
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/statistics"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/webhook"
+	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/workplace"
 )
