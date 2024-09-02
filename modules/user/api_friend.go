@@ -383,7 +383,12 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询用户通讯录红点信息错误"))
 		return
 	}
-	tx, _ := f.ctx.DB().Begin()
+	tx, err := f.ctx.DB().Begin()
+	if err != nil {
+		f.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -559,7 +564,12 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 		return
 	}
 	// 添加好友到数据库
-	tx, _ := f.ctx.DB().Begin()
+	tx, err := f.ctx.DB().Begin()
+	if err != nil {
+		f.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -586,14 +596,14 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 			SourceVercode: vercode,
 		}, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			c.ResponseError(errors.New("添加好友失败！"))
 			return
 		}
 	} else {
 		err = f.db.updateRelationshipTx(loginUID, applyUID, 0, 0, vercode, version, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			c.ResponseError(errors.New("修改好友关系失败"))
 			return
 		}
@@ -602,7 +612,7 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 	loginFriendModel, err := f.db.queryWithUID(applyUID, loginUID)
 	//loginIsFriend, err := f.db.IsFriend(applyUID, loginUID)
 	if err != nil {
-		util.CheckErr(tx.Rollback())
+		tx.Rollback()
 		f.Error("查询被添加者是否是好友失败！", zap.Error(err), zap.String("uid", loginUID), zap.String("toUid", applyUID))
 		c.ResponseError(errors.New("查询被添加者是否是好友失败！"))
 		return
@@ -618,14 +628,14 @@ func (f *Friend) friendSure(c *wkhttp.Context) {
 			SourceVercode: vercode,
 		}, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			c.ResponseError(errors.New("添加好友失败！"))
 			return
 		}
 	} else {
 		err = f.db.updateRelationshipTx(applyUID, loginUID, 0, 0, vercode, version, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			c.ResponseError(errors.New("修改好友关系失败"))
 			return
 		}

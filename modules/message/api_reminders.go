@@ -27,14 +27,19 @@ func (m *Message) reminderDone(c *wkhttp.Context) {
 		return
 	}
 	loginUID := c.GetLoginUID()
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
 			panic(err)
 		}
 	}()
-	err := m.remindersDB.insertDonesTx(ids, loginUID, tx)
+	err = m.remindersDB.insertDonesTx(ids, loginUID, tx)
 	if err != nil {
 		tx.Rollback()
 		m.Error("添加done失败！", zap.Error(err))

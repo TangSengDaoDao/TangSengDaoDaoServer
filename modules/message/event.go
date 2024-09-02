@@ -90,7 +90,11 @@ func (m *Message) handleReadedMessageCount() {
 		messageChannelMap[fakeChannelID] = list
 	}
 
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()

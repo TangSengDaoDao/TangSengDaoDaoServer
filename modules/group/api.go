@@ -809,7 +809,12 @@ func (g *Group) groupUpdate(c *wkhttp.Context) {
 			group.Invite = int(invite)
 		}
 	}
-	tx, _ := g.ctx.DB().Begin()
+	tx, err := g.ctx.DB().Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -1187,7 +1192,11 @@ func (g *Group) addMembersTx(members []string, groupNo string, operator, operato
 }
 
 func (g *Group) addMembers(members []string, groupNo string, operator, operatorName string) error {
-	tx, _ := g.ctx.DB().Begin()
+	tx, err := g.ctx.DB().Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		return errors.New("开启事务失败！")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -1396,7 +1405,12 @@ func (g *Group) groupForbidden(c *wkhttp.Context) {
 		return
 	}
 
-	tx, _ := g.ctx.DB().Begin()
+	tx, err := g.ctx.DB().Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()

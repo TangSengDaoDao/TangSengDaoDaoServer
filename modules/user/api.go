@@ -1632,7 +1632,12 @@ func (u *User) addBlacklist(c *wkhttp.Context) {
 	//添加黑名单
 	version := u.ctx.GenSeq(common.UserSettingSeqKey)
 	friendVersion := u.ctx.GenSeq(common.FriendSeqKey)
-	tx, _ := u.ctx.DB().Begin()
+	tx, err := u.ctx.DB().Begin()
+	if err != nil {
+		u.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -1699,14 +1704,19 @@ func (u *User) removeBlacklist(c *wkhttp.Context) {
 	version := u.ctx.GenSeq(common.UserSettingSeqKey)
 	friendVersion := u.ctx.GenSeq(common.FriendSeqKey)
 
-	tx, _ := u.ctx.DB().Begin()
+	tx, err := u.ctx.DB().Begin()
+	if err != nil {
+		u.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
 			panic(err)
 		}
 	}()
-	err := u.db.AddOrRemoveBlacklistTx(loginUID, uid, 0, version, tx)
+	err = u.db.AddOrRemoveBlacklistTx(loginUID, uid, 0, version, tx)
 	if err != nil {
 		tx.Rollback()
 		u.Error("移除黑名单失败！", zap.Error(err))

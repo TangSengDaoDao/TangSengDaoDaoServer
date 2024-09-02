@@ -70,7 +70,12 @@ func (m *manager) reorderBanner(c *wkhttp.Context) {
 		c.ResponseError(common.ErrData)
 		return
 	}
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -308,7 +313,12 @@ func (m *manager) addCategoryApp(c *wkhttp.Context) {
 	if maxSortNumApp != nil {
 		maxNum = maxSortNumApp.SortNum
 	}
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -363,7 +373,12 @@ func (m *manager) reorderCategoryApp(c *wkhttp.Context) {
 		c.ResponseError(errors.New("应用ID不能为空"))
 		return
 	}
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -651,7 +666,12 @@ func (m *manager) deleteApp(c *wkhttp.Context) {
 		c.ResponseOK()
 		return
 	}
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -710,7 +730,12 @@ func (m *manager) reorderCategory(c *wkhttp.Context) {
 		c.ResponseError(common.ErrData)
 		return
 	}
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()

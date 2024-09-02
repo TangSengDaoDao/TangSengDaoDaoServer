@@ -395,7 +395,12 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 		return
 	}
 
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1183,7 +1188,12 @@ func (m *Message) delete(c *wkhttp.Context) {
 		}
 	}
 
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1213,7 +1223,7 @@ func (m *Message) delete(c *wkhttp.Context) {
 		return
 	}
 
-	err := m.ctx.SendCMD(config.MsgCMDReq{
+	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
 		ChannelID:   loginUID,
 		ChannelType: common.ChannelTypePerson.Uint8(),
@@ -1352,7 +1362,11 @@ func (m *Message) cancelMentionReminderIfNeed(message *messageModel) {
 						}
 					}
 				} else if len(uids) > 0 {
-					tx, _ := m.ctx.DB().Begin()
+					tx, err := m.ctx.DB().Begin()
+					if err != nil {
+						m.Error("开启事务失败！", zap.Error(err))
+						return
+					}
 					defer func() {
 						if err := recover(); err != nil {
 							tx.RollbackUnlessCommitted()
@@ -1373,7 +1387,7 @@ func (m *Message) cancelMentionReminderIfNeed(message *messageModel) {
 						tx.RollbackUnlessCommitted()
 						return
 					}
-					err := m.ctx.SendCMD(config.MsgCMDReq{
+					err = m.ctx.SendCMD(config.MsgCMDReq{
 						NoPersist:   true,
 						Subscribers: uids,
 						CMD:         common.CMDSyncReminders,
