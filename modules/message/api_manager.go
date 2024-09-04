@@ -440,10 +440,10 @@ func (m *Manager) recordpersonal(c *wkhttp.Context) {
 		return
 	}
 	uids := make([]string, 0)
-	msgIds := make([]int64, 0)
+	msgIds := make([]string, 0)
 	for _, msg := range msgs {
 		uids = append(uids, msg.FromUID)
-		msgIds = append(msgIds, msg.MessageID)
+		msgIds = append(msgIds, strconv.FormatInt(msg.MessageID, 10))
 	}
 	msgExtrs, err := m.managerDB.queryMsgExtrWithMsgIds(msgIds)
 	if err != nil {
@@ -536,10 +536,10 @@ func (m *Manager) record(c *wkhttp.Context) {
 		return
 	}
 	uids := make([]string, 0)
-	msgIds := make([]int64, 0)
+	msgIds := make([]string, 0)
 	for _, msg := range msgs {
 		uids = append(uids, msg.FromUID)
-		msgIds = append(msgIds, msg.MessageID)
+		msgIds = append(msgIds, strconv.FormatInt(msg.MessageID, 10))
 	}
 	msgExtrs, err := m.managerDB.queryMsgExtrWithMsgIds(msgIds)
 	if err != nil {

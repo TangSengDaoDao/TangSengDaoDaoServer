@@ -54,7 +54,7 @@ func (m *managerDB) queryRecordCount(channelID string) (int64, error) {
 	return count, err
 }
 
-func (m *managerDB) queryMsgExtrWithMsgIds(msgIds []int64) ([]*messageExtraModel, error) {
+func (m *managerDB) queryMsgExtrWithMsgIds(msgIds []string) ([]*messageExtraModel, error) {
 	var list []*messageExtraModel
 	_, err := m.session.Select("*").From("message_extra").Where("message_id in ?", msgIds).Load(&list)
 	return list, err
