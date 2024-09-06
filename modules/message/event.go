@@ -34,6 +34,7 @@ func (m *Message) handleReadedMessageCount() {
 		m.Error("获取已读消息keys错误", zap.Error(err))
 		return
 	}
+	messageIds := make([]string, 0)
 	messages := make([]*messageReadedCountModel, 0)
 	if len(keysStr) > 0 {
 		for _, key := range keysStr {
@@ -49,6 +50,7 @@ func (m *Message) handleReadedMessageCount() {
 				return
 			}
 			messages = append(messages, &messageExtra)
+			messageIds = append(messageIds, messageExtra.MessageIDStr)
 			m.mutex.Lock()
 			err = m.ctx.GetRedisConn().Del(key)
 			if err != nil {
@@ -89,14 +91,23 @@ func (m *Message) handleReadedMessageCount() {
 		})
 		messageChannelMap[fakeChannelID] = list
 	}
-
+	m.mutex.Lock()
+	// 查询已经存在的消息扩展数据
+	messageExtras, err := m.messageExtraDB.queryWithMessageIDs(messageIds)
+	if err != nil {
+		m.mutex.Unlock()
+		m.Error("查询消息扩展数据错误", zap.Error(err))
+		return
+	}
 	tx, err := m.ctx.DB().Begin()
 	if err != nil {
+		m.mutex.Unlock()
 		m.Error("开启事务失败！", zap.Error(err))
 		return
 	}
 	defer func() {
 		if err := recover(); err != nil {
+			m.mutex.Unlock()
 			tx.RollbackUnlessCommitted()
 			panic(err)
 		}
@@ -123,6 +134,7 @@ func (m *Message) handleReadedMessageCount() {
 		}
 		messageReadedCountMap, err := m.memberReadedDB.queryCountWithMessageIDs(fakeChannelID, reqChannelType, messageIDStrs)
 		if err != nil {
+			m.mutex.Unlock()
 			tx.Rollback()
 			m.Error("获取消息已读数量map失败！", zap.Error(err))
 			return
@@ -135,56 +147,58 @@ func (m *Message) handleReadedMessageCount() {
 			if message.ChannelType == common.ChannelTypePerson.Uint8() {
 				count = 1
 			}
-			err = m.messageExtraDB.insertOrUpdateReadedCountTx(&messageExtraModel{
-				MessageID:   message.MessageIDStr,
-				MessageSeq:  message.MessageSeq,
-				FromUID:     message.FromUID,
-				ChannelID:   fakeChannelID,
-				ChannelType: reqChannelType,
-				ReadedCount: count,
-				Version:     version,
-			}, tx)
-			if err != nil {
-				tx.Rollback()
-				m.Error("添加或更新消息扩展数据失败！", zap.Error(err), zap.Int64("messageID", message.MessageID), zap.String("channelID", fakeChannelID))
-				return
+
+			var tempMsgExtra *messageExtraModel
+			for _, messageExtra := range messageExtras {
+				if messageExtra.MessageID == message.MessageIDStr {
+					tempMsgExtra = messageExtra
+					tempMsgExtra.ReadedCount = count
+					tempMsgExtra.Version = version
+					break
+				}
 			}
+			if tempMsgExtra == nil {
+				err = m.messageExtraDB.insertTx(&messageExtraModel{
+					MessageID:   message.MessageIDStr,
+					MessageSeq:  message.MessageSeq,
+					FromUID:     message.FromUID,
+					ChannelID:   fakeChannelID,
+					ChannelType: reqChannelType,
+					ReadedCount: count,
+					Version:     version,
+				}, tx)
+				if err != nil {
+					m.mutex.Unlock()
+					tx.Rollback()
+					m.Error("添加消息扩展数据失败！", zap.Error(err), zap.Int64("messageID", message.MessageID), zap.String("channelID", fakeChannelID))
+					return
+				}
+			} else {
+				err = m.messageExtraDB.updateTx(tempMsgExtra, tx)
+				if err != nil {
+					m.mutex.Unlock()
+					tx.Rollback()
+					m.Error("更新消息扩展数据失败！", zap.Error(err), zap.Int64("messageID", message.MessageID), zap.String("channelID", fakeChannelID))
+					return
+				}
+			}
+
 		}
 		if reqChannelType == common.ChannelTypePerson.Uint8() {
-			// err = m.ctx.SendCMD(config.MsgCMDReq{
-			// 	NoPersist:   true,
-			// 	ChannelID:   reqChannelID,
-			// 	ChannelType: reqChannelType,
-			// 	FromUID:     reqLoginUID,
-			// 	CMD:         common.CMDSyncMessageExtra,
-			// })
 			sendCmds = append(sendCmds, &sendCMDVO{
 				ChannelID:   reqChannelID,
 				ChannelType: reqChannelType,
 				LoginUID:    reqLoginUID,
 			})
 		} else {
-			// err = m.ctx.SendCMD(config.MsgCMDReq{
-			// 	NoPersist:   true,
-			// 	ChannelID:   fakeChannelID,
-			// 	ChannelType: reqChannelType,
-			// 	Subscribers: fromUIDs, // 消息只发送给发送者
-			// 	CMD:         common.CMDSyncMessageExtra,
-			// })
 			sendCmds = append(sendCmds, &sendCMDVO{
 				ChannelID:   fakeChannelID,
 				ChannelType: reqChannelType,
 				FromUIDs:    fromUIDs,
 			})
 		}
-
-		// if err != nil {
-		// 	tx.Rollback()
-		// 	m.Error("发送cmd消息错误", zap.Error(err))
-		// 	return
-		// }
 	}
-
+	m.mutex.Unlock()
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		m.Error("提交事物错误", zap.Error(err))

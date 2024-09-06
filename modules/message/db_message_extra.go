@@ -5,6 +5,7 @@ import (
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/db"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/gocraft/dbr/v2"
 )
 
@@ -20,30 +21,21 @@ func newMessageExtraDB(ctx *config.Context) *messageExtraDB {
 	}
 }
 
-func (m *messageExtraDB) insertOrUpdateRevoke(md *messageExtraModel) error {
-	_, err := m.session.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,`revoke`,revoker,version) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `revoke`=VALUES(`revoke`),revoker=VALUES(revoker),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.Revoke, md.Revoker, md.Version).Exec()
-	return err
-}
-
 func (m *messageExtraDB) insertOrUpdateRevokeTx(md *messageExtraModel, tx *dbr.Tx) error {
 	_, err := tx.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,`revoke`,revoker,version) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `revoke`=VALUES(`revoke`),revoker=VALUES(revoker),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.Revoke, md.Revoker, md.Version).Exec()
 	return err
 }
 
-// 更新已读数量
-func (m *messageExtraDB) insertOrUpdateReadedCount(md *messageExtraModel) error {
-	_, err := m.session.InsertBySql("INSERT INTO message_extra (clone_no,message_id,message_seq,from_uid,channel_id,channel_type,readed_count,version) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE clone_no=IF(clone_no='',VALUES(clone_no),clone_no),readed_count=VALUES(readed_count),version=VALUES(version)", md.CloneNo, md.MessageID, md.MessageSeq, md.FromUID, md.ChannelID, md.ChannelType, md.ReadedCount, md.Version).Exec()
+func (m *messageExtraDB) insertTx(md *messageExtraModel, tx *dbr.Tx) error {
+	_, err := tx.InsertInto("message_extra").Columns(util.AttrToUnderscore(md)...).Record(md).Exec()
 	return err
 }
 
-// 更新已读数量
-func (m *messageExtraDB) insertOrUpdateReadedCountTx(md *messageExtraModel, tx *dbr.Tx) error {
-	_, err := tx.InsertBySql("INSERT INTO message_extra (clone_no,message_id,message_seq,from_uid,channel_id,channel_type,readed_count,version) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE clone_no=IF(clone_no='',VALUES(clone_no),clone_no),readed_count=VALUES(readed_count),version=VALUES(version)", md.CloneNo, md.MessageID, md.MessageSeq, md.FromUID, md.ChannelID, md.ChannelType, md.ReadedCount, md.Version).Exec()
-	return err
-}
-
-func (m *messageExtraDB) insertOrUpdateContentEdit(md *messageExtraModel) error {
-	_, err := m.session.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,content_edit,content_edit_hash,edited_at,version) VALUES (?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE content_edit=VALUES(content_edit),content_edit_hash=VALUES(content_edit_hash),edited_at=VALUES(edited_at),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.ContentEdit, md.ContentEditHash, md.EditedAt, md.Version).Exec()
+func (m *messageExtraDB) updateTx(md *messageExtraModel, tx *dbr.Tx) error {
+	_, err := tx.Update("message_extra").SetMap(map[string]interface{}{
+		"readed_count": md.ReadedCount,
+		"version":      md.Version,
+	}).Where("message_id=?", md.MessageID).Exec()
 	return err
 }
 
@@ -69,7 +61,7 @@ func (m *messageExtraDB) existContentEdit(messageID string, contentEditHash stri
 	return count > 0, err
 }
 
-func (m *messageExtraDB) queryWithMessageIDs(messageIDs []string, loginUID string) ([]*messageExtraDetailModel, error) {
+func (m *messageExtraDB) queryWithMessageIDsAndUID(messageIDs []string, loginUID string) ([]*messageExtraDetailModel, error) {
 	if len(messageIDs) <= 0 {
 		return nil, nil
 	}
@@ -78,7 +70,13 @@ func (m *messageExtraDB) queryWithMessageIDs(messageIDs []string, loginUID strin
 	return models, err
 }
 
-func (m *messageExtraDB) queryWithMessageID(messageID int64) (*messageExtraModel, error) {
+func (m *messageExtraDB) queryWithMessageIDs(messageIDs []string) ([]*messageExtraModel, error) {
+	var list []*messageExtraModel
+	_, err := m.session.Select("*").From("message_extra").Where("message_id in ?", messageIDs).Load(&list)
+	return list, err
+}
+
+func (m *messageExtraDB) queryWithMessageID(messageID string) (*messageExtraModel, error) {
 	var model *messageExtraModel
 	_, err := m.session.Select("*").From("message_extra").Where("message_id=?", messageID).Load(&model)
 	return model, err

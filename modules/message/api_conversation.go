@@ -1054,7 +1054,7 @@ func newSyncUserConversationResp(resp *config.SyncUserConversationResp, extra *c
 		}
 
 		// 消息扩充数据
-		messageExtras, err := messageExtraDB.queryWithMessageIDs(messageIDs, loginUID)
+		messageExtras, err := messageExtraDB.queryWithMessageIDsAndUID(messageIDs, loginUID)
 		if err != nil {
 			log.Error("查询消息扩展字段失败！", zap.Error(err))
 		}
