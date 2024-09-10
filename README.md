@@ -129,7 +129,7 @@
 
 唐僧叨叨：
 
-https://tangsengdaodao.com
+https://tsdaodao.com
 
 悟空IM：
 
