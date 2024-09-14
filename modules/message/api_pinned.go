@@ -79,13 +79,8 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("该不存在或已删除"))
 		return
 	}
-	msgId, err := strconv.ParseInt(req.MessageID, 10, 64)
-	if err != nil {
-		m.Error("message_id格式有误！", zap.Error(err))
-		c.ResponseError(errors.New("message_id格式有误！"))
-		return
-	}
-	messageExtra, err := m.messageExtraDB.queryWithMessageID(msgId)
+
+	messageExtra, err := m.messageExtraDB.queryWithMessageID(req.MessageID)
 	if err != nil {
 		m.Error("查询消息扩展信息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询消息扩展信息错误"))
@@ -97,8 +92,8 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 	}
 	appConfig, err := m.commonService.GetAppConfig()
 	if err != nil {
-		m.Error("查询一样配置错误", zap.Error(err))
-		c.ResponseError(errors.New("查询一样配置错误"))
+		m.Error("查询配置错误", zap.Error(err))
+		c.ResponseError(errors.New("查询配置错误"))
 		return
 	}
 	var maxCount = 10
@@ -111,16 +106,17 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询当前置顶消息数量错误"))
 		return
 	}
-	if currentCount >= int64(maxCount) {
-		c.ResponseError(errors.New("置顶数量已达到上限"))
-		return
-	}
 	pinnedMessage, err := m.pinnedDB.queryWithMessageId(fakeChannelID, req.ChannelType, req.MessageID)
 	if err != nil {
 		m.Error("查询置顶消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询置顶消息错误"))
 		return
 	}
+	if currentCount >= int64(maxCount) && (pinnedMessage == nil || pinnedMessage.IsDeleted == 1) {
+		c.ResponseError(errors.New("置顶数量已达到上限"))
+		return
+	}
+
 	tx, err := m.db.session.Begin()
 	if err != nil {
 		m.Error("开启事务错误", zap.Error(err))
@@ -450,7 +446,7 @@ func (m *Message) syncPinnedMessage(c *wkhttp.Context) {
 		return
 	}
 	// 消息全局扩张
-	messageExtras, err := m.messageExtraDB.queryWithMessageIDs(messageIds, loginUID)
+	messageExtras, err := m.messageExtraDB.queryWithMessageIDsAndUID(messageIds, loginUID)
 	if err != nil {
 		m.Error("查询消息扩展字段失败！", zap.Error(err))
 		c.ResponseError(errors.New("查询用户消息扩展错误"))

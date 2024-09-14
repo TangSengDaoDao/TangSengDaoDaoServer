@@ -170,7 +170,11 @@ func (u *User) onlineStatusCheck() {
 	}
 	if len(makeOfflines) > 0 {
 		u.Debug("改变在线状态！", zap.Int("offlineCount", len(makeOfflines)))
-		tx, _ := u.ctx.DB().Begin()
+		tx, err := u.ctx.DB().Begin()
+		if err != nil {
+			u.Error("开启事务失败！", zap.Error(err))
+			return
+		}
 		defer func() {
 			if err := recover(); err != nil {
 				tx.RollbackUnlessCommitted()

@@ -618,7 +618,11 @@ func (co *Conversation) syncUserConversationAck(c *wkhttp.Context) {
 }
 
 func (co *Conversation) insertDeviceOffsets(deviceOffsetModels []*deviceOffsetModel) error {
-	tx, _ := co.ctx.DB().Begin()
+	tx, err := co.ctx.DB().Begin()
+	if err != nil {
+		co.Error("开启事务失败！", zap.Error(err))
+		return errors.New("开启事务失败！")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -640,7 +644,11 @@ func (co *Conversation) insertDeviceOffsets(deviceOffsetModels []*deviceOffsetMo
 	return nil
 }
 func (co *Conversation) insertUserLastOffsets(userLastOffsetModels []*userLastOffsetModel) error {
-	tx, _ := co.ctx.DB().Begin()
+	tx, err := co.ctx.DB().Begin()
+	if err != nil {
+		co.Error("开启事务失败！", zap.Error(err))
+		return errors.New("开启事务失败！")
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -1046,7 +1054,7 @@ func newSyncUserConversationResp(resp *config.SyncUserConversationResp, extra *c
 		}
 
 		// 消息扩充数据
-		messageExtras, err := messageExtraDB.queryWithMessageIDs(messageIDs, loginUID)
+		messageExtras, err := messageExtraDB.queryWithMessageIDsAndUID(messageIDs, loginUID)
 		if err != nil {
 			log.Error("查询消息扩展字段失败！", zap.Error(err))
 		}

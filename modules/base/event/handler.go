@@ -20,10 +20,10 @@ func (e *Event) registerHandlers() {
 		GroupCreate:                  e.handleGroupCreateEvent,             // 群创建
 		GroupUnableAddDestroyAccount: e.handleGroupUnableAddDestroyAccount, // 无法添加注销账号到群聊
 		// GroupMemberAdd:             e.handleGroupMemberAddEvent,      // 群成员添加
-		GroupMemberRemove:          e.handleGroupMemberRemoveEvent,   // 群成员移除
-		GroupUpdate:                e.handleGroupUpdateEvent,         // 群更新
-		GroupAvatarUpdate:          e.handleGroupAvatarUpdateEvent,   // 群头像更新
-		GroupMemberScanJoin:        e.handleGroupMemberScanJoin,      // 群扫码入群
+		GroupMemberRemove: e.handleGroupMemberRemoveEvent, // 群成员移除
+		GroupUpdate:       e.handleGroupUpdateEvent,       // 群更新
+		GroupAvatarUpdate: e.handleGroupAvatarUpdateEvent, // 群头像更新
+		// GroupMemberScanJoin:        e.handleGroupMemberScanJoin,      // 群扫码入群
 		GroupMemberTransferGrouper: e.handleGroupTransferGrouper,     // 群转让
 		GroupMemberInviteRequest:   e.handleGroupMemberInviteRequest, // 群成员邀请
 		// EventRedpacketReceive:      e.handleRedpacketReceive,         // 处理红包领取消息
@@ -35,6 +35,7 @@ func (e *Event) handleEvent(model *Model) {
 	if handler == nil {
 		listeners := e.ctx.GetEventListeners(model.Event)
 		if listeners == nil {
+			e.updateEventStatus(nil, model.VersionLock, model.Id)
 			e.Debug("不支持的事件!", zap.String("event", model.Event))
 			return
 		}

@@ -122,7 +122,7 @@ func (d *DB) QueryDetailByUIDs(uids []string, loginUID string) ([]*Detail, error
 		return nil, nil
 	}
 	var details []*Detail
-	_, err := d.session.Select("user.*,IFNULL(user_setting.mute,0) mute,IFNULL(user_setting.top,0) top,IFNULL(user_setting.chat_pwd_on,0) chat_pwd_on,IFNULL(user_setting.revoke_remind,0) revoke_remind,IFNULL(user_setting.screenshot,0) screenshot,IFNULL(user_setting.receipt,0) receipt").From("user").LeftJoin("user_setting", "user.uid=user_setting.to_uid and user_setting.uid=?").Where("user.uid in ?", loginUID, uids).Load(&details)
+	_, err := d.session.Select("user.*,IFNULL(user_setting.mute,0) mute,IFNULL(user_setting.top,0) top,IFNULL(user_setting.chat_pwd_on,0) chat_pwd_on,IFNULL(user_setting.revoke_remind,1) revoke_remind,IFNULL(user_setting.screenshot,0) screenshot,IFNULL(user_setting.receipt,0) receipt").From("user").LeftJoin("user_setting", "user.uid=user_setting.to_uid and user_setting.uid=?").Where("user.uid in ?", loginUID, uids).Load(&details)
 	return details, err
 }
 

@@ -143,7 +143,12 @@ func (m *Manager) delete(c *wkhttp.Context) {
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(req.ChannelID, req.FromUID)
 	}
-	tx, _ := m.ctx.DB().Begin()
+	tx, err := m.ctx.DB().Begin()
+	if err != nil {
+		m.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
@@ -206,19 +211,22 @@ func (m *Manager) delete(c *wkhttp.Context) {
 			m.Warn("发送cmd失败！", zap.Error(err))
 		}
 	}
-	eventID, err := m.ctx.EventBegin(&wkevent.Data{
-		Event: event.EventUpdateSearchMessage,
-		Data: &config.UpdateSearchMessageReq{
-			MessageIDs: msgIds,
-			ChannelID:  req.ChannelID,
-		},
-		Type: wkevent.None,
-	}, tx)
-	if err != nil {
-		tx.Rollback()
-		m.Error("开启事件失败！", zap.Error(err))
-		c.ResponseError(errors.New("开启事件失败！"))
-		return
+	var eventID int64 = 0
+	if m.ctx.GetConfig().ZincSearch.SearchOn {
+		eventID, err = m.ctx.EventBegin(&wkevent.Data{
+			Event: event.EventUpdateSearchMessage,
+			Data: &config.UpdateSearchMessageReq{
+				MessageIDs: msgIds,
+				ChannelID:  req.ChannelID,
+			},
+			Type: wkevent.None,
+		}, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("开启事件失败！", zap.Error(err))
+			c.ResponseError(errors.New("开启事件失败！"))
+			return
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
@@ -226,7 +234,9 @@ func (m *Manager) delete(c *wkhttp.Context) {
 		c.ResponseError(errors.New("提交事务失败！"))
 		return
 	}
-	m.ctx.EventCommit(eventID)
+	if eventID > 0 {
+		m.ctx.EventCommit(eventID)
+	}
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		err = m.ctx.SendCMD(config.MsgCMDReq{
 			NoPersist:   false,
@@ -430,10 +440,10 @@ func (m *Manager) recordpersonal(c *wkhttp.Context) {
 		return
 	}
 	uids := make([]string, 0)
-	msgIds := make([]int64, 0)
+	msgIds := make([]string, 0)
 	for _, msg := range msgs {
 		uids = append(uids, msg.FromUID)
-		msgIds = append(msgIds, msg.MessageID)
+		msgIds = append(msgIds, strconv.FormatInt(msg.MessageID, 10))
 	}
 	msgExtrs, err := m.managerDB.queryMsgExtrWithMsgIds(msgIds)
 	if err != nil {
@@ -526,10 +536,10 @@ func (m *Manager) record(c *wkhttp.Context) {
 		return
 	}
 	uids := make([]string, 0)
-	msgIds := make([]int64, 0)
+	msgIds := make([]string, 0)
 	for _, msg := range msgs {
 		uids = append(uids, msg.FromUID)
-		msgIds = append(msgIds, msg.MessageID)
+		msgIds = append(msgIds, strconv.FormatInt(msg.MessageID, 10))
 	}
 	msgExtrs, err := m.managerDB.queryMsgExtrWithMsgIds(msgIds)
 	if err != nil {

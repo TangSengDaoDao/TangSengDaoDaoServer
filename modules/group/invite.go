@@ -240,7 +240,12 @@ func (g *Group) groupMemberInviteSure(c *wkhttp.Context) {
 
 	}
 	allower := authMap["allower"].(string)
-	tx, _ := g.ctx.DB().Begin()
+	tx, err := g.ctx.DB().Begin()
+	if err != nil {
+		g.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -299,6 +304,21 @@ func (g *Group) groupMemberInviteDetail(c *wkhttp.Context) {
 		c.ResponseError(errors.New("获取邀请项失败！"))
 		return
 	}
+	var uids = make([]string, 0, len(inviteItems))
+	for _, item := range inviteItems {
+		uids = append(uids, item.UID)
+	}
+	// 查询被邀请的成员
+	members, err := g.db.QueryMembersWithUids(uids, inviteDetilModel.GroupNo)
+	if err != nil {
+		g.Error("查询成员信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询成员信息错误"))
+		return
+	}
+	if len(members) == len(inviteItems) {
+		inviteDetilModel.Status = 1
+	}
+
 	g.Debug("inviteItems-", zap.Int("len", len(inviteItems)))
 	c.Response(InviteDetailResp{}.From(inviteDetilModel, inviteItems))
 }

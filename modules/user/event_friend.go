@@ -135,7 +135,12 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 		return
 	}
 	// 添加好友到数据库
-	tx, _ := f.ctx.DB().Begin()
+	tx, err := f.ctx.DB().Begin()
+	if err != nil {
+		f.Error("开启事务失败！", zap.Error(err))
+		commit(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -162,14 +167,14 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 			SourceVercode: inviteVercode,
 		}, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			commit(errors.New("添加好友失败！"))
 			return
 		}
 	} else {
 		err = f.db.updateRelationshipTx(uid, inviteUid, 0, 0, inviteVercode, version, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			commit(errors.New("修改好友关系失败"))
 			return
 		}
@@ -178,7 +183,7 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 	loginFriendModel, err := f.db.queryWithUID(inviteUid, uid)
 	//loginIsFriend, err := f.db.IsFriend(applyUID, loginUID)
 	if err != nil {
-		util.CheckErr(tx.Rollback())
+		tx.Rollback()
 		f.Error("查询被添加者是否是好友失败！", zap.Error(err), zap.String("uid", uid), zap.String("toUid", inviteUid))
 		commit(errors.New("查询被添加者是否是好友失败！"))
 		return
@@ -194,14 +199,14 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 			SourceVercode: inviteVercode,
 		}, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			commit(errors.New("添加好友失败！"))
 			return
 		}
 	} else {
 		err = f.db.updateRelationshipTx(inviteUid, uid, 0, 0, inviteVercode, version, tx)
 		if err != nil {
-			util.CheckErr(tx.Rollback())
+			tx.Rollback()
 			commit(errors.New("修改好友关系失败"))
 			return
 		}

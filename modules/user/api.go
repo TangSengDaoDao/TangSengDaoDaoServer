@@ -711,17 +711,36 @@ func (u *User) get(c *wkhttp.Context) {
 	}
 	isShowShortNo := false
 	vercode := ""
+	var groupMember *model.GroupMemberResp
 	if groupNo != "" {
 		modules := register.GetModules(u.ctx)
 		for _, m := range modules {
-			if m.BussDataSource.IsShowShortNo != nil {
+			if m.BussDataSource.IsShowShortNo != nil && vercode == "" {
 				tempShowShortNo, tempVercode, _ := m.BussDataSource.IsShowShortNo(groupNo, uid, loginUID)
 				if tempShowShortNo {
 					isShowShortNo = tempShowShortNo
 					vercode = tempVercode
-					break
 				}
 			}
+			if m.BussDataSource.GetGroupMember != nil && groupMember == nil {
+				groupMember, _ = m.BussDataSource.GetGroupMember(groupNo, uid)
+			}
+		}
+	}
+
+	if groupMember != nil && groupMember.InviteUID != "" && groupMember.IsDeleted == 0 {
+		inviteJoinGroupUserInfo, err := u.userService.GetUserDetail(groupMember.InviteUID, uid)
+		if err != nil {
+			u.Error("获取加入群聊邀请用户详情失败！", zap.Error(err))
+		}
+		if inviteJoinGroupUserInfo != nil {
+			var name = inviteJoinGroupUserInfo.Name
+			if inviteJoinGroupUserInfo.Remark != "" {
+				name = inviteJoinGroupUserInfo.Remark
+			}
+			userDetailResp.JoinGroupInviteUID = groupMember.InviteUID
+			userDetailResp.JoinGroupTime = groupMember.CreatedAt
+			userDetailResp.JoinGroupInviteName = name
 		}
 	}
 
@@ -1613,7 +1632,12 @@ func (u *User) addBlacklist(c *wkhttp.Context) {
 	//添加黑名单
 	version := u.ctx.GenSeq(common.UserSettingSeqKey)
 	friendVersion := u.ctx.GenSeq(common.FriendSeqKey)
-	tx, _ := u.ctx.DB().Begin()
+	tx, err := u.ctx.DB().Begin()
+	if err != nil {
+		u.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
@@ -1680,14 +1704,19 @@ func (u *User) removeBlacklist(c *wkhttp.Context) {
 	version := u.ctx.GenSeq(common.UserSettingSeqKey)
 	friendVersion := u.ctx.GenSeq(common.FriendSeqKey)
 
-	tx, _ := u.ctx.DB().Begin()
+	tx, err := u.ctx.DB().Begin()
+	if err != nil {
+		u.Error("开启事务失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事务失败！"))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
 			panic(err)
 		}
 	}()
-	err := u.db.AddOrRemoveBlacklistTx(loginUID, uid, 0, version, tx)
+	err = u.db.AddOrRemoveBlacklistTx(loginUID, uid, 0, version, tx)
 	if err != nil {
 		tx.Rollback()
 		u.Error("移除黑名单失败！", zap.Error(err))
