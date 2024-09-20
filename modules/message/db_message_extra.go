@@ -21,11 +21,6 @@ func newMessageExtraDB(ctx *config.Context) *messageExtraDB {
 	}
 }
 
-func (m *messageExtraDB) insertOrUpdateRevokeTx(md *messageExtraModel, tx *dbr.Tx) error {
-	_, err := tx.InsertBySql("INSERT INTO message_extra (message_id,message_seq,channel_id,channel_type,`revoke`,revoker,version) VALUES (?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE `revoke`=VALUES(`revoke`),revoker=VALUES(revoker),version=VALUES(version)", md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.Revoke, md.Revoker, md.Version).Exec()
-	return err
-}
-
 func (m *messageExtraDB) insertTx(md *messageExtraModel, tx *dbr.Tx) error {
 	_, err := tx.InsertInto("message_extra").Columns(util.AttrToUnderscore(md)...).Record(md).Exec()
 	return err
@@ -35,6 +30,8 @@ func (m *messageExtraDB) updateTx(md *messageExtraModel, tx *dbr.Tx) error {
 	_, err := tx.Update("message_extra").SetMap(map[string]interface{}{
 		"readed_count": md.ReadedCount,
 		"version":      md.Version,
+		"revoke":       md.Revoke,
+		"revoker":      md.Revoker,
 	}).Where("message_id=?", md.MessageID).Exec()
 	return err
 }
