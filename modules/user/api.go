@@ -1167,8 +1167,8 @@ func (u *User) register(c *wkhttp.Context) {
 		for _, m := range modules {
 			if m.BussDataSource.GetInviteCode != nil {
 				invite, _ = m.BussDataSource.GetInviteCode(req.InviteCode)
-				if invite == nil || invite.Uid == "" {
-					inviteCodeIsExist = false
+				if invite != nil && invite.Uid != "" {
+					inviteCodeIsExist = true
 					break
 				}
 			}

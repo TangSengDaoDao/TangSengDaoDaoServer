@@ -138,10 +138,7 @@ func (m *Message) listenerMessages(messages []*config.MessageResp) {
 }
 
 func (m *Message) getReminders(messages []*config.MessageResp) []*remindersModel {
-	var reminders []*remindersModel
-	if reminders == nil {
-		reminders = make([]*remindersModel, 0, len(messages))
-	}
+	reminders := make([]*remindersModel, 0, len(messages))
 	for _, message := range messages {
 		payloadMap, err := message.GetPayloadMap()
 		if err != nil {

@@ -107,7 +107,6 @@ func (sm *ServiceMinio) UploadFile(filePath string, contentType string, copyFile
 	}
 
 	fileName := strings.TrimPrefix(filePath, fmt.Sprintf("%s/", bucketName))
-	println("上传的文件名称：", fileName)
 	n, err := minioClient.PutObject(ctx, bucketName, fileName, buff, int64(len(buff.Bytes())), minio.PutObjectOptions{ContentType: contentType, PartSize: 10 * 1024 * 1024})
 	if err != nil {
 		sm.Error("上传文件失败：", zap.Error(err))
@@ -115,7 +114,6 @@ func (sm *ServiceMinio) UploadFile(filePath string, contentType string, copyFile
 			"path": "",
 		}, err
 	}
-	println("上传文件结果", n.Key)
 	return map[string]interface{}{
 		"path": n.Key,
 	}, err

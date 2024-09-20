@@ -324,11 +324,9 @@ func (m *Manager) prohibitWords(c *wkhttp.Context) {
 		}
 		count, err = m.managerDB.queryProhibitWordsCount()
 		if err != nil {
-			if err != nil {
-				m.Error(common.ErrData.Error(), zap.Error(err))
-				c.ResponseError(errors.New("查询违禁词总数错误"))
-				return
-			}
+			m.Error(common.ErrData.Error(), zap.Error(err))
+			c.ResponseError(errors.New("查询违禁词总数错误"))
+			return
 		}
 	} else {
 		result, err = m.managerDB.queryProhibitWordsWithContentAndPage(searchKey, uint64(pageIndex), uint64(pageSize))
@@ -340,11 +338,9 @@ func (m *Manager) prohibitWords(c *wkhttp.Context) {
 
 		count, err = m.managerDB.queryProhibitWordsCountWithContent(searchKey)
 		if err != nil {
-			if err != nil {
-				m.Error(common.ErrData.Error(), zap.Error(err))
-				c.ResponseError(errors.New("查询搜索违禁词总数错误"))
-				return
-			}
+			m.Error(common.ErrData.Error(), zap.Error(err))
+			c.ResponseError(errors.New("查询搜索违禁词总数错误"))
+			return
 		}
 	}
 

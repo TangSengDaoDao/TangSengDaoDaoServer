@@ -1256,11 +1256,21 @@ func (m *Message) hasRevokePermission(messageM *messageModel, loginUID string) (
 		return true, nil
 	}
 	if messageM.ChannelType == common.ChannelTypeGroup.Uint8() { // 管理者或创建者可以撤回其他成员的消息
-		creatorOrManager, err := m.groupService.IsCreatorOrManager(messageM.ChannelID, loginUID)
+		loginMember, err := m.groupService.GetMember(messageM.ChannelID, loginUID)
 		if err != nil {
 			return false, err
 		}
-		return creatorOrManager, nil
+		fromMember, err := m.groupService.GetMember(messageM.ChannelID, messageM.FromUID)
+		if err != nil {
+			return false, err
+		}
+		if loginMember == nil || fromMember == nil || fromMember.Role == int(common.GroupMemberRoleCreater) || loginMember.Role == int(common.GroupMemberRoleNormal) {
+			return false, nil
+		}
+		if loginMember.Role == int(common.GroupMemberRoleCreater) || (loginMember.Role == int(common.GroupMemberRoleManager) && fromMember.Role == int(common.GroupMemberRoleNormal)) {
+			return true, nil
+		}
+
 	}
 
 	return false, nil
@@ -1725,10 +1735,10 @@ type syncReq struct {
 // 	}
 // }
 
-type replyMsgSyncResp struct {
-	Root     *config.MessageResp   `json:"root"`
-	Messages []*config.MessageResp `json:"messages"`
-}
+// type replyMsgSyncResp struct {
+// 	Root     *config.MessageResp   `json:"root"`
+// 	Messages []*config.MessageResp `json:"messages"`
+// }
 
 // MgSyncResp 消息同步请求
 type MsgSyncResp struct {
@@ -1917,13 +1927,13 @@ type reactionSimpleResp struct {
 // 	IsDeleted int    `json:"is_deleted"`
 // }
 
-type syncTotalResp struct {
-	MessageID   string `json:"message_id"`   // 消息唯一ID
-	Seq         string `json:"seq"`          // 回复序列号
-	ChannelID   string `json:"channel_id"`   // 频道唯一ID
-	ChannelType uint8  `json:"channel_type"` // 频道类型
-	Count       int    `json:"count"`        // 回复数量
-}
+// type syncTotalResp struct {
+// 	MessageID   string `json:"message_id"`   // 消息唯一ID
+// 	Seq         string `json:"seq"`          // 回复序列号
+// 	ChannelID   string `json:"channel_id"`   // 频道唯一ID
+// 	ChannelType uint8  `json:"channel_type"` // 频道类型
+// 	Count       int    `json:"count"`        // 回复数量
+// }
 
 type messageExtraResp struct {
 	MessageID       int64                  `json:"message_id"`
