@@ -1440,6 +1440,7 @@ func (m *Message) revoke(c *wkhttp.Context) {
 			if err != nil {
 				tx.Rollback()
 				m.Error("更新消息扩展数据失败！", zap.Error(err), zap.String("messageID", msgID), zap.String("channelID", fakeChannelID))
+				c.ResponseErrorf("更新消息为撤回状态失败！", err)
 				return
 			}
 		} else {
@@ -1467,6 +1468,7 @@ func (m *Message) revoke(c *wkhttp.Context) {
 			if err != nil {
 				tx.Rollback()
 				m.Error("新增消息扩展数据失败！", zap.Error(err), zap.String("messageID", msgID), zap.String("channelID", fakeChannelID))
+				c.ResponseErrorf("新增消息为撤回状态失败！", err)
 				return
 			}
 		}
