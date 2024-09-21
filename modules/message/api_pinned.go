@@ -69,16 +69,35 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 			return
 		}
 	}
-	message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.ChannelType, req.MessageID)
+	messageIds := make([]int64, 0)
+	id, _ := strconv.ParseInt(req.MessageID, 10, 64)
+	messageIds = append(messageIds, id)
+	syncMsg, err := m.ctx.IMSearchMessages(&config.MsgSearchReq{
+		ChannelID:   req.ChannelID,
+		ChannelType: req.ChannelType,
+		LoginUID:    loginUID,
+		MessageIds:  messageIds,
+	})
 	if err != nil {
 		m.Error("查询消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询消息错误"))
 		return
 	}
-	if message == nil {
-		c.ResponseError(errors.New("该不存在或已删除"))
+	if syncMsg == nil || len(syncMsg.Messages) == 0 {
+		c.ResponseError(errors.New("该消息不存在或已删除"))
 		return
 	}
+	message := syncMsg.Messages[0]
+	// message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.ChannelType, req.MessageID)
+	// if err != nil {
+	// 	m.Error("查询消息错误", zap.Error(err))
+	// 	c.ResponseError(errors.New("查询消息错误"))
+	// 	return
+	// }
+	// if message == nil {
+	// 	c.ResponseError(errors.New("该不存在或已删除"))
+	// 	return
+	// }
 
 	messageExtra, err := m.messageExtraDB.queryWithMessageID(req.MessageID)
 	if err != nil {

@@ -383,17 +383,36 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 		return
 	}
 	messageIDStrs := util.RemoveRepeatedElement(req.MessageIDs)
-
-	messages, err := m.db.queryMessagesWithMessageIDs(fakeChannelID, req.ChannelType, messageIDStrs)
+	messageIdsI := make([]int64, 0, len(messageIDStrs))
+	for _, msgID := range messageIDStrs {
+		id, _ := strconv.ParseInt(msgID, 10, 64)
+		messageIdsI = append(messageIdsI, id)
+	}
+	syncMsg, err := m.ctx.IMSearchMessages(&config.MsgSearchReq{
+		ChannelID:   req.ChannelID,
+		ChannelType: req.ChannelType,
+		MessageIds:  messageIdsI,
+		LoginUID:    loginUID,
+	})
 	if err != nil {
 		c.ResponseErrorf("查询消息失败！", err)
 		return
 	}
-	if len(messages) <= 0 {
+	if syncMsg == nil || len(syncMsg.Messages) <= 0 {
 		m.Warn("没有读取到消息！", zap.Strings("messages", req.MessageIDs))
 		c.ResponseError(errors.New("没有读取到消息！"))
 		return
 	}
+	// messages, err := m.db.queryMessagesWithMessageIDs(fakeChannelID, req.ChannelType, messageIDStrs)
+	// if err != nil {
+	// 	c.ResponseErrorf("查询消息失败！", err)
+	// 	return
+	// }
+	// if len(messages) <= 0 {
+	// 	m.Warn("没有读取到消息！", zap.Strings("messages", req.MessageIDs))
+	// 	c.ResponseError(errors.New("没有读取到消息！"))
+	// 	return
+	// }
 
 	tx, err := m.ctx.DB().Begin()
 	if err != nil {
@@ -409,7 +428,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 	}()
 
 	//	fromUIDs := make([]string, 0, len(messages)) // 消息发送者
-	for _, message := range messages {
+	for _, message := range syncMsg.Messages {
 		//	fromUIDs = append(fromUIDs, message.FromUID)
 		err := m.memberReadedDB.insertOrUpdateTx(&memberReadedModel{
 			MessageID:   message.MessageID,
@@ -428,7 +447,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 		c.ResponseErrorf("提交事务失败！", err)
 		return
 	}
-	for _, message := range messages {
+	for _, message := range syncMsg.Messages {
 		messageIDStr := strconv.FormatInt(message.MessageID, 10)
 		jsonStr, err := json.Marshal(&messageReadedCountModel{
 			MessageIDStr:   messageIDStr,
@@ -1403,48 +1422,6 @@ func (m *Message) revoke(c *wkhttp.Context) {
 	}
 
 	m.cancelMentionReminderIfNeed(message)
-
-	// var messageIDs = []string{}
-	// var err error
-	// var messages []*messageModel
-	// if clientMsgNo != "" {
-	// 	messages, err = m.db.queryMessagesWithChannelClientMsgNo(fakeChannelID, uint8(channelTypeI), clientMsgNo)
-	// 	if err != nil {
-	// 		m.Error("撤回失败！", zap.String("fakeChannelID", fakeChannelID), zap.String("clientMsgNo", clientMsgNo), zap.String("loginUID", c.GetLoginUID()))
-	// 		c.ResponseErrorf("查询消息失败！", err)
-	// 		return
-	// 	}
-	// 	if len(messages) == 0 {
-	// 		c.ResponseError(errors.New("撤回失败！"))
-	// 		return
-	// 	}
-	// 	var message *messageModel
-	// 	if len(messages) > 0 {
-	// 		message = messages[0]
-	// 		for _, message := range messages {
-	// 			messageIDs = append(messageIDs, fmt.Sprintf("%d", message.MessageID))
-	// 		}
-	// 	}
-	// 	if message != nil {
-	// 		allow, err := m.hasRevokePermission(message, c.GetLoginUID())
-	// 		if err != nil {
-	// 			m.Error("权限判断失败！", zap.Error(err))
-	// 			c.ResponseError(errors.New("权限判断失败！"))
-	// 			return
-	// 		}
-	// 		if !allow {
-	// 			c.ResponseError(errors.New("无权限撤回此消息！"))
-	// 			return
-	// 		}
-
-	// 		m.cancelMentionReminderIfNeed(message)
-
-	// 	}
-	// }
-
-	// if len(messageIDs) == 0 {
-	// 	messageIDs = append(messageIDs, messageID)
-	// }
 
 	messageExtra, err := m.messageExtraDB.queryWithMessageID(messageID)
 	if err != nil {
