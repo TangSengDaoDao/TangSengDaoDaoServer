@@ -1485,6 +1485,8 @@ func (m *Message) revoke(c *wkhttp.Context) {
 			ChannelID:   fakeChannelID,
 			ChannelType: uint8(channelTypeI),
 			ReadedCount: 0,
+			Revoke:      1,
+			Revoker:     loginUID,
 			Version:     version,
 		}, tx)
 		if err != nil {
@@ -1494,56 +1496,6 @@ func (m *Message) revoke(c *wkhttp.Context) {
 			return
 		}
 	}
-	// for _, msgID := range messageIDs {
-	// 	version := m.genMessageExtraSeq(fakeChannelID)
-	// 	var tempMsgExtra *messageExtraModel
-	// 	for _, messageExtra := range messageExtras {
-	// 		if messageExtra.MessageID == msgID {
-	// 			tempMsgExtra = messageExtra
-	// 			tempMsgExtra.Revoke = 1
-	// 			tempMsgExtra.Revoker = loginUID
-	// 			tempMsgExtra.Version = version
-	// 			break
-	// 		}
-	// 	}
-	// 	if tempMsgExtra != nil {
-	// 		err = m.messageExtraDB.updateTx(tempMsgExtra, tx)
-	// 		if err != nil {
-	// 			tx.Rollback()
-	// 			m.Error("更新消息扩展数据失败！", zap.Error(err), zap.String("messageID", msgID), zap.String("channelID", fakeChannelID))
-	// 			c.ResponseErrorf("更新消息为撤回状态失败！", err)
-	// 			return
-	// 		}
-	// 	} else {
-	// 		fromUID := ""
-	// 		msgSeq := uint32(0)
-	// 		if len(messages) > 0 {
-	// 			for _, msg := range messages {
-	// 				messageIDStr := strconv.FormatInt(msg.MessageID, 10)
-	// 				if messageIDStr == msgID {
-	// 					fromUID = msg.FromUID
-	// 					msgSeq = msg.MessageSeq
-	// 					break
-	// 				}
-	// 			}
-	// 		}
-	// 		err = m.messageExtraDB.insertTx(&messageExtraModel{
-	// 			MessageID:   msgID,
-	// 			MessageSeq:  msgSeq,
-	// 			FromUID:     fromUID,
-	// 			ChannelID:   fakeChannelID,
-	// 			ChannelType: uint8(channelTypeI),
-	// 			ReadedCount: 0,
-	// 			Version:     version,
-	// 		}, tx)
-	// 		if err != nil {
-	// 			tx.Rollback()
-	// 			m.Error("新增消息扩展数据失败！", zap.Error(err), zap.String("messageID", msgID), zap.String("channelID", fakeChannelID))
-	// 			c.ResponseErrorf("新增消息为撤回状态失败！", err)
-	// 			return
-	// 		}
-	// 	}
-	// }
 	msgIds := make([]string, 0)
 	msgIds = append(msgIds, messageIDStr)
 	// 发布撤回消息事件
