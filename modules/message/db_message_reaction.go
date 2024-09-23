@@ -62,13 +62,6 @@ func (d *messageReactionDB) updateReactionStatus(model *reactionModel) error {
 	}).Where("message_id=? and uid=?", model.MessageID, model.UID).Exec()
 	return err
 }
-func (d *messageReactionDB) updateReactionText(model *reactionModel) error {
-	_, err := d.session.Update("reaction_users").SetMap(map[string]interface{}{
-		"is_deleted": model.IsDeleted,
-		"seq":        model.Seq,
-	}).Where("message_id=? and uid=? and emoji=?", model.MessageID, model.UID, model.Emoji).Exec()
-	return err
-}
 
 type reactionModel struct {
 	MessageID   string // 消息唯一ID

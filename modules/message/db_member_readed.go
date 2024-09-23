@@ -19,7 +19,7 @@ func newMemberReadedDB(ctx *config.Context) *memberReadedDB {
 }
 
 func (m *memberReadedDB) insertOrUpdateTx(model *memberReadedModel, tx *dbr.Tx) error {
-	_, err := m.session.InsertBySql("INSERT INTO member_readed (message_id,clone_no,channel_id,channel_type,uid) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE `message_id`=VALUES(`message_id`),`clone_no`=VALUES(`clone_no`),uid=VALUES(uid)", model.MessageID, model.CloneNo, model.ChannelID, model.ChannelType, model.UID).Exec()
+	_, err := tx.InsertBySql("INSERT INTO member_readed (message_id,clone_no,channel_id,channel_type,uid) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE `message_id`=VALUES(`message_id`),`clone_no`=VALUES(`clone_no`),uid=VALUES(uid)", model.MessageID, model.CloneNo, model.ChannelID, model.ChannelType, model.UID).Exec()
 	return err
 }
 

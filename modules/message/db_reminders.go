@@ -121,9 +121,3 @@ type remindersModel struct {
 	IsDeleted    int
 	db.BaseModel
 }
-
-type reminderDoneModel struct {
-	ReminderID int64
-	UID        string
-	db.BaseModel
-}

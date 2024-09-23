@@ -47,7 +47,7 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 	fakeChannelID := req.ChannelID
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(loginUID, req.ChannelID)
-	} else {
+	} else if req.ChannelType == common.ChannelTypeGroup.Uint8() {
 		groupInfo, err := m.groupService.GetGroupDetail(req.ChannelID, loginUID)
 		if err != nil {
 			m.Error("查询群组信息错误", zap.Error(err))
@@ -69,35 +69,16 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 			return
 		}
 	}
-	messageIds := make([]int64, 0)
-	id, _ := strconv.ParseInt(req.MessageID, 10, 64)
-	messageIds = append(messageIds, id)
-	syncMsg, err := m.ctx.IMSearchMessages(&config.MsgSearchReq{
-		ChannelID:   req.ChannelID,
-		ChannelType: req.ChannelType,
-		LoginUID:    loginUID,
-		MessageIds:  messageIds,
-	})
+	message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.MessageID)
 	if err != nil {
 		m.Error("查询消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询消息错误"))
 		return
 	}
-	if syncMsg == nil || len(syncMsg.Messages) == 0 {
-		c.ResponseError(errors.New("该消息不存在或已删除"))
+	if message == nil {
+		c.ResponseError(errors.New("该不存在或已删除"))
 		return
 	}
-	message := syncMsg.Messages[0]
-	// message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.ChannelType, req.MessageID)
-	// if err != nil {
-	// 	m.Error("查询消息错误", zap.Error(err))
-	// 	c.ResponseError(errors.New("查询消息错误"))
-	// 	return
-	// }
-	// if message == nil {
-	// 	c.ResponseError(errors.New("该不存在或已删除"))
-	// 	return
-	// }
 
 	messageExtra, err := m.messageExtraDB.queryWithMessageID(req.MessageID)
 	if err != nil {

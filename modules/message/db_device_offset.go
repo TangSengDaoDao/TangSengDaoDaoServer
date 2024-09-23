@@ -1,8 +1,6 @@
 package message
 
 import (
-	"fmt"
-
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/db"
 	"github.com/gocraft/dbr/v2"
 )
@@ -18,7 +16,7 @@ func newDeviceOffsetDB(session *dbr.Session) *deviceOffsetDB {
 }
 
 func (d *deviceOffsetDB) insertOrUpdateTx(tx *dbr.Tx, model *deviceOffsetModel) error {
-	sq := fmt.Sprintf("INSERT INTO device_offset (uid,device_uuid,channel_id,channel_type,message_seq) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE message_seq=IF(message_seq<VALUES(message_seq),VALUES(message_seq),message_seq)")
+	sq := "INSERT INTO device_offset (uid,device_uuid,channel_id,channel_type,message_seq) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE message_seq=IF(message_seq<VALUES(message_seq),VALUES(message_seq),message_seq)"
 	_, err := tx.InsertBySql(sq, model.UID, model.DeviceUUID, model.ChannelID, model.ChannelType, model.MessageSeq).Exec()
 	return err
 }

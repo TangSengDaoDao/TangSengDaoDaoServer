@@ -38,7 +38,6 @@ type Message struct {
 	messageReactionDB   *messageReactionDB
 	userDB              *user.DB
 	messageExtraDB      *messageExtraDB
-	memberChangeDB      *memberChangeDB
 	memberReadedDB      *memberReadedDB
 	channelOffsetDB     *channelOffsetDB
 	deviceOffsetDB      *deviceOffsetDB
@@ -65,7 +64,6 @@ func New(ctx *config.Context) *Message {
 		userDB:              user.NewDB(ctx),
 		messageExtraDB:      newMessageExtraDB(ctx),
 		groupService:        group.NewService(ctx),
-		memberChangeDB:      newMemberChangeDB(ctx),
 		memberReadedDB:      newMemberReadedDB(ctx),
 		conversationExtradb: newConversationExtraDB(ctx),
 		messageReactionDB:   newMessageReactionDB(ctx),
@@ -383,36 +381,17 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 		return
 	}
 	messageIDStrs := util.RemoveRepeatedElement(req.MessageIDs)
-	messageIdsI := make([]int64, 0, len(messageIDStrs))
-	for _, msgID := range messageIDStrs {
-		id, _ := strconv.ParseInt(msgID, 10, 64)
-		messageIdsI = append(messageIdsI, id)
-	}
-	syncMsg, err := m.ctx.IMSearchMessages(&config.MsgSearchReq{
-		ChannelID:   req.ChannelID,
-		ChannelType: req.ChannelType,
-		MessageIds:  messageIdsI,
-		LoginUID:    loginUID,
-	})
+
+	messages, err := m.db.queryMessagesWithMessageIDs(fakeChannelID, messageIDStrs)
 	if err != nil {
 		c.ResponseErrorf("查询消息失败！", err)
 		return
 	}
-	if syncMsg == nil || len(syncMsg.Messages) <= 0 {
+	if len(messages) <= 0 {
 		m.Warn("没有读取到消息！", zap.Strings("messages", req.MessageIDs))
 		c.ResponseError(errors.New("没有读取到消息！"))
 		return
 	}
-	// messages, err := m.db.queryMessagesWithMessageIDs(fakeChannelID, req.ChannelType, messageIDStrs)
-	// if err != nil {
-	// 	c.ResponseErrorf("查询消息失败！", err)
-	// 	return
-	// }
-	// if len(messages) <= 0 {
-	// 	m.Warn("没有读取到消息！", zap.Strings("messages", req.MessageIDs))
-	// 	c.ResponseError(errors.New("没有读取到消息！"))
-	// 	return
-	// }
 
 	tx, err := m.ctx.DB().Begin()
 	if err != nil {
@@ -428,7 +407,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 	}()
 
 	//	fromUIDs := make([]string, 0, len(messages)) // 消息发送者
-	for _, message := range syncMsg.Messages {
+	for _, message := range messages {
 		//	fromUIDs = append(fromUIDs, message.FromUID)
 		err := m.memberReadedDB.insertOrUpdateTx(&memberReadedModel{
 			MessageID:   message.MessageID,
@@ -447,7 +426,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 		c.ResponseErrorf("提交事务失败！", err)
 		return
 	}
-	for _, message := range syncMsg.Messages {
+	for _, message := range messages {
 		messageIDStr := strconv.FormatInt(message.MessageID, 10)
 		jsonStr, err := json.Marshal(&messageReadedCountModel{
 			MessageIDStr:   messageIDStr,
@@ -1382,53 +1361,55 @@ func (m *Message) revoke(c *wkhttp.Context) {
 	if uint8(channelTypeI) == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(channelID, c.GetLoginUID())
 	}
-	cliengMsgNos := make([]string, 0)
-	cliengMsgNos = append(cliengMsgNos, clientMsgNo)
-	syncMsgs, err := m.ctx.IMSearchMessages(&config.MsgSearchReq{
-		LoginUID:     loginUID,
-		ChannelID:    channelID,
-		ChannelType:  uint8(channelTypeI),
-		ClientMsgNos: cliengMsgNos,
-	})
-	if err != nil {
-		m.Error("查询IM消息错误", zap.String("fakeChannelID", fakeChannelID), zap.String("clientMsgNo", clientMsgNo), zap.String("loginUID", c.GetLoginUID()))
-		c.ResponseErrorf("查询IM消息错误", err)
-		return
-	}
-	if syncMsgs == nil || len(syncMsgs.Messages) == 0 {
-		c.ResponseErrorf("未查询到撤回消息！", err)
-		return
-	}
-	syncMsg := syncMsgs.Messages[0]
-	message := &messageModel{
-		ChannelID:   syncMsg.ChannelID,
-		ChannelType: syncMsg.ChannelType,
-		Setting:     syncMsg.Setting,
-		MessageID:   syncMsg.MessageID,
-		MessageSeq:  syncMsg.MessageSeq,
-		FromUID:     syncMsg.FromUID,
-		ClientMsgNo: syncMsg.ClientMsgNo,
-		Payload:     syncMsg.Payload,
-	}
-	allow, err := m.hasRevokePermission(message, c.GetLoginUID())
-	if err != nil {
-		m.Error("权限判断失败！", zap.Error(err))
-		c.ResponseError(errors.New("权限判断失败！"))
-		return
-	}
-	if !allow {
-		c.ResponseError(errors.New("无权限撤回此消息！"))
-		return
+
+	var messageIDs = []string{}
+	var err error
+	var messages []*messageModel
+	if clientMsgNo != "" {
+		messages, err = m.db.queryMessagesWithChannelClientMsgNo(fakeChannelID, uint8(channelTypeI), clientMsgNo)
+		if err != nil {
+			m.Error("撤回失败！", zap.String("fakeChannelID", fakeChannelID), zap.String("clientMsgNo", clientMsgNo), zap.String("loginUID", c.GetLoginUID()))
+			c.ResponseErrorf("查询消息失败！", err)
+			return
+		}
+		if len(messages) == 0 {
+			c.ResponseError(errors.New("撤回失败！"))
+			return
+		}
+		var message *messageModel
+		if len(messages) > 0 {
+			message = messages[0]
+			for _, message := range messages {
+				messageIDs = append(messageIDs, fmt.Sprintf("%d", message.MessageID))
+			}
+		}
+		if message != nil {
+			allow, err := m.hasRevokePermission(message, c.GetLoginUID())
+			if err != nil {
+				m.Error("权限判断失败！", zap.Error(err))
+				c.ResponseError(errors.New("权限判断失败！"))
+				return
+			}
+			if !allow {
+				c.ResponseError(errors.New("无权限撤回此消息！"))
+				return
+			}
+
+			m.cancelMentionReminderIfNeed(message)
+
+		}
 	}
 
-	m.cancelMentionReminderIfNeed(message)
-
-	messageExtra, err := m.messageExtraDB.queryWithMessageID(messageID)
+	if len(messageIDs) == 0 {
+		messageIDs = append(messageIDs, messageID)
+	}
+	messageExtras, err := m.messageExtraDB.queryWithMessageIDs(messageIDs)
 	if err != nil {
 		m.Error("查询消息扩展错误", zap.Error(err))
 		c.ResponseError(errors.New("查询消息扩展错误"))
 		return
 	}
+
 	tx, err := m.db.session.Begin()
 	if err != nil {
 		m.Error("开启事务失败！", zap.Error(err))
@@ -1441,59 +1422,87 @@ func (m *Message) revoke(c *wkhttp.Context) {
 			panic(err)
 		}
 	}()
-	messageIDStr := strconv.FormatInt(message.MessageID, 10)
-	version := m.genMessageExtraSeq(fakeChannelID)
-	if messageExtra != nil {
-		messageExtra.Revoke = 1
-		messageExtra.Revoker = loginUID
-		messageExtra.Version = version
-		err = m.messageExtraDB.updateTx(messageExtra, tx)
-		if err != nil {
-			tx.Rollback()
-			m.Error("更新消息扩展数据失败！", zap.Error(err), zap.String("messageID", messageIDStr), zap.String("channelID", fakeChannelID))
-			c.ResponseErrorf("更新消息为撤回状态失败！", err)
-			return
+	for _, msgID := range messageIDs {
+		version := m.genMessageExtraSeq(fakeChannelID)
+		// err = m.messageExtraDB.insertOrUpdateRevokeTx(&messageExtraModel{
+		// 	MessageID:   msgID,
+		// 	ChannelID:   fakeChannelID,
+		// 	ChannelType: uint8(channelTypeI),
+		// 	Revoke:      1,
+		// 	Version:     version,
+		// 	Revoker:     loginUID,
+		// }, tx)
+		// if err != nil {
+		// 	tx.Rollback()
+		// 	c.ResponseErrorf("更新消息为撤回状态失败！", err)
+		// 	return
+		// }
+		var tempMsgExtra *messageExtraModel
+		for _, messageExtra := range messageExtras {
+			if messageExtra.MessageID == msgID {
+				tempMsgExtra = messageExtra
+				tempMsgExtra.Revoke = 1
+				tempMsgExtra.Revoker = loginUID
+				tempMsgExtra.Version = version
+				break
+			}
 		}
-	} else {
-		err = m.messageExtraDB.insertTx(&messageExtraModel{
-			MessageID:   messageIDStr,
-			MessageSeq:  message.MessageSeq,
-			FromUID:     message.FromUID,
-			ChannelID:   fakeChannelID,
-			ChannelType: uint8(channelTypeI),
-			ReadedCount: 0,
-			Revoke:      1,
-			Revoker:     loginUID,
-			Version:     version,
-		}, tx)
-		if err != nil {
-			tx.Rollback()
-			m.Error("新增消息扩展数据失败！", zap.Error(err), zap.String("messageID", messageIDStr), zap.String("channelID", fakeChannelID))
-			c.ResponseErrorf("新增消息为撤回状态失败！", err)
-			return
+		if tempMsgExtra != nil {
+			err = m.messageExtraDB.updateTx(tempMsgExtra, tx)
+			if err != nil {
+				tx.Rollback()
+				m.Error("更新消息扩展数据失败！", zap.Error(err), zap.String("messageID", msgID), zap.String("channelID", fakeChannelID))
+				return
+			}
+		} else {
+			fromUID := ""
+			msgSeq := uint32(0)
+			if len(messages) > 0 {
+				for _, msg := range messages {
+					messageIDStr := strconv.FormatInt(msg.MessageID, 10)
+					if messageIDStr == msgID {
+						fromUID = msg.FromUID
+						msgSeq = msg.MessageSeq
+						break
+					}
+				}
+			}
+			err = m.messageExtraDB.insertTx(&messageExtraModel{
+				MessageID:   msgID,
+				MessageSeq:  msgSeq,
+				FromUID:     fromUID,
+				ChannelID:   fakeChannelID,
+				ChannelType: uint8(channelTypeI),
+				ReadedCount: 0,
+				Version:     version,
+				Revoke:      1,
+				Revoker:     loginUID,
+			}, tx)
+			if err != nil {
+				tx.Rollback()
+				m.Error("新增消息扩展数据失败！", zap.Error(err), zap.String("messageID", msgID), zap.String("channelID", fakeChannelID))
+				return
+			}
 		}
 	}
 	msgIds := make([]string, 0)
-	msgIds = append(msgIds, messageIDStr)
+	msgIds = append(msgIds, messageID)
 	// 发布撤回消息事件
-	var eventID int64 = 0
-	if m.ctx.GetConfig().ZincSearch.SearchOn {
-		eventID, err = m.ctx.EventBegin(&wkevent.Data{
-			Event: event.EventUpdateSearchMessage,
-			Data: &config.UpdateSearchMessageReq{
-				MessageIDs: msgIds,
-				ChannelID:  channelID,
-			},
-			Type: wkevent.None,
-		}, tx)
-		if err != nil {
-			tx.Rollback()
-			m.Error("开启事件失败！", zap.Error(err))
-			c.ResponseError(errors.New("开启事件失败！"))
-			return
-		}
+	eventID, err := m.ctx.EventBegin(&wkevent.Data{
+		Event: event.EventUpdateSearchMessage,
+		Data: &config.UpdateSearchMessageReq{
+			MessageIDs: msgIds,
+			ChannelID:  channelID,
+		},
+		Type: wkevent.None,
+	}, tx)
+	if err != nil {
+		tx.Rollback()
+		m.Error("开启事件失败！", zap.Error(err))
+		c.ResponseError(errors.New("开启事件失败！"))
+		return
 	}
-	err = m.deletePinnedMessage(channelID, uint8(channelTypeI), msgIds, loginUID, tx)
+	err = m.deletePinnedMessage(channelID, uint8(channelTypeI), messageIDs, loginUID, tx)
 	if err != nil {
 		c.ResponseError(err)
 		return
@@ -1503,10 +1512,20 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		c.ResponseErrorf("事务提交失败！", err)
 		return
 	}
-	if eventID > 0 {
-		m.ctx.EventCommit(eventID)
-	}
-	for _, msgID := range msgIds {
+	m.ctx.EventCommit(eventID)
+	// err = m.ctx.SendCMD(config.MsgCMDReq{
+	// 	NoPersist:   true,
+	// 	ChannelID:   channelID,
+	// 	ChannelType: uint8(channelTypeI),
+	// 	FromUID:     loginUID,
+	// 	CMD:         common.CMDSyncMessageExtra,
+	// })
+	// if err != nil {
+	// 	c.ResponseErrorf("发送同步命令失败！", err)
+	// 	return
+	// }
+
+	for _, msgID := range messageIDs {
 		messageIDI, _ := strconv.ParseInt(msgID, 10, 64)
 		// 发给指定频道
 		err = m.ctx.SendRevoke(&config.MsgRevokeReq{
