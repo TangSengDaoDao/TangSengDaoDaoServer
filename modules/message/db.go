@@ -24,27 +24,6 @@ func NewDB(ctx *config.Context) *DB {
 	}
 }
 
-func (d *DB) queryMessageWithMessageID(channelID string, messageID string) (*messageModel, error) {
-	var m *messageModel
-	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("message_id=?", messageID).Load(&m)
-	return m, err
-}
-
-func (d *DB) queryMessagesWithMessageIDs(channelID string, messageIDs []string) ([]*messageModel, error) {
-	if len(messageIDs) <= 0 {
-		return nil, nil
-	}
-	var models []*messageModel
-	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("message_id in ?", messageIDs).Load(&models)
-	return models, err
-}
-
-func (d *DB) queryMessagesWithChannelClientMsgNo(channelID string, channelType uint8, clientMsgNo string) ([]*messageModel, error) {
-	var models []*messageModel
-	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("channel_id=? and channel_type=? and client_msg_no=?", channelID, channelType, clientMsgNo).Load(&models)
-	return models, err
-}
-
 func (d *DB) queryMaxMessageSeq(channelID string, channelType uint8) (uint32, error) {
 	var maxMessageSeq uint32
 	err := d.session.Select("IFNULL(max(message_seq),0)").From(d.getTable(channelID)).Where("channel_id=? and channel_type=?", channelID, channelType).LoadOne(&maxMessageSeq)
