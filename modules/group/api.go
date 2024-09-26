@@ -1983,6 +1983,7 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 	}
 	var loginMember *MemberModel
 	// 查询操作者身份
+	// 这里要兼容后台管理系统的删除操作
 	if c.CheckLoginRole() != nil {
 		loginMember, err = g.db.QueryMemberWithUID(operator, groupNo)
 		if err != nil {
@@ -2016,16 +2017,18 @@ func (g *Group) memberRemove(c *wkhttp.Context) {
 		c.ResponseError(errors.New("被删除者不在此群内"))
 		return
 	}
-	// 验证权限
-	for _, member := range deleteMembers {
-		if loginMember.Role == int(common.GroupMemberRoleManager) {
-			if member.Role == int(common.GroupMemberRoleManager) {
-				c.ResponseError(errors.New("管理员不能删除管理员"))
-				return
-			}
-			if member.Role == int(common.GroupMemberRoleCreater) {
-				c.ResponseError(errors.New("管理员不能删除群主"))
-				return
+	if loginMember != nil {
+		// 验证权限
+		for _, member := range deleteMembers {
+			if loginMember.Role == int(common.GroupMemberRoleManager) {
+				if member.Role == int(common.GroupMemberRoleManager) {
+					c.ResponseError(errors.New("管理员不能删除管理员"))
+					return
+				}
+				if member.Role == int(common.GroupMemberRoleCreater) {
+					c.ResponseError(errors.New("管理员不能删除群主"))
+					return
+				}
 			}
 		}
 	}
