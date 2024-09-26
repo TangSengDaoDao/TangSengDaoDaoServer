@@ -38,31 +38,6 @@ CREATE  INDEX channel_idx on `member_readed` (channel_id,channel_type);
 CREATE  INDEX uid_idx on `member_readed` (uid);
 CREATE UNIQUE INDEX message_uid_idx on `member_readed` (message_id,uid);
 
--- 成员克隆列表(TODO: 此表已作废)
-CREATE TABLE `member_clone`(
-    id           bigint          not null primary key AUTO_INCREMENT,
-    clone_no     VARCHAR(40)   not null default '', -- 克隆成员唯一编号
-    channel_id   VARCHAR(40)      not null default '', -- 频道ID
-    channel_type smallint         not null default 0,  -- 频道类型
-    uid     VARCHAR(40)      not null default '', -- 已读用户uid
-    created_at timeStamp     not null DEFAULT CURRENT_TIMESTAMP, -- 创建时间
-    updated_at timeStamp     not null DEFAULT CURRENT_TIMESTAMP  -- 更新时间
-);
-
-CREATE  INDEX clone_no_idx on `member_clone` (clone_no);
-CREATE  INDEX channel_idx on `member_clone` (channel_id,channel_type);
-
--- 频道成员变化记录
-CREATE TABLE `member_change`(
-    id        bigint          not null primary key AUTO_INCREMENT,
-    clone_no     VARCHAR(40)   not null default '', -- 未读编号
-    channel_id   VARCHAR(40)      not null default '', -- 频道ID
-    channel_type smallint         not null default 0,  -- 频道类型
-    max_version bigint   not null default 0, -- 当前最大版本
-    created_at timeStamp     not null DEFAULT CURRENT_TIMESTAMP, -- 创建时间
-    updated_at timeStamp     not null DEFAULT CURRENT_TIMESTAMP  -- 更新时间
-);
-
 
 -- 最近会话扩展表
 CREATE TABLE `conversation_extra`(
