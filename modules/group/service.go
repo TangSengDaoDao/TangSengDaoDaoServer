@@ -40,7 +40,7 @@ type IService interface {
 	GetMembers(groupNo string) ([]*MemberResp, error)
 	// 获取指定群的指定成员信息
 	GetMember(groupNo, uid string) (*MemberResp, error)
-	// 获取黑明单成员uid集合
+	// 获取黑名单成员uid集合
 	GetBlacklistMemberUIDs(groupNo string) ([]string, error)
 	// 查询管理员成员uid列表（包括创建者）
 	GetMemberUIDsOfManager(groupNo string) ([]string, error)

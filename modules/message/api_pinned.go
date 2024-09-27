@@ -47,7 +47,7 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 	fakeChannelID := req.ChannelID
 	if req.ChannelType == common.ChannelTypePerson.Uint8() {
 		fakeChannelID = common.GetFakeChannelIDWith(loginUID, req.ChannelID)
-	} else {
+	} else if req.ChannelType == common.ChannelTypeGroup.Uint8() {
 		groupInfo, err := m.groupService.GetGroupDetail(req.ChannelID, loginUID)
 		if err != nil {
 			m.Error("查询群组信息错误", zap.Error(err))
@@ -69,7 +69,7 @@ func (m *Message) pinnedMessage(c *wkhttp.Context) {
 			return
 		}
 	}
-	message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.ChannelType, req.MessageID)
+	message, err := m.db.queryMessageWithMessageID(fakeChannelID, req.MessageID)
 	if err != nil {
 		m.Error("查询消息错误", zap.Error(err))
 		c.ResponseError(errors.New("查询消息错误"))

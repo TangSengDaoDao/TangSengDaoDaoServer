@@ -21,12 +21,6 @@ func newMessageUserExtraDB(ctx *config.Context) *messageUserExtraDB {
 	}
 }
 
-// 插入或更新消息为已删除
-func (m *messageUserExtraDB) insertOrUpdateDeleted(md *messageUserExtraModel) error {
-	sq := fmt.Sprintf("INSERT INTO %s (uid,message_id,message_seq,channel_id,channel_type,message_is_deleted) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE  message_is_deleted=VALUES(message_is_deleted)", m.getTable(md.UID))
-	_, err := m.session.InsertBySql(sq, md.UID, md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.MessageIsDeleted).Exec()
-	return err
-}
 func (m *messageUserExtraDB) insertOrUpdateDeletedTx(md *messageUserExtraModel, tx *dbr.Tx) error {
 	sq := fmt.Sprintf("INSERT INTO %s (uid,message_id,message_seq,channel_id,channel_type,message_is_deleted) VALUES (?,?,?,?,?,?) ON DUPLICATE KEY UPDATE  message_is_deleted=VALUES(message_is_deleted)", m.getTable(md.UID))
 	_, err := tx.InsertBySql(sq, md.UID, md.MessageID, md.MessageSeq, md.ChannelID, md.ChannelType, md.MessageIsDeleted).Exec()

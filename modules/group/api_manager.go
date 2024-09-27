@@ -1,8 +1,11 @@
 package group
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/base/event"
@@ -394,7 +397,32 @@ func (m *Manager) removeMember(c *wkhttp.Context) {
 		c.ResponseError(err)
 		return
 	}
+	type memberRemoveReq struct {
+		UID []string `json:"uid"` // 成员uid
+	}
+	var req memberRemoveReq
+	if err := c.BindJSON(&req); err != nil {
+		m.Error(common.ErrData.Error(), zap.Error(err))
+		c.ResponseError(common.ErrData)
+		return
+	}
+	if len(req.UID) == 0 {
+		c.ResponseError(errors.New("群成员不能为空！"))
+		return
+	}
+	type deleteReq struct {
+		Members []string `json:"members"` // 成员uid
+	}
+	req2 := &deleteReq{Members: req.UID}
 	c.Request.URL.Path = fmt.Sprintf("/v1/groups/%s/members", c.Param("group_no"))
+
+	jsonData, err := json.Marshal(req2)
+	if err != nil {
+		m.Error("json序列化失败！", zap.Error(err))
+		c.ResponseError(errors.New("json序列化失败！"))
+		return
+	}
+	c.Request.Body = io.NopCloser(bytes.NewReader(jsonData))
 	m.ctx.GetHttpRoute().HandleContext(c)
 }
 

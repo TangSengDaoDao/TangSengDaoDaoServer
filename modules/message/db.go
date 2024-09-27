@@ -24,24 +24,24 @@ func NewDB(ctx *config.Context) *DB {
 	}
 }
 
-// InsertTx 添加消息
-// func (d *DB) InsertTx(m *Model, tx *dbr.Tx) error {
-// 	_, err := tx.InsertInto("message").Columns(util.AttrToUnderscore(m)...).Record(m).Exec()
-// 	return err
-// }
-
-func (d *DB) queryMessageWithMessageID(channelID string, channelType uint8, messageID string) (*messageModel, error) {
+func (d *DB) queryMessageWithMessageID(channelID string, messageID string) (*messageModel, error) {
 	var m *messageModel
 	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("message_id=?", messageID).Load(&m)
 	return m, err
 }
 
-func (d *DB) queryMessagesWithMessageIDs(channelID string, channelType uint8, messageIDs []string) ([]*messageModel, error) {
+func (d *DB) queryMessagesWithMessageIDs(channelID string, messageIDs []string) ([]*messageModel, error) {
 	if len(messageIDs) <= 0 {
 		return nil, nil
 	}
 	var models []*messageModel
 	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("message_id in ?", messageIDs).Load(&models)
+	return models, err
+}
+
+func (d *DB) queryMessagesWithChannelClientMsgNo(channelID string, channelType uint8, clientMsgNo string) ([]*messageModel, error) {
+	var models []*messageModel
+	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("channel_id=? and channel_type=? and client_msg_no=?", channelID, channelType, clientMsgNo).Load(&models)
 	return models, err
 }
 
@@ -51,11 +51,6 @@ func (d *DB) queryMaxMessageSeq(channelID string, channelType uint8) (uint32, er
 	return maxMessageSeq, err
 }
 
-func (d *DB) queryMessagesWithChannelClientMsgNo(channelID string, channelType uint8, clientMsgNo string) ([]*messageModel, error) {
-	var models []*messageModel
-	_, err := d.session.Select("*").From(d.getTable(channelID)).Where("channel_id=? and channel_type=? and client_msg_no=?", channelID, channelType, clientMsgNo).Load(&models)
-	return models, err
-}
 func (d *DB) queryProhibitWordsWithVersion(version int64) ([]*ProhibitWordModel, error) {
 	var list []*ProhibitWordModel
 	_, err := d.session.Select("*").From("prohibit_words").Where("`version` > ?", version).Load(&list)
