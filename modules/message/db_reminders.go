@@ -8,6 +8,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/db"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/gocraft/dbr/v2"
+	"go.uber.org/zap"
 )
 
 type remindersDB struct {
@@ -87,9 +88,9 @@ func (r *remindersDB) sync(uid string, version int64, limit uint64, channelIDs [
 
 func (r *remindersDB) insertDonesTx(ids []int64, uid string, tx *dbr.Tx) error {
 	for _, id := range ids {
-		_, err := tx.InsertBySql("insert ignore  into reminder_done(reminder_id,uid) values(?,?)", id, uid).Exec()
+		_, err := tx.InsertBySql("insert  into reminder_done(reminder_id,uid) values(?,?)", id, uid).Exec()
 		if err != nil {
-			return err
+			r.ctx.Warn("insertDonesTx failed", zap.Error(err))
 		}
 	}
 	return nil
