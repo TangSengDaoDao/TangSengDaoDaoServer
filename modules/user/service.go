@@ -843,7 +843,7 @@ func toSettingResp(m *SettingModel) *SettingResp {
 
 	return &SettingResp{
 		ToUID:        m.ToUID,
-		UID:          m.ToUID,
+		UID:          m.UID,
 		Mute:         m.Mute,
 		Top:          m.Top,
 		ChatPwdOn:    m.ChatPwdOn,
