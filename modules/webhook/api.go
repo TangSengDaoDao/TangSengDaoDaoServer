@@ -396,6 +396,7 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 			if msgResp.FromUID != "" && len(toUids) > 0 {
 				uids := make([]string, 0)
 				uids = append(uids, msgResp.FromUID)
+				println("推送loginuid:", toUids[0], uids)
 				userSettings, err = w.userService.GetUserSettings(uids, toUids[0])
 				if err != nil {
 					w.Error("查询用户对某人设置错误", zap.Error(err))
