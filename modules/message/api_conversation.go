@@ -344,6 +344,7 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 	uids := make([]string, 0, len(conversations))
 	channelIDs := make([]string, 0, len(conversations))
 	if len(conversations) > 0 {
+		println("查询到会话数据", len(conversations))
 		for _, conversation := range conversations {
 			if len(conversation.Recents) == 0 {
 				continue
