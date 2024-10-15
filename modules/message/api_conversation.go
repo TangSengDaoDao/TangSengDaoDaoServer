@@ -329,6 +329,10 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 			})
 		}
 	}
+	println("请求参数version:", version)
+	println("请求参数MsgCount:", req.MsgCount)
+	println("请求参数lastMsgSeqs:", lastMsgSeqs)
+	println("请求参数largeChannels:", largeChannels)
 	conversations, err := co.ctx.IMSyncUserConversation(loginUID, version, req.MsgCount, lastMsgSeqs, largeChannels)
 	if err != nil {
 		co.Error("同步离线后的最近会话失败！", zap.Error(err), zap.String("loginUID", loginUID))
@@ -351,6 +355,8 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 			}
 			channelIDs = append(channelIDs, conversation.ChannelID)
 		}
+	} else {
+		println("未查询到会话数据", loginUID)
 	}
 
 	userMap := map[string]*user.UserDetailResp{}                // 用户详情
