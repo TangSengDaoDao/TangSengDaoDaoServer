@@ -147,6 +147,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		user.POST("/sms/destroy", u.sendDestroyCode)               //获取注销账号短信验证码
 		user.PUT("/updatepassword", u.updatePwd)                   // 修改登录密码
 		user.POST("/web3publickey", u.uploadWeb3PublicKey)         // 上传web3公钥
+		user.POST("/quit", u.quit)                                 // 退出登录
 		// #################### 登录设备管理 ####################
 		user.GET("/devices", u.deviceList)                 // 用户登录设备
 		user.DELETE("/devices/:device_id", u.deviceDelete) // 删除登录设备
@@ -202,6 +203,32 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 	u.ctx.AddOnlineStatusListener(u.handleOnlineStatus)               // 需要放在listenOnlineStatus之后
 	u.ctx.Schedule(time.Minute*5, u.onlineStatusCheck)                // 在线状态定时检查
 
+}
+
+// app退出登录
+func (u *User) quit(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	err := u.ctx.QuitUserDevice(loginUID, int(config.Web)) // 退出web
+	if err != nil {
+		u.Error("退出web设备失败", zap.Error(err))
+		c.ResponseError(errors.New("退出web设备失败"))
+		return
+	}
+
+	err = u.ctx.QuitUserDevice(loginUID, int(config.PC))
+	if err != nil {
+		u.Error("退出PC设备失败", zap.Error(err))
+		c.ResponseError(errors.New("退出PC设备失败"))
+		return
+	}
+
+	err = u.ctx.GetRedisConn().Del(fmt.Sprintf("%s%s", u.userDeviceTokenPrefix, loginUID))
+	if err != nil {
+		u.Error("删除设备token失败！", zap.Error(err))
+		c.ResponseError(errors.New("删除设备token失败！"))
+		return
+	}
+	c.ResponseOK()
 }
 
 // 清除红点
