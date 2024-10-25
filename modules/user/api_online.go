@@ -69,7 +69,10 @@ func (u *User) onlinelistWithUIDs(c *wkhttp.Context) {
 // onlineList 查询在线用户 包含我的pc设备
 func (u *User) onlineList(c *wkhttp.Context) {
 	if !u.ctx.GetConfig().OnlineStatusOn {
-		c.Response(make([]string, 0))
+		c.Response(onlineFriendAndDeviceResp{
+			Friends: make([]*config.OnlinestatusResp, 0),
+			PC:      nil,
+		})
 		return
 	}
 	loginUID := c.MustGet("uid").(string)
