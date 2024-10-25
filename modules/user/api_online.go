@@ -71,7 +71,6 @@ func (u *User) onlineList(c *wkhttp.Context) {
 	if !u.ctx.GetConfig().OnlineStatusOn {
 		c.Response(onlineFriendAndDeviceResp{
 			Friends: make([]*config.OnlinestatusResp, 0),
-			PC:      nil,
 		})
 		return
 	}
