@@ -19,6 +19,12 @@ const (
 
 var systemRobotMap = []*systemRobotMenu{
 	{
+		CMD:          "/基本信息",
+		Remark:       "唐僧叨叨基本信息",
+		ReplyContent: "唐僧叨叨是一款轻量级，高性能，重安全专注于私有化部署的开源即时通讯系统。唐僧叨叨官网：https://www.tsdaodao.com 各端演示地址：https://tsdaodao.com/guide/demo.html 悟空官网：https://githubim.com 在APP我的-设置-模块管理中关闭所有模块即是开源版本所有功能。",
+		Type:         string(None),
+	},
+	{
 		CMD:          "/添加好友",
 		Remark:       "如何添加好友",
 		ReplyContent: "您好，点击右上角【+】，选择【添加好友】-- 点击搜索 -- 输入用户的手机号、短号（任意一个添加即可）进行好友添加查找",
@@ -48,12 +54,12 @@ var systemRobotMap = []*systemRobotMenu{
 		ReplyContent: "您好，唐僧叨叨 Android应用下载地址 https://www.pgyer.com/tsdd",
 		Type:         string(None),
 	},
-	{
-		CMD:          "/解密失败",
-		Remark:       "收到消息提示【消息解密失败，无法查看】",
-		ReplyContent: "您好，消息解密失败是因为您和对方之间有谁卸载重装了软件，或者更换了聊天设备，导致密钥不再配对，解密不了消息。对此需要您和你的好友双方互发一条消息且双方都收到，完成密钥更新后就能正常聊天了",
-		Type:         string(None),
-	},
+	// {
+	// 	CMD:          "/解密失败",
+	// 	Remark:       "收到消息提示【消息解密失败，无法查看】",
+	// 	ReplyContent: "您好，消息解密失败是因为您和对方之间有谁卸载重装了软件，或者更换了聊天设备，导致密钥不再配对，解密不了消息。对此需要您和你的好友双方互发一条消息且双方都收到，完成密钥更新后就能正常聊天了",
+	// 	Type:         string(None),
+	// },
 	{
 		CMD:          "/未知消息",
 		Remark:       "收到消息提示【未知消息，请升级客户端后查看】",

@@ -816,6 +816,28 @@ paths:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
+  /user/quit: 
+    post:
+      tags:
+        - "user"
+      summary: "用户退出"
+      description: "用户退出。会退出web和pc端，同时销毁app推送token"
+      operationId: "quit"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            $ref: "#/definitions/response"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
   /user/login/check_phone:
     post:
       tags:
@@ -2017,8 +2039,8 @@ paths:
     get:
       tags:
         - "user"
-      summary: "退出pc登录"
-      description: "退出pc登录"
+      summary: "获取登录状态"
+      description: "通过login uid获取登录状态"
       operationId: "quit pc"
       consumes:
         - "application/json"
