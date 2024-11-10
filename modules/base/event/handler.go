@@ -52,9 +52,11 @@ func (e *Event) handleEvent(model *Model) {
 // 处理群创建事件
 func (e *Event) handleGroupCreateEvent(model *Model) {
 
+	fmt.Println("handleGroupCreateEvent....", model.Event)
 	e.ctx.EventPool.Work <- &pool.Job{
 		Data: model,
 		JobFunc: func(id int64, data interface{}) {
+			fmt.Println("handleGroupCreateEvent2....JobFunc")
 			var model = data.(*Model)
 			var req *config.MsgGroupCreateReq
 			err := util.ReadJsonByByte([]byte(model.Data), &req)
@@ -64,6 +66,7 @@ func (e *Event) handleGroupCreateEvent(model *Model) {
 			}
 			err = e.ctx.SendGroupCreate(req)
 			e.updateEventStatus(err, model.VersionLock, model.Id)
+			fmt.Println("handleGroupCreateEvent3....JobFunc")
 		},
 	}
 }

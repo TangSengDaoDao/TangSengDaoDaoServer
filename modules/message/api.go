@@ -630,7 +630,6 @@ func (m *Message) syncChannelMessage(c *wkhttp.Context) {
 		c.ResponseError(errors.New("同步频道内的消息失败！"))
 		return
 	}
-	fmt.Println("resp----messages-->", len(resp.Messages))
 	fakeChannelID := req.ChannelID
 	if req.ChannelType == common.ChannelTypePerson.Uint8() { // 如果是群则需要计算群成员是否变化 如果有变化则将群成员加入到克隆表
 		fakeChannelID = common.GetFakeChannelIDWith(req.ChannelID, req.LoginUID)
