@@ -820,6 +820,7 @@ type UpdateLoginPasswordReq struct {
 }
 
 type SettingResp struct {
+	ToUID        string // 用户UID
 	UID          string // 用户UID
 	Mute         int    // 免打扰
 	Top          int    // 置顶
@@ -841,7 +842,8 @@ type OnLineUserResp struct {
 func toSettingResp(m *SettingModel) *SettingResp {
 
 	return &SettingResp{
-		UID:          m.ToUID,
+		ToUID:        m.ToUID,
+		UID:          m.UID,
 		Mute:         m.Mute,
 		Top:          m.Top,
 		ChatPwdOn:    m.ChatPwdOn,

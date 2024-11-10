@@ -388,12 +388,14 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 		w.Error("查询推送用户信息错误", zap.Error(err))
 		return nil
 	}
+	fromUID := ""
 	if !isVideoCall { // 音视频消息不检查设置，直接推送
 		// 查询免打扰
 		// 查询用户总设置
 		if msgResp.ChannelType == common.ChannelTypePerson.Uint8() {
 			// 查询用户对某人设置
 			if msgResp.FromUID != "" && len(toUids) > 0 {
+				fromUID = msgResp.FromUID
 				uids := make([]string, 0)
 				uids = append(uids, msgResp.FromUID)
 				userSettings, err = w.userService.GetUserSettings(uids, toUids[0])
@@ -414,7 +416,7 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 
 	for _, toUID := range toUids {
 		if !isVideoCall {
-			if !w.allowPush(users, userSettings, groupSettings, toUID) {
+			if !w.allowPush(users, userSettings, groupSettings, toUID, fromUID) {
 				continue
 			}
 		} else {
@@ -457,7 +459,7 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 }
 
 // 是否允许推送
-func (w *Webhook) allowPush(users []*user.Resp, userSettings []*user.SettingResp, groupSettings []*group.SettingResp, toUID string) bool {
+func (w *Webhook) allowPush(users []*user.Resp, userSettings []*user.SettingResp, groupSettings []*group.SettingResp, toUID string, fromUID string) bool {
 	isPush := true
 	if len(users) > 0 {
 		for _, user := range users {
@@ -469,9 +471,9 @@ func (w *Webhook) allowPush(users []*user.Resp, userSettings []*user.SettingResp
 			}
 		}
 	}
-	if isPush && userSettings != nil && len(userSettings) > 0 {
+	if isPush && userSettings != nil && len(userSettings) > 0 && fromUID != "" {
 		for _, userSetting := range userSettings {
-			if userSetting.UID == toUID {
+			if userSetting.UID == toUID && userSetting.ToUID == fromUID {
 				if userSetting.Mute == 1 {
 					isPush = false
 				}
