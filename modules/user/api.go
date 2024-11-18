@@ -2183,12 +2183,22 @@ func (u *User) destroyAccount(c *wkhttp.Context) {
 		c.ResponseError(errors.New("登录用户不存在"))
 		return
 	}
-	// 校验验证码
-	err = u.smsServie.Verify(c.Context, userInfo.Zone, userInfo.Phone, code, commonapi.CodeTypeDestroyAccount)
-	if err != nil {
-		c.ResponseError(err)
-		return
+	//测试模式
+	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
+		if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != code {
+			c.ResponseError(errors.New("验证码错误"))
+			return
+		}
+	} else {
+		//线上验证短信验证码
+		// 校验验证码
+		err = u.smsServie.Verify(c.Context, userInfo.Zone, userInfo.Phone, code, commonapi.CodeTypeDestroyAccount)
+		if err != nil {
+			c.ResponseError(err)
+			return
+		}
 	}
+
 	t := time.Now()
 	time := fmt.Sprintf("%d%d%d%d%d", t.Year(), t.Month(), t.Day(), t.Minute(), t.Second())
 	phone := fmt.Sprintf("%s@%s@delete", userInfo.Phone, time)
