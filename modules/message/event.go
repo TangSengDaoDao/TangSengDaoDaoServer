@@ -218,10 +218,12 @@ func (m *Message) handleReadedMessageCount() {
 			} else {
 				err = m.ctx.SendCMD(config.MsgCMDReq{
 					NoPersist:   true,
-					ChannelID:   cmd.ChannelID,
-					ChannelType: cmd.ChannelType,
 					Subscribers: cmd.FromUIDs, // 消息只发送给发送者
 					CMD:         common.CMDSyncMessageExtra,
+					Param: map[string]interface{}{
+						"channel_id":   cmd.ChannelID,
+						"channel_type": cmd.ChannelType,
+					},
 				})
 			}
 			if err != nil {
