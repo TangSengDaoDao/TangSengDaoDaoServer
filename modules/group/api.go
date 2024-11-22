@@ -922,44 +922,43 @@ func (g *Group) memberAdd(c *wkhttp.Context) {
 		return
 	}
 
-	memberCount, err := g.db.QueryMemberCount(groupNo)
-	if err != nil {
-		g.Error("查询群成员数量失败！", zap.Error(err))
-		c.ResponseError(errors.New("查询群成员数量失败！"))
-		return
-	}
-
+	// memberCount, err := g.db.QueryMemberCount(groupNo)
+	// if err != nil {
+	// 	g.Error("查询群成员数量失败！", zap.Error(err))
+	// 	c.ResponseError(errors.New("查询群成员数量失败！"))
+	// 	return
+	// }
 	// 普通群自动升级
-	if memberCount >= int64(g.ctx.GetConfig().GroupUpgradeWhenMemberCount) && group.GroupType == int(GroupTypeCommon) {
+	// if memberCount >= int64(g.ctx.GetConfig().GroupUpgradeWhenMemberCount) && group.GroupType == int(GroupTypeCommon) {
 
-		var ban = 0
-		if group.Status == GroupStatusDisabled {
-			ban = 1
-		}
-		err = g.ctx.IMCreateOrUpdateChannel(&config.ChannelCreateReq{
-			ChannelID:   groupNo,
-			ChannelType: common.ChannelTypeGroup.Uint8(),
-			Ban:         ban,
-			Large:       1,
-		})
-		if err != nil {
-			g.Error("更新频道信息失败！", zap.Error(err))
-			c.ResponseError(errors.New("更新频道信息失败！"))
-			return
-		}
+	// 	var ban = 0
+	// 	if group.Status == GroupStatusDisabled {
+	// 		ban = 1
+	// 	}
+	// 	err = g.ctx.IMCreateOrUpdateChannel(&config.ChannelCreateReq{
+	// 		ChannelID:   groupNo,
+	// 		ChannelType: common.ChannelTypeGroup.Uint8(),
+	// 		Ban:         ban,
+	// 		Large:       1,
+	// 	})
+	// 	if err != nil {
+	// 		g.Error("更新频道信息失败！", zap.Error(err))
+	// 		c.ResponseError(errors.New("更新频道信息失败！"))
+	// 		return
+	// 	}
 
-		err = g.db.UpdateGroupType(groupNo, GroupTypeSuper)
-		if err != nil {
-			g.Error("修改群为超级群失败！", zap.Error(err), zap.String("groupNo", groupNo))
-			c.ResponseError(errors.New("修改群为超级群失败！"))
-			return
-		}
-		// 发送群升级通知
-		err = g.ctx.SendGroupUpgrade(groupNo)
-		if err != nil {
-			g.Warn("发送群升级通知失败！", zap.Error(err))
-		}
-	}
+	// 	err = g.db.UpdateGroupType(groupNo, GroupTypeSuper)
+	// 	if err != nil {
+	// 		g.Error("修改群为超级群失败！", zap.Error(err), zap.String("groupNo", groupNo))
+	// 		c.ResponseError(errors.New("修改群为超级群失败！"))
+	// 		return
+	// 	}
+	// 	// 发送群升级通知
+	// 	err = g.ctx.SendGroupUpgrade(groupNo)
+	// 	if err != nil {
+	// 		g.Warn("发送群升级通知失败！", zap.Error(err))
+	// 	}
+	// }
 
 	c.ResponseOK()
 

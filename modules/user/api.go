@@ -655,8 +655,6 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 		}
 		err = u.ctx.SendCMD(config.MsgCMDReq{
 			CMD:         common.CMDChannelUpdate,
-			ChannelID:   loginUID,
-			ChannelType: common.ChannelTypePerson.Uint8(),
 			Subscribers: uids,
 			Param: map[string]interface{}{
 				"channel_id":   loginUID,
