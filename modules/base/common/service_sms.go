@@ -51,6 +51,8 @@ func (s *SMSService) SendVerifyCode(ctx context.Context, zone, phone string, cod
 		}
 	} else if smsProviderName == config.SMSProviderUnisms {
 		smsProvider = NewUnismsProvider(s.ctx)
+	} else if smsProviderName == config.SMSProviderSmsbao {
+		smsProvider = NewSmsbaoProvider(s.ctx)
 	}
 
 	if smsProvider == nil {
@@ -86,5 +88,6 @@ func (s *SMSService) Verify(ctx context.Context, zone, phone, code string, codeT
 		s.ctx.GetRedisConn().Del(cacheKey)
 		return nil
 	}
+	s.Info("验证码错误:"+code+", 真code:"+sysCode+", phone:"+phone, zap.String("code", code))
 	return errors.New("验证码无效！")
 }

@@ -61,6 +61,7 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.GET("/user/admin", m.getAdminUsers)              // 查询管理员用户
 		auth.DELETE("/user/admin", m.deleteAdminUsers)        // 删除管理员用户
 		auth.POST("/user/add", m.addUser)                     // 添加一个用户
+		auth.POST("/user/resetpassword", m.resetUserPassword) // 重置用户密码
 		auth.GET("/user/list", m.list)                        // 用户列表
 		auth.GET("/user/friends", m.friends)                  // 某个用户的好友
 		auth.GET("/user/blacklist", m.blacklist)              // 用户黑名单列表
@@ -153,6 +154,56 @@ func (m *Manager) login(c *wkhttp.Context) {
 		Name:  userInfo.Name,
 		Role:  userInfo.Role,
 	})
+}
+
+// 重置用户密码
+func (m *Manager) resetUserPassword(c *wkhttp.Context) {
+	err := c.CheckLoginRoleIsSuperAdmin()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+
+	type reqRUP struct {
+		NewPassword              string `json:"new_password"`
+		NewPassswordConfirmation string `json:"new_password_confirmation"`
+		Uid                      string `json:"uid"`
+	}
+	var req reqRUP
+	if err := c.BindJSON(&req); err != nil {
+		c.ResponseError(errors.New("请求数据格式有误！"))
+		return
+	}
+	if len(req.NewPassword) < 6 {
+		c.ResponseError(errors.New("密码长度必须大于6位"))
+		return
+	}
+	if req.NewPassword != req.NewPassswordConfirmation {
+		c.ResponseError(errors.New("两次密码不一致！"))
+		return
+	}
+	if req.Uid == "" {
+		c.ResponseError(errors.New("用户uid不能为空！"))
+		return
+	}
+	user, err := m.userDB.QueryByUID(req.Uid)
+	if err != nil {
+		m.Error("查询用户信息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户信息错误"))
+		return
+	}
+	if user == nil {
+		c.ResponseError(errors.New("操作用户不存在"))
+		return
+	}
+
+	err = m.userDB.UpdateUsersWithField("password", util.MD5(util.MD5(req.NewPassword)), req.Uid)
+	if err != nil {
+		m.Error("重置用户密码错误", zap.Error(err))
+		c.Response("重置用户密码错误")
+		return
+	}
+	c.ResponseOK()
 }
 
 // 删除管理员用户
