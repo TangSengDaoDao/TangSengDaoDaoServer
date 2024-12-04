@@ -1225,7 +1225,6 @@ func (m *Message) offset(c *wkhttp.Context) {
 	if err != nil {
 		m.Error("清除最近会话未读数失败！", zap.Error(err), zap.String("uid", c.GetLoginUID()), zap.String("channelID", req.ChannelID), zap.Uint8("channelType", req.ChannelType))
 	}
-
 	// 清空提醒项
 	reminders, err := m.remindersDB.queryWithUIDAndChannel(loginUID, req.ChannelID, req.ChannelType, req.MessageSeq)
 	if err != nil {
@@ -1236,7 +1235,7 @@ func (m *Message) offset(c *wkhttp.Context) {
 	reminderIds := make([]int64, 0)
 	if len(reminders) > 0 {
 		for _, reminder := range reminders {
-			if reminder.MessageSeq < req.MessageSeq && reminder.Done == 0 {
+			if reminder.MessageSeq <= req.MessageSeq && reminder.Done == 0 {
 				reminderIds = append(reminderIds, reminder.Id)
 			}
 		}
