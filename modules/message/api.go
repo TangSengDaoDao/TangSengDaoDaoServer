@@ -1242,6 +1242,8 @@ func (m *Message) offset(c *wkhttp.Context) {
 			}
 		}
 	}
+	println("清空提醒的ID数量", len(reminderIds))
+
 	if len(reminderIds) > 0 {
 		tx, err := m.ctx.DB().Begin()
 		if err != nil {
