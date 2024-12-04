@@ -1233,7 +1233,6 @@ func (m *Message) offset(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询用户提醒项失败！"))
 		return
 	}
-	println("查询未读的提醒：", len(reminders))
 	reminderIds := make([]int64, 0)
 	if len(reminders) > 0 {
 		for _, reminder := range reminders {
@@ -1242,7 +1241,6 @@ func (m *Message) offset(c *wkhttp.Context) {
 			}
 		}
 	}
-	println("清空提醒的ID数量", len(reminderIds))
 
 	if len(reminderIds) > 0 {
 		tx, err := m.ctx.DB().Begin()
@@ -1264,6 +1262,16 @@ func (m *Message) offset(c *wkhttp.Context) {
 			c.ResponseError(errors.New("更新提醒项状态失败！"))
 			return
 		}
+		for _, id := range reminderIds {
+			version := m.ctx.GenSeq(common.RemindersKey)
+			err = m.remindersDB.updateVersionTx(version, id, tx)
+			if err != nil {
+				tx.Rollback()
+				m.Error("更新提醒项版本失败！", zap.Error(err))
+				c.ResponseError(errors.New("更新提醒项版本失败！"))
+				return
+			}
+		}
 		if err := tx.Commit(); err != nil {
 			tx.Rollback()
 			m.Error("提交事务失败！", zap.Error(err))
@@ -1280,7 +1288,6 @@ func (m *Message) offset(c *wkhttp.Context) {
 			m.Error("发送cmd[CMDSyncReminders]失败！", zap.Error(err))
 		}
 	}
-	println("清除提醒项完成")
 	// 发送清空红点的命令
 	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
