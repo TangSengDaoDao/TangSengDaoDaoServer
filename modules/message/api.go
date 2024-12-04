@@ -1280,6 +1280,7 @@ func (m *Message) offset(c *wkhttp.Context) {
 			m.Error("发送cmd[CMDSyncReminders]失败！", zap.Error(err))
 		}
 	}
+	println("清除提醒项完成")
 	// 发送清空红点的命令
 	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
