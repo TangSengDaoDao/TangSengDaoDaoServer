@@ -1233,6 +1233,7 @@ func (m *Message) offset(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询用户提醒项失败！"))
 		return
 	}
+	println("查询未读的提醒：", len(reminders))
 	reminderIds := make([]int64, 0)
 	if len(reminders) > 0 {
 		for _, reminder := range reminders {
