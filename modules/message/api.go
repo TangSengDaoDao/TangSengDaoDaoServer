@@ -1179,6 +1179,7 @@ func (m *Message) genMessageReactionSeq(channelID string) int64 {
 
 // 消息偏移
 func (m *Message) offset(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
 	var req struct {
 		ChannelID   string `json:"channel_id"`
 		ChannelType uint8  `json:"channel_type"`
@@ -1225,6 +1226,57 @@ func (m *Message) offset(c *wkhttp.Context) {
 		m.Error("清除最近会话未读数失败！", zap.Error(err), zap.String("uid", c.GetLoginUID()), zap.String("channelID", req.ChannelID), zap.Uint8("channelType", req.ChannelType))
 	}
 
+	// 清空提醒项
+	reminders, err := m.remindersDB.queryWithUIDAndChannel(loginUID, req.ChannelID, req.ChannelType, req.MessageSeq)
+	if err != nil {
+		m.Error("查询用户提醒项失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询用户提醒项失败！"))
+		return
+	}
+	reminderIds := make([]int64, 0)
+	if len(reminders) > 0 {
+		for _, reminder := range reminders {
+			if reminder.MessageSeq < req.MessageSeq && reminder.Done == 0 {
+				reminderIds = append(reminderIds, reminder.Id)
+			}
+		}
+	}
+	if len(reminderIds) > 0 {
+		tx, err := m.ctx.DB().Begin()
+		if err != nil {
+			m.Error("开启事务失败！", zap.Error(err))
+			c.ResponseError(errors.New("开启事务失败！"))
+			return
+		}
+		defer func() {
+			if err := recover(); err != nil {
+				tx.RollbackUnlessCommitted()
+				panic(err)
+			}
+		}()
+		err = m.remindersDB.insertDonesTx(reminderIds, loginUID, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("更新提醒项状态失败！", zap.Error(err))
+			c.ResponseError(errors.New("更新提醒项状态失败！"))
+			return
+		}
+		if err := tx.Commit(); err != nil {
+			tx.Rollback()
+			m.Error("提交事务失败！", zap.Error(err))
+			c.ResponseError(errors.New("提交事务失败！"))
+			return
+		}
+		err = m.ctx.SendCMD(config.MsgCMDReq{
+			NoPersist:   true,
+			ChannelID:   req.ChannelID,
+			ChannelType: req.ChannelType,
+			CMD:         common.CMDSyncReminders,
+		})
+		if err != nil {
+			m.Error("发送cmd[CMDSyncReminders]失败！", zap.Error(err))
+		}
+	}
 	// 发送清空红点的命令
 	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
