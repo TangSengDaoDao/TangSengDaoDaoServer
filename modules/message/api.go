@@ -413,7 +413,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 			MessageID:   message.MessageID,
 			ChannelID:   fakeChannelID,
 			ChannelType: req.ChannelType,
-			UID:         c.GetLoginUID(),
+			UID:         loginUID,
 		}, tx)
 		if err != nil {
 			tx.Rollback()
@@ -1490,7 +1490,8 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		}
 	}()
 	for _, msgID := range messageIDs {
-		version := m.genMessageExtraSeq(fakeChannelID)
+		version := time.Now().UnixNano() / 1e3
+		// version := m.genMessageExtraSeq(fakeChannelID)
 		// err = m.messageExtraDB.insertOrUpdateRevokeTx(&messageExtraModel{
 		// 	MessageID:   msgID,
 		// 	ChannelID:   fakeChannelID,

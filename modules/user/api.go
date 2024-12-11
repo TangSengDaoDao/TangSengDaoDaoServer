@@ -2531,7 +2531,6 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 	userModel.WXUnionid = createUser.WXUnionid
 	userModel.GiteeUID = createUser.GiteeUID
 	userModel.GithubUID = createUser.GithubUID
-
 	userModel.Status = int(common.UserAvailable)
 	err = u.db.insertTx(userModel, tx)
 	if err != nil {
