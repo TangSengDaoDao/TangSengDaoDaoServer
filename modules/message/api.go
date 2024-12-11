@@ -1319,14 +1319,17 @@ func (m *Message) hasRevokePermission(messageM *messageModel, loginUID string) (
 		if err != nil {
 			return false, err
 		}
+		if loginMember == nil {
+			return false, nil
+		}
 		fromMember, err := m.groupService.GetMember(messageM.ChannelID, messageM.FromUID)
 		if err != nil {
 			return false, err
 		}
-		if fromMember == nil {
+		if fromMember == nil && loginMember.Role != int(common.GroupMemberRoleNormal) {
 			return true, nil
 		}
-		if loginMember == nil || fromMember == nil || fromMember.Role == int(common.GroupMemberRoleCreater) || loginMember.Role == int(common.GroupMemberRoleNormal) {
+		if fromMember.Role == int(common.GroupMemberRoleCreater) || loginMember.Role == int(common.GroupMemberRoleNormal) {
 			return false, nil
 		}
 		if loginMember.Role == int(common.GroupMemberRoleCreater) || (loginMember.Role == int(common.GroupMemberRoleManager) && fromMember.Role == int(common.GroupMemberRoleNormal)) {

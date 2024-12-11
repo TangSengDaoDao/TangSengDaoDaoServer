@@ -439,30 +439,34 @@ func toInfoResp(m *Model) *InfoResp {
 }
 
 type MemberResp struct {
-	GroupNo   string // 群编号
-	UID       string // 成员uid
-	Name      string // 群成员名称
-	Remark    string // 成员备注
-	Role      int    // 成员角色
-	Version   int64
-	Vercode   string //验证码
-	InviteUID string // 邀请人uid
-	CreatedAt int64  // 注册时间 10位时间戳
-	IsDeleted int    //是否已删除
+	GroupNo            string // 群编号
+	UID                string // 成员uid
+	Name               string // 群成员名称
+	Remark             string // 成员备注
+	Role               int    // 成员角色
+	Version            int64
+	Vercode            string //验证码
+	InviteUID          string // 邀请人uid
+	CreatedAt          int64  // 注册时间 10位时间戳
+	IsDeleted          int    //是否已删除
+	ForbiddenExpirTime int64  // 禁言时长
+	Status             int    // 成员状态
 }
 
 func newMemberResp(m *MemberDetailModel) *MemberResp {
 	return &MemberResp{
-		GroupNo:   m.GroupNo,
-		UID:       m.UID,
-		Name:      m.Name,
-		Remark:    m.Remark,
-		Role:      m.Role,
-		Version:   m.Version,
-		Vercode:   m.Vercode,
-		InviteUID: m.InviteUID,
-		IsDeleted: m.IsDeleted,
-		CreatedAt: time.Time(m.CreatedAt).Unix(),
+		GroupNo:            m.GroupNo,
+		UID:                m.UID,
+		Name:               m.Name,
+		Remark:             m.Remark,
+		Role:               m.Role,
+		Version:            m.Version,
+		Vercode:            m.Vercode,
+		InviteUID:          m.InviteUID,
+		IsDeleted:          m.IsDeleted,
+		ForbiddenExpirTime: m.ForbiddenExpirTime,
+		Status:             m.Status,
+		CreatedAt:          time.Time(m.CreatedAt).Unix(),
 	}
 }
 

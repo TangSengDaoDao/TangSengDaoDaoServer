@@ -890,6 +890,23 @@ type UserDetailResp struct {
 	JoinGroupInviteUID  string            `json:"join_group_invite_uid"`  // 加入群聊邀请人UID
 	JoinGroupInviteName string            `json:"join_group_invite_name"` // 加入群聊邀请人名称
 	JoinGroupTime       string            `json:"join_group_time"`        // 加入群聊时间
+	GroupMember         *GroupMemberResp  `json:"group_member,omitempty"` // 群成员信息
+}
+
+type GroupMemberResp struct {
+	UID                string `json:"uid"`                  // 成员uid
+	GroupNo            string `json:"group_no"`             // 群唯一编号
+	Name               string `json:"name"`                 // 群成员名称
+	Remark             string `json:"remark"`               // 成员备注
+	Role               int    `json:"role"`                 // 成员角色
+	IsDeleted          int    `json:"is_deleted"`           // 是否删除
+	Status             int    `json:"status"`               //成员状态0:正常，2:黑名单
+	Vercode            string `json:"vercode"`              // 验证码
+	InviteUID          string `json:"invite_uid"`           // 邀请人
+	Robot              int    `json:"robot"`                // 机器人
+	ForbiddenExpirTime int64  `json:"forbidden_expir_time"` // 禁言时长
+	CreatedAt          string `json:"created_at"`
+	UpdatedAt          string `json:"updated_at"`
 }
 
 func NewUserDetailResp(m *Detail, remark, loginUID string, sourceFrom string, onLine int, lastOffline int, deviceFlag config.DeviceFlag, follow int, status int, beDeleted int, beBlacklist int, setting *SettingModel, vercode string) *UserDetailResp {

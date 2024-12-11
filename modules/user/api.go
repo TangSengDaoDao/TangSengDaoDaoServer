@@ -767,6 +767,18 @@ func (u *User) get(c *wkhttp.Context) {
 			userDetailResp.JoinGroupTime = groupMember.CreatedAt
 			userDetailResp.JoinGroupInviteName = name
 		}
+		userDetailResp.GroupMember = &GroupMemberResp{
+			UID:                groupMember.UID,
+			Name:               groupMember.Name,
+			GroupNo:            groupMember.GroupNo,
+			Remark:             groupMember.Remark,
+			Role:               groupMember.Role,
+			Status:             groupMember.Status,
+			InviteUID:          groupMember.InviteUID,
+			Robot:              groupMember.Role,
+			ForbiddenExpirTime: groupMember.ForbiddenExpirTime,
+			CreatedAt:          groupMember.CreatedAt,
+		}
 	}
 
 	if userDetailResp.Follow == 1 || uid == loginUID {
