@@ -1323,6 +1323,9 @@ func (m *Message) hasRevokePermission(messageM *messageModel, loginUID string) (
 		if err != nil {
 			return false, err
 		}
+		if fromMember == nil {
+			return true, nil
+		}
 		if loginMember == nil || fromMember == nil || fromMember.Role == int(common.GroupMemberRoleCreater) || loginMember.Role == int(common.GroupMemberRoleNormal) {
 			return false, nil
 		}
