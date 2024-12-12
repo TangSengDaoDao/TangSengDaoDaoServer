@@ -421,7 +421,7 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 			MessageID:   message.MessageID,
 			ChannelID:   fakeChannelID,
 			ChannelType: req.ChannelType,
-			UID:         c.GetLoginUID(),
+			UID:         loginUID,
 		}, tx)
 		if err != nil {
 			tx.Rollback()
@@ -1187,6 +1187,7 @@ func (m *Message) genMessageReactionSeq(channelID string) int64 {
 
 // 消息偏移
 func (m *Message) offset(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
 	var req struct {
 		ChannelID   string `json:"channel_id"`
 		ChannelType uint8  `json:"channel_type"`
@@ -1232,7 +1233,68 @@ func (m *Message) offset(c *wkhttp.Context) {
 	if err != nil {
 		m.Error("清除最近会话未读数失败！", zap.Error(err), zap.String("uid", c.GetLoginUID()), zap.String("channelID", req.ChannelID), zap.Uint8("channelType", req.ChannelType))
 	}
+	// 清空提醒项
+	reminders, err := m.remindersDB.queryWithUIDAndChannel(loginUID, req.ChannelID, req.ChannelType, req.MessageSeq)
+	if err != nil {
+		m.Error("查询用户提醒项失败！", zap.Error(err))
+		c.ResponseError(errors.New("查询用户提醒项失败！"))
+		return
+	}
+	reminderIds := make([]int64, 0)
+	if len(reminders) > 0 {
+		for _, reminder := range reminders {
+			if reminder.MessageSeq <= req.MessageSeq && reminder.Done == 0 {
+				reminderIds = append(reminderIds, reminder.Id)
+			}
+		}
+	}
 
+	if len(reminderIds) > 0 {
+		tx, err := m.ctx.DB().Begin()
+		if err != nil {
+			m.Error("开启事务失败！", zap.Error(err))
+			c.ResponseError(errors.New("开启事务失败！"))
+			return
+		}
+		defer func() {
+			if err := recover(); err != nil {
+				tx.RollbackUnlessCommitted()
+				panic(err)
+			}
+		}()
+		err = m.remindersDB.insertDonesTx(reminderIds, loginUID, tx)
+		if err != nil {
+			tx.Rollback()
+			m.Error("更新提醒项状态失败！", zap.Error(err))
+			c.ResponseError(errors.New("更新提醒项状态失败！"))
+			return
+		}
+		for _, id := range reminderIds {
+			version := m.ctx.GenSeq(common.RemindersKey)
+			err = m.remindersDB.updateVersionTx(version, id, tx)
+			if err != nil {
+				tx.Rollback()
+				m.Error("更新提醒项版本失败！", zap.Error(err))
+				c.ResponseError(errors.New("更新提醒项版本失败！"))
+				return
+			}
+		}
+		if err := tx.Commit(); err != nil {
+			tx.Rollback()
+			m.Error("提交事务失败！", zap.Error(err))
+			c.ResponseError(errors.New("提交事务失败！"))
+			return
+		}
+		err = m.ctx.SendCMD(config.MsgCMDReq{
+			NoPersist:   true,
+			ChannelID:   req.ChannelID,
+			ChannelType: req.ChannelType,
+			CMD:         common.CMDSyncReminders,
+		})
+		if err != nil {
+			m.Error("发送cmd[CMDSyncReminders]失败！", zap.Error(err))
+		}
+	}
 	// 发送清空红点的命令
 	err = m.ctx.SendCMD(config.MsgCMDReq{
 		NoPersist:   true,
@@ -1265,11 +1327,17 @@ func (m *Message) hasRevokePermission(messageM *messageModel, loginUID string) (
 		if err != nil {
 			return false, err
 		}
+		if loginMember == nil {
+			return false, nil
+		}
 		fromMember, err := m.groupService.GetMember(messageM.ChannelID, messageM.FromUID)
 		if err != nil {
 			return false, err
 		}
-		if loginMember == nil || fromMember == nil || fromMember.Role == int(common.GroupMemberRoleCreater) || loginMember.Role == int(common.GroupMemberRoleNormal) {
+		if fromMember == nil && loginMember.Role != int(common.GroupMemberRoleNormal) {
+			return true, nil
+		}
+		if fromMember.Role == int(common.GroupMemberRoleCreater) || loginMember.Role == int(common.GroupMemberRoleNormal) {
 			return false, nil
 		}
 		if loginMember.Role == int(common.GroupMemberRoleCreater) || (loginMember.Role == int(common.GroupMemberRoleManager) && fromMember.Role == int(common.GroupMemberRoleNormal)) {
@@ -1428,7 +1496,8 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		}
 	}()
 	messageIDStr := strconv.FormatInt(message.MessageID, 10)
-	version := m.genMessageExtraSeq(fakeChannelID)
+	//version := m.genMessageExtraSeq(fakeChannelID)
+	version := time.Now().UnixNano() / 1e3
 	if messageExtra != nil {
 		messageExtra.Revoke = 1
 		messageExtra.Revoker = loginUID

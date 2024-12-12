@@ -1528,9 +1528,13 @@ func (g *Group) groupScanJoin(c *wkhttp.Context) {
 		c.ResponseError(errors.New("群编号不能为空"))
 		return
 	}
-	_, err := g.getGroupInfo(groupNo)
+	group, err := g.getGroupInfo(groupNo)
 	if err != nil {
 		c.ResponseError(err)
+		return
+	}
+	if group.Invite == 1 {
+		c.ResponseError(errors.New("群开启了邀请模式，不能直接加入群聊"))
 		return
 	}
 	authInfo, err := g.ctx.GetRedisConn().GetString(fmt.Sprintf("%s%s", common.AuthCodeCachePrefix, authCode))

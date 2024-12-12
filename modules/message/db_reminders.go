@@ -53,6 +53,12 @@ func (r *remindersDB) deleteWithChannelAndUIDTx(channelID string, channelType ui
 	_, err := tx.Update("reminders").Set("is_deleted", 1).Set("version", version).Where("channel_id=? and channel_type=? and uid=? and message_id=?", channelID, channelType, uid, messageID).Exec()
 	return err
 }
+func (r *remindersDB) queryWithUIDAndChannel(uid string, channelID string, channelType uint8, messageSeq uint32) ([]*remindersDetailModel, error) {
+	var list []*remindersDetailModel
+	builder := r.session.Select("reminders.*,IF(reminder_done.id is null and reminders.is_deleted=0,0,1) done").From("reminders").LeftJoin("reminder_done", fmt.Sprintf("reminders.id=reminder_done.reminder_id and reminder_done.uid='%s'", uid))
+	_, err := builder.Where("(reminders.uid=?  or  ( reminders.uid='' and reminders.channel_id=? and reminders.channel_type=?))  and reminders.message_seq<=? and reminder_done.id is null", uid, channelID, channelType, messageSeq).Load(&list)
+	return list, err
+}
 
 /*
 *

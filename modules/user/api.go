@@ -767,6 +767,18 @@ func (u *User) get(c *wkhttp.Context) {
 			userDetailResp.JoinGroupTime = groupMember.CreatedAt
 			userDetailResp.JoinGroupInviteName = name
 		}
+		userDetailResp.GroupMember = &GroupMemberResp{
+			UID:                groupMember.UID,
+			Name:               groupMember.Name,
+			GroupNo:            groupMember.GroupNo,
+			Remark:             groupMember.Remark,
+			Role:               groupMember.Role,
+			Status:             groupMember.Status,
+			InviteUID:          groupMember.InviteUID,
+			Robot:              groupMember.Role,
+			ForbiddenExpirTime: groupMember.ForbiddenExpirTime,
+			CreatedAt:          groupMember.CreatedAt,
+		}
 	}
 
 	if userDetailResp.Follow == 1 || uid == loginUID {
@@ -2519,7 +2531,6 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 	userModel.WXUnionid = createUser.WXUnionid
 	userModel.GiteeUID = createUser.GiteeUID
 	userModel.GithubUID = createUser.GithubUID
-
 	userModel.Status = int(common.UserAvailable)
 	err = u.db.insertTx(userModel, tx)
 	if err != nil {

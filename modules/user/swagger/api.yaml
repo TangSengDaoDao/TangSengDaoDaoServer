@@ -1829,7 +1829,7 @@ paths:
     get:
       tags:
         - "user"
-      summary: "获取指定uid的用户信息"
+      summary: "用户详情"
       description: "获取指定uid的用户信息"
       operationId: "userGet"
       consumes:
@@ -2517,7 +2517,40 @@ definitions:
       flame_second:
         type: integer
         description: "阅后即焚秒数"
-
+      group_member:
+        type: object
+        description: "群组成员信息 group_no不为空时返回"
+        properties:
+          group_no:
+            type: string
+            description: "群组ID"
+          uid: 
+            type: string
+            description: "用户ID"
+          name:
+            type: string
+            description: "用户名"
+          remark:
+            type: string
+            description: "成员群内备注"
+          role: 
+            type : integer
+            description: "群组角色 0.普通成员 1.群主 2.管理员"
+          is_deleted:
+            type: integer
+            description: "是否被删除 1.是"
+          status:
+            type: integer
+            description: "成员状态 0.禁用 1.正常 2.黑名单"
+          invite_uid:
+            type: string
+            description: "邀请人ID"
+          robot:
+            type: integer
+            description: "是否为机器人 1.是"
+          forbidden_expir_time:
+            type: integer
+            description: "禁言时间"
   response:
     type: "object"
     properties:

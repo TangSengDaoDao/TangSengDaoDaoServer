@@ -135,12 +135,16 @@ func init() {
 						return nil, nil
 					}
 					return &model.GroupMemberResp{
-						UID:       member.UID,
-						GroupNo:   member.GroupNo,
-						InviteUID: member.InviteUID,
-						IsDeleted: member.IsDeleted,
-						Role:      member.Role,
-						CreatedAt: util.ToyyyyMMddHHmm(time.Unix(member.CreatedAt, 0)),
+						UID:                member.UID,
+						GroupNo:            member.GroupNo,
+						Name:               member.Name,
+						Remark:             member.Remark,
+						InviteUID:          member.InviteUID,
+						IsDeleted:          member.IsDeleted,
+						Role:               member.Role,
+						Status:             member.Status,
+						ForbiddenExpirTime: member.ForbiddenExpirTime,
+						CreatedAt:          util.ToyyyyMMddHHmm(time.Unix(member.CreatedAt, 0)),
 					}, nil
 				},
 			},

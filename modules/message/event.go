@@ -142,7 +142,8 @@ func (m *Message) handleReadedMessageCount() {
 		fromUIDs := make([]string, 0, len(messages)) // 消息发送者
 		for _, message := range msgs {
 			fromUIDs = append(fromUIDs, message.FromUID)
-			version := m.genMessageExtraSeq(fakeChannelID)
+			//version := m.genMessageExtraSeq(fakeChannelID)
+			version := time.Now().UnixNano() / 1e3
 			count := messageReadedCountMap[message.MessageID]
 			if message.ChannelType == common.ChannelTypePerson.Uint8() {
 				count = 1

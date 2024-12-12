@@ -1092,8 +1092,11 @@ func newSyncUserConversationResp(resp *config.SyncUserConversationResp, extra *c
 			messageUserExtra := messageUserExtraMap[messageIDStr]
 			msgResp := &MsgSyncResp{}
 			msgResp.from(message, loginUID, messageExtra, messageUserExtra, messageReactionMap[messageIDStr], channelOffsetMessageSeq)
+			msgResp.ExtraVersion = 0
+			if msgResp.MessageExtra != nil {
+				msgResp.MessageExtra.ExtraVersion = 0
+			}
 			recents = append(recents, msgResp)
-
 			if lastClientMsgNo == "" && msgResp.IsDeleted == 0 {
 				lastClientMsgNo = msgResp.ClientMsgNo
 			}
