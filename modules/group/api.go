@@ -1273,19 +1273,37 @@ func (g *Group) managerAdd(c *wkhttp.Context) {
 			return
 		}
 	}
-
-	err = g.ctx.SendCMD(config.MsgCMDReq{
-		ChannelID:   groupNo,
-		ChannelType: common.ChannelTypeGroup.Uint8(),
-		CMD:         common.CMDGroupMemberUpdate,
-		Param: map[string]interface{}{
-			"group_no": groupNo,
-		},
-	})
-	if err != nil {
-		g.Error("发送命令消息失败！", zap.Error(err))
-		c.ResponseError(errors.New("发送命令消息失败！"))
-		return
+	if groupModel.GroupType == int(GroupTypeCommon) {
+		err = g.ctx.SendCMD(config.MsgCMDReq{
+			ChannelID:   groupNo,
+			ChannelType: common.ChannelTypeGroup.Uint8(),
+			CMD:         common.CMDGroupMemberUpdate,
+			Param: map[string]interface{}{
+				"group_no": groupNo,
+			},
+		})
+		if err != nil {
+			g.Error("发送命令消息失败！", zap.Error(err))
+			c.ResponseError(errors.New("发送命令消息失败！"))
+			return
+		}
+	} else {
+		for _, uid := range memberUIDs {
+			err = g.ctx.SendCMD(config.MsgCMDReq{
+				ChannelID:   groupNo,
+				ChannelType: common.ChannelTypeGroup.Uint8(),
+				CMD:         common.CMDGroupMemberUpdate,
+				Param: map[string]interface{}{
+					"group_no": groupNo,
+					"uid":      uid,
+				},
+			})
+			if err != nil {
+				g.Error("发送命令消息失败！", zap.Error(err))
+				c.ResponseError(errors.New("发送命令消息失败！"))
+				return
+			}
+		}
 	}
 	c.ResponseOK()
 }
@@ -1345,19 +1363,38 @@ func (g *Group) managerRemove(c *wkhttp.Context) {
 			return
 		}
 	}
+	if groupModel.GroupType == int(GroupTypeCommon) {
 
-	err = g.ctx.SendCMD(config.MsgCMDReq{
-		ChannelID:   groupNo,
-		ChannelType: common.ChannelTypeGroup.Uint8(),
-		CMD:         common.CMDGroupMemberUpdate,
-		Param: map[string]interface{}{
-			"group_no": groupNo,
-		},
-	})
-	if err != nil {
-		g.Error("发送命令消息失败！", zap.Error(err))
-		c.ResponseError(errors.New("发送命令消息失败！"))
-		return
+		err = g.ctx.SendCMD(config.MsgCMDReq{
+			ChannelID:   groupNo,
+			ChannelType: common.ChannelTypeGroup.Uint8(),
+			CMD:         common.CMDGroupMemberUpdate,
+			Param: map[string]interface{}{
+				"group_no": groupNo,
+			},
+		})
+		if err != nil {
+			g.Error("发送命令消息失败！", zap.Error(err))
+			c.ResponseError(errors.New("发送命令消息失败！"))
+			return
+		}
+	} else {
+		for _, uid := range memberUIDs {
+			err = g.ctx.SendCMD(config.MsgCMDReq{
+				ChannelID:   groupNo,
+				ChannelType: common.ChannelTypeGroup.Uint8(),
+				CMD:         common.CMDGroupMemberUpdate,
+				Param: map[string]interface{}{
+					"group_no": groupNo,
+					"uid":      uid,
+				},
+			})
+			if err != nil {
+				g.Error("发送命令消息失败！", zap.Error(err))
+				c.ResponseError(errors.New("发送命令消息失败！"))
+				return
+			}
+		}
 	}
 	c.ResponseOK()
 }
@@ -1950,6 +1987,7 @@ func (g *Group) memberUpdate(c *wkhttp.Context) {
 		CMD:         common.CMDGroupMemberUpdate,
 		Param: map[string]interface{}{
 			"group_no": groupNo,
+			"uid":      memberUID,
 		},
 	})
 	if err != nil {
@@ -2437,6 +2475,7 @@ func (g *Group) groupExit(c *wkhttp.Context) {
 		CMD:         common.CMDGroupMemberUpdate,
 		Param: map[string]interface{}{
 			"group_no": groupNo,
+			"uid":      loginUID,
 		},
 	})
 	if err != nil {
@@ -2551,19 +2590,39 @@ func (g *Group) blacklist(c *wkhttp.Context) {
 			}
 		}
 	}
-	// 发送群成员更新命令
-	err = g.ctx.SendCMD(config.MsgCMDReq{
-		ChannelID:   groupNo,
-		ChannelType: common.ChannelTypeGroup.Uint8(),
-		CMD:         common.CMDGroupMemberUpdate,
-		Param: map[string]interface{}{
-			"group_no": groupNo,
-		},
-	})
-	if err != nil {
-		g.Error("发送更新群成员消息错误", zap.Error(err))
-		c.ResponseError(errors.New("发送更新群成员消息错误！"))
-		return
+	if group.GroupType == int(GroupTypeCommon) {
+		// 发送群成员更新命令
+		err = g.ctx.SendCMD(config.MsgCMDReq{
+			ChannelID:   groupNo,
+			ChannelType: common.ChannelTypeGroup.Uint8(),
+			CMD:         common.CMDGroupMemberUpdate,
+			Param: map[string]interface{}{
+				"group_no": groupNo,
+			},
+		})
+		if err != nil {
+			g.Error("发送更新群成员消息错误", zap.Error(err))
+			c.ResponseError(errors.New("发送更新群成员消息错误！"))
+			return
+		}
+	} else {
+		for _, uid := range req.Uids {
+			// 发送群成员更新命令
+			err = g.ctx.SendCMD(config.MsgCMDReq{
+				ChannelID:   groupNo,
+				ChannelType: common.ChannelTypeGroup.Uint8(),
+				CMD:         common.CMDGroupMemberUpdate,
+				Param: map[string]interface{}{
+					"group_no": groupNo,
+					"uid":      uid,
+				},
+			})
+			if err != nil {
+				g.Error("发送更新群成员消息错误", zap.Error(err))
+				c.ResponseError(errors.New("发送更新群成员消息错误！"))
+				return
+			}
+		}
 	}
 	c.ResponseOK()
 }
@@ -2764,6 +2823,7 @@ func (g *Group) CheckForbiddenLoop() {
 				CMD:         common.CMDGroupMemberUpdate,
 				Param: map[string]interface{}{
 					"group_no": model.GroupNo,
+					"uid":      model.UID,
 				},
 			})
 			if err != nil {
