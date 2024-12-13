@@ -2715,6 +2715,7 @@ func (g *Group) forbiddenWithGroupMember(c *wkhttp.Context) {
 		CMD:         common.CMDGroupMemberUpdate,
 		Param: map[string]interface{}{
 			"group_no": groupNo,
+			"uid":      req.MemberUID,
 		},
 	})
 	if err != nil {
