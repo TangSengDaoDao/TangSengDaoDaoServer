@@ -64,6 +64,26 @@ func init() {
 					}
 					return newChannelRespWithUserDetailResp(userDetailResp), nil
 				},
+				GetDevice: func(ids []int64) ([]*model.DeviceResp, error) {
+					list, err := api.deviceDB.queryDevicesWithIds(ids)
+					if err != nil {
+						return nil, err
+					}
+					if len(list) == 0 {
+						return nil, nil
+					}
+					result := make([]*model.DeviceResp, 0, len(list))
+					for _, device := range list {
+						result = append(result, &model.DeviceResp{
+							ID:          device.Id,
+							UID:         device.UID,
+							DeviceID:    device.DeviceID,
+							DeviceName:  device.DeviceName,
+							DeviceModel: device.DeviceModel,
+						})
+					}
+					return result, nil
+				},
 			},
 		}
 	})

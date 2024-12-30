@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -69,8 +70,44 @@ func (m *Manager) Route(r *wkhttp.WKHttp) {
 		auth.GET("user/online", m.online)                     // 在线设备信息
 		auth.PUT("/user/liftban/:uid/:status", m.liftBanUser) // 解禁或封禁用户
 		auth.POST("/user/updatepassword", m.updatePwd)        // 修改用户密码
+		auth.GET("/user/devices", m.devices)                  // 查看某用户设备列表
 	}
 }
+
+func (m *Manager) devices(c *wkhttp.Context) {
+	err := c.CheckLoginRole()
+	if err != nil {
+		c.ResponseError(err)
+		return
+	}
+	uid := c.Query("uid")
+	if uid == "" {
+		c.ResponseError(errors.New("请求用户uid不能为空"))
+		return
+	}
+	devices, err := m.deviceDB.queryDeviceWithUID(uid)
+	if err != nil {
+		m.Error("查询用户设备列表错误", zap.Error(err))
+		c.ResponseError(errors.New("查询用户设备列表错误"))
+		return
+	}
+	list := make([]*managerDeviceResp, 0)
+	if len(devices) == 0 {
+		c.Response(list)
+		return
+	}
+	for _, device := range devices {
+		list = append(list, &managerDeviceResp{
+			ID:          device.Id,
+			DeviceID:    device.DeviceID,
+			DeviceName:  device.DeviceName,
+			DeviceModel: device.DeviceModel,
+			LastLogin:   util.ToyyyyMMddHHmm(time.Unix(device.LastLogin, 0)),
+		})
+	}
+	c.Response(list)
+}
+
 func (m *Manager) online(c *wkhttp.Context) {
 	err := c.CheckLoginRole()
 	if err != nil {
@@ -614,6 +651,14 @@ func (m *Manager) friends(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询用户ID不能为空"))
 		return
 	}
+	sortType := c.Query("sort_type")
+	if sortType == "" {
+		sortType = "1"
+	}
+	sortTypeInt, err := strconv.Atoi(sortType)
+	if err != nil {
+		sortTypeInt = 0
+	}
 	list, err := m.friendDB.QueryFriends(uid)
 	if err != nil {
 		m.Error("查询用户好友错误", zap.String("uid", uid))
@@ -621,13 +666,78 @@ func (m *Manager) friends(c *wkhttp.Context) {
 		return
 	}
 	result := make([]*managerFriendResp, 0)
-	if len(list) > 0 {
+	if len(list) == 0 {
+		c.Response(result)
+		return
+	}
+	if sortTypeInt == 0 {
 		for _, friend := range list {
 			result = append(result, &managerFriendResp{
 				UID:              friend.ToUID,
 				Remark:           friend.Remark,
 				Name:             friend.ToName,
 				RelationshipTime: friend.CreatedAt.String(),
+			})
+		}
+		c.Response(result)
+		return
+	}
+	// 查询最近会话
+	conversations, err := m.ctx.IMSyncUserConversation(uid, 0, 1, "", nil)
+	if err != nil {
+		m.Error("同步离线后的最近会话失败！", zap.Error(err), zap.String("loginUID", uid))
+		c.ResponseError(errors.New("同步离线后的最近会话失败！"))
+		return
+	}
+	if len(conversations) == 0 {
+		for _, friend := range list {
+			result = append(result, &managerFriendResp{
+				UID:              friend.ToUID,
+				Remark:           friend.Remark,
+				Name:             friend.ToName,
+				RelationshipTime: friend.CreatedAt.String(),
+			})
+		}
+		c.Response(result)
+		return
+	}
+	sort.SliceStable(conversations, func(i, j int) bool {
+		return conversations[i].Timestamp > conversations[j].Timestamp
+	})
+	for _, conv := range conversations {
+		if conv.ChannelType != common.ChannelTypePerson.Uint8() {
+			continue
+		}
+		var f *DetailModel
+		for _, friend := range list {
+			if friend.ToUID == conv.ChannelID {
+				f = friend
+				break
+			}
+		}
+		if f != nil {
+			result = append(result, &managerFriendResp{
+				UID:              f.ToUID,
+				Remark:           f.Remark,
+				Name:             f.ToName,
+				RelationshipTime: f.CreatedAt.String(),
+			})
+		}
+	}
+	for _, f := range list {
+		isAdd := true
+		for _, r := range result {
+			if r.UID == f.ToUID {
+				isAdd = false
+				break
+			}
+		}
+		if isAdd {
+			result = append(result, &managerFriendResp{
+				UID:              f.ToUID,
+				Remark:           f.Remark,
+				Name:             f.ToName,
+				RelationshipTime: f.CreatedAt.String(),
 			})
 		}
 	}
@@ -1048,6 +1158,15 @@ type managerDisableUserResp struct {
 	RegisterTime string `json:"register_time"`
 	Phone        string `json:"phone"`
 	ClosureTime  string `json:"closure_time"`
+}
+
+type managerDeviceResp struct {
+	ID          int64  `json:"id"`
+	DeviceID    string `json:"device_id"`    // 设备ID
+	DeviceName  string `json:"device_name"`  // 设备名称
+	DeviceModel string `json:"device_model"` // 设备型号
+	LastLogin   string `json:"last_login"`   // 设备最后一次登录时间
+	Self        int    `json:"self"`         // 是否是本机
 }
 
 type userOnlineResp struct {

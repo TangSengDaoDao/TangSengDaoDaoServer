@@ -23,6 +23,7 @@ func newDeviceDB(ctx *config.Context) *deviceDB {
 // 添加或更新设备
 func (d *deviceDB) insertOrUpdateDevice(m *deviceModel) error {
 	_, err := d.session.InsertBySql("insert into device(uid,device_id,device_name,device_model,last_login) values(?,?,?,?,?) ON DUPLICATE KEY UPDATE device_name=VALUES(device_name),device_model=VALUES(device_model),last_login=VALUES(last_login)", m.UID, m.DeviceID, m.DeviceName, m.DeviceModel, m.LastLogin).Exec()
+
 	return err
 }
 func (d *deviceDB) insertOrUpdateDeviceCtx(ctx context.Context, m *deviceModel) error {
@@ -37,11 +38,24 @@ func (d *deviceDB) insertOrUpdateDeviceTx(m *deviceModel, tx *dbr.Tx) error {
 	return err
 }
 
+// 获取设备列表
+func (d *deviceDB) queryDevicesWithIds(ids []int64) ([]*deviceModel, error) {
+	var devices []*deviceModel
+	_, err := d.session.Select("*").From("device").Where("id in ?", ids).Load(&devices)
+	return devices, err
+}
+
 // 获取用户设备列表
 func (d *deviceDB) queryDeviceWithUID(uid string) ([]*deviceModel, error) {
 	var devices []*deviceModel
 	_, err := d.session.Select("*").From("device").Where("uid=?", uid).OrderDir("last_login", false).Load(&devices)
 	return devices, err
+}
+
+func (d *deviceDB) queryDeviceWithUIDAndDeviceID(deviceID, uid string) (*deviceModel, error) {
+	var device *deviceModel
+	_, err := d.session.Select("*").From("device").Where("uid=? and device_id=?", uid, deviceID).Load(&device)
+	return device, err
 }
 
 // 是否存在指定用户的指定设备

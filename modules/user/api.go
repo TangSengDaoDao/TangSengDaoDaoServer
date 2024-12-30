@@ -151,6 +151,7 @@ func (u *User) Route(r *wkhttp.WKHttp) {
 		// #################### 登录设备管理 ####################
 		user.GET("/devices", u.deviceList)                 // 用户登录设备
 		user.DELETE("/devices/:device_id", u.deviceDelete) // 删除登录设备
+		user.GET("/devices/:device_id", u.getDevice)       // 查询某个登录设备
 		user.GET("/online", u.onlineList)                  // 用户在线列表（我的设备和我的好友）
 		user.POST("/online", u.onlinelistWithUIDs)         // 获取指定的uid在线状态
 		user.POST("/pc/quit", u.pcQuit)                    // 退出pc登录
@@ -1046,7 +1047,8 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 		}
 	}
 	//更新最后一次登录设备信息
-	if flag == config.APP && device != nil {
+	// flag == config.APP &&
+	if device != nil {
 		err := u.deviceDB.insertOrUpdateDeviceCtx(loginSpanCtx, &deviceModel{
 			UID:         userInfo.UID,
 			DeviceID:    device.DeviceID,
@@ -1058,6 +1060,7 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 			u.Error("更新用户登录设备失败", zap.Error(err))
 			return nil, errors.New("更新用户登录设备失败")
 		}
+
 	}
 	token := util.GenerUUID()
 	// 将token设置到缓存
@@ -1382,6 +1385,9 @@ func (u *User) unregisterUserDeviceToken(c *wkhttp.Context) {
 // 获取登录的uuid（web登录）
 func (u *User) getLoginUUID(c *wkhttp.Context) {
 	uuid := util.GenerUUID()
+	deviceId := c.Query("device_id")
+	deviceName := c.Query("device_name")
+	deviceModel := c.Query("device_model")
 	err := u.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", common.QRCodeCachePrefix, uuid), util.ToJson(common.NewQRCodeModel(common.QRCodeTypeScanLogin, map[string]interface{}{
 		"app_id":  "wukongchat",
 		"status":  common.ScanLoginStatusWaitScan,
@@ -1391,6 +1397,19 @@ func (u *User) getLoginUUID(c *wkhttp.Context) {
 		u.Error("设置登录uuid失败！", zap.Error(err))
 		c.ResponseError(errors.New("设置登录uuid失败！"))
 		return
+	}
+	// 缓存设备信息
+	if deviceId != "" && deviceName != "" && deviceModel != "" {
+		err := u.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", common.DeviceCacheUUIDPrefix, uuid), util.ToJson(map[string]interface{}{
+			"device_id":    deviceId,
+			"device_name":  deviceName,
+			"device_model": deviceModel,
+		}), time.Minute*2)
+		if err != nil {
+			u.Error("设置登录设备信息失败！", zap.Error(err))
+			c.ResponseError(errors.New("设置登录设备信息失败！"))
+			return
+		}
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"uuid":   uuid,
@@ -1494,7 +1513,49 @@ func (u *User) loginWithAuthCode(c *wkhttp.Context) {
 		c.ResponseError(errors.New("用户不存在！"))
 		return
 	}
-
+	// 获取缓存设备
+	uuid := authInfoMap["uuid"].(string)
+	if uuid != "" {
+		deviceCache, err := u.ctx.GetRedisConn().GetString(fmt.Sprintf("%s%s", common.DeviceCacheUUIDPrefix, uuid))
+		if err != nil {
+			u.Error("获取登录设备信息失败！", zap.Error(err))
+			c.ResponseError(errors.New("获取登录设备信息失败！"))
+			return
+		}
+		if deviceCache != "" {
+			var deviceInfoMap map[string]interface{}
+			err = util.ReadJsonByByte([]byte(deviceCache), &deviceInfoMap)
+			if err != nil {
+				u.Error("解码设备信息失败！", zap.Error(err))
+				c.ResponseError(errors.New("解码设备信息失败！"))
+				return
+			}
+			deviceId := deviceInfoMap["device_id"].(string)
+			deviceName := deviceInfoMap["device_name"].(string)
+			dmodel := deviceInfoMap["device_model"].(string)
+			if deviceId != "" && deviceName != "" && dmodel != "" {
+				span := u.ctx.Tracer().StartSpan(
+					"user.authCodeLogin",
+					opentracing.ChildOf(c.GetSpanContext()),
+				)
+				defer span.Finish()
+				spanCtx := u.ctx.Tracer().ContextWithSpan(context.Background(), span)
+				// 更新设备信息
+				err := u.deviceDB.insertOrUpdateDeviceCtx(spanCtx, &deviceModel{
+					UID:         userModel.UID,
+					DeviceID:    deviceId,
+					DeviceName:  deviceName,
+					DeviceModel: dmodel,
+					LastLogin:   time.Now().Unix(),
+				})
+				if err != nil {
+					u.Error("更新用户登录设备失败", zap.Error(err))
+					c.ResponseError(errors.New("更新用户登录设备失败"))
+					return
+				}
+			}
+		}
+	}
 	imResp, err := u.ctx.UpdateIMToken(config.UpdateIMTokenReq{
 		UID:         scaner,
 		Token:       token,

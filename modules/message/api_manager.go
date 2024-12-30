@@ -11,7 +11,9 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkevent"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
@@ -453,6 +455,7 @@ func (m *Manager) recordpersonal(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询发送者信息错误"))
 		return
 	}
+	ids := make([]int64, 0)
 	for _, msg := range msgs {
 		sendName := ""
 		for _, user := range userList {
@@ -486,6 +489,22 @@ func (m *Manager) recordpersonal(c *wkhttp.Context) {
 				log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(msg.Payload)))
 			}
 		}
+		var deviceDBID int64 = 0
+		if strings.Contains(msg.ClientMsgNo, "_") {
+			tempStrs := strings.Split(msg.ClientMsgNo, "_")
+			if len(tempStrs) > 2 {
+				str := tempStrs[1]
+				if str != "" {
+					deviceDBID, err = strconv.ParseInt(str, 10, 64)
+					if err == nil {
+						ids = append(ids, deviceDBID)
+					} else {
+						deviceDBID = 0
+					}
+				}
+			}
+		}
+		println("消息设备ID", deviceDBID)
 		messageId := strconv.FormatInt(msg.MessageID, 10)
 		list = append(list, &recordVO{
 			MessageID:   messageId,
@@ -497,8 +516,31 @@ func (m *Manager) recordpersonal(c *wkhttp.Context) {
 			CreatedAt:   msg.CreatedAt.String(),
 			EditedAt:    editedAt,
 			Revoke:      revoke,
+			DeviceDBID:  deviceDBID,
 			ReadedCount: readedCount,
 		})
+	}
+	var devices []*model.DeviceResp
+	if len(ids) > 0 {
+		modules := register.GetModules(m.ctx)
+		for _, module := range modules {
+			if module.BussDataSource.GetDevice != nil {
+				devices, _ = module.BussDataSource.GetDevice(ids)
+				break
+			}
+		}
+	}
+	if len(devices) > 0 && len(list) > 0 {
+		for _, device := range devices {
+			for _, msg := range list {
+				if msg.DeviceDBID == device.ID {
+					msg.DeviceID = device.DeviceID
+					msg.DeviceName = device.DeviceName
+					msg.DeviceModel = device.DeviceModel
+					break
+				}
+			}
+		}
 	}
 	c.Response(&recordResp{
 		Count: count,
@@ -549,6 +591,7 @@ func (m *Manager) record(c *wkhttp.Context) {
 		c.ResponseError(errors.New("查询发送者信息错误"))
 		return
 	}
+	ids := make([]int64, 0)
 	for _, msg := range msgs {
 		sendName := ""
 		for _, user := range userList {
@@ -582,7 +625,22 @@ func (m *Manager) record(c *wkhttp.Context) {
 				log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(msg.Payload)))
 			}
 		}
-
+		var deviceDBID int64 = 0
+		if strings.Contains(msg.ClientMsgNo, "_") {
+			tempStrs := strings.Split(msg.ClientMsgNo, "_")
+			if len(tempStrs) > 2 {
+				str := tempStrs[1]
+				if str != "" {
+					deviceDBID, err = strconv.ParseInt(str, 10, 64)
+					if err == nil {
+						ids = append(ids, deviceDBID)
+					} else {
+						deviceDBID = 0
+					}
+				}
+			}
+		}
+		println("消息设备ID", deviceDBID)
 		messageId := strconv.FormatInt(msg.MessageID, 10)
 
 		list = append(list, &recordVO{
@@ -596,8 +654,32 @@ func (m *Manager) record(c *wkhttp.Context) {
 			CreatedAt:   msg.CreatedAt.String(),
 			EditedAt:    editedAt,
 			Revoke:      revoke,
+			DeviceDBID:  deviceDBID,
 			ReadedCount: readedCount,
 		})
+	}
+
+	var devices []*model.DeviceResp
+	if len(ids) > 0 {
+		modules := register.GetModules(m.ctx)
+		for _, module := range modules {
+			if module.BussDataSource.GetDevice != nil {
+				devices, _ = module.BussDataSource.GetDevice(ids)
+				break
+			}
+		}
+	}
+	if len(devices) > 0 && len(list) > 0 {
+		for _, device := range devices {
+			for _, msg := range list {
+				if msg.DeviceDBID == device.ID {
+					msg.DeviceID = device.DeviceID
+					msg.DeviceName = device.DeviceName
+					msg.DeviceModel = device.DeviceModel
+					break
+				}
+			}
+		}
 	}
 	c.Response(&recordResp{
 		Count: count,
@@ -835,6 +917,10 @@ type recordVO struct {
 	IsDeleted   int                    `json:"is_deleted"`   // 是否删除
 	ReadedCount int                    `json:"readed_count"` // 已读人数
 	Revoke      int                    `json:"revoke"`       // 是否撤回
+	DeviceDBID  int64                  `json:"device_db_id"` // 设备数据库id
+	DeviceID    string                 `json:"device_id"`    // 设备id
+	DeviceName  string                 `json:"device_name"`  // 设备名称
+	DeviceModel string                 `json:"device_model"` // 设备型号
 	CreatedAt   string                 `json:"created_at"`   // 发送时间
 	EditedAt    int                    `json:"edited_at"`    // 编辑时间
 }
