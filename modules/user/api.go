@@ -1294,7 +1294,7 @@ func (u *User) search(c *wkhttp.Context) {
 
 	if useModel.SearchByShort == 0 {
 		//关闭了短编号搜索
-		if keyword != useModel.ShortNo {
+		if keyword == useModel.ShortNo {
 			c.JSON(http.StatusOK, gin.H{
 				"exist": 0,
 			})
