@@ -15,7 +15,9 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/common"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/model"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/log"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/register"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"github.com/gin-gonic/gin"
@@ -335,7 +337,6 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 		c.ResponseError(errors.New("同步离线后的最近会话失败！"))
 		return
 	}
-
 	groupNos := make([]string, 0, len(conversations))
 	uids := make([]string, 0, len(conversations))
 	channelIDs := make([]string, 0, len(conversations))
@@ -524,12 +525,58 @@ func (co *Conversation) syncUserConversation(c *wkhttp.Context) {
 		co.syncConversationVersionMap[userKey] = lastVersion
 	}
 	co.syncConversationResultCacheLock.Unlock()
-
+	// 查询通话中的频道
+	// 加入的群聊
+	joinedGroups, err := co.groupService.GetGroupsWithMemberUID(loginUID)
+	if err != nil {
+		co.Error("查询加入的群聊错误", zap.Error(err))
+		c.ResponseError(errors.New("查询加入的群聊错误"))
+		return
+	}
+	callChannelIDs := make([]string, 0)
+	if len(joinedGroups) > 0 {
+		for _, g := range joinedGroups {
+			callChannelIDs = append(callChannelIDs, g.GroupNo)
+		}
+	}
+	// 好友
+	friends, err := co.userService.GetFriends(loginUID)
+	if err != nil {
+		co.Error("查询好友错误", zap.Error(err))
+		c.ResponseError(errors.New("查询好友错误"))
+		return
+	}
+	if len(friends) > 0 {
+		for _, f := range friends {
+			fakeChannelID := common.GetFakeChannelIDWith(f.UID, loginUID)
+			callChannelIDs = append(callChannelIDs, fakeChannelID)
+		}
+	}
+	var callingChannels []*model.CallingChannelResp
+	modules := register.GetModules(co.ctx)
+	for _, m := range modules {
+		if m.BussDataSource.GetCallingChannel != nil {
+			callingChannels, _ = m.BussDataSource.GetCallingChannel(loginUID, callChannelIDs)
+			break
+		}
+	}
+	println("查询到通话中的频道", len(callingChannels))
+	channelStates := make([]*ChannelState, 0)
+	if len(callingChannels) > 0 {
+		for _, channel := range callingChannels {
+			channelStates = append(channelStates, &ChannelState{
+				ChannelID:   channel.ChannelID,
+				ChannelType: channel.ChannelType,
+				Calling:     1,
+			})
+		}
+	}
 	c.Response(SyncUserConversationRespWrap{
 		Conversations: syncUserConversationResps,
 		UID:           loginUID,
 		Users:         users,
 		Groups:        groups,
+		ChannelStates: channelStates,
 	})
 }
 
@@ -855,8 +902,9 @@ func (co *Conversation) clearConversationUnread(c *wkhttp.Context) {
 type SyncUserConversationRespWrap struct {
 	UID           string                      `json:"uid"` // 请求者uid
 	Conversations []*SyncUserConversationResp `json:"conversations"`
-	Users         []*user.UserDetailResp      `json:"users"`  // 用户详情
-	Groups        []*group.GroupResp          `json:"groups"` // 群
+	Users         []*user.UserDetailResp      `json:"users"`          // 用户详情
+	Groups        []*group.GroupResp          `json:"groups"`         // 群
+	ChannelStates []*ChannelState             `json:"channel_status"` // 频道状态
 }
 
 type clearConversationUnreadReq struct {
@@ -864,6 +912,12 @@ type clearConversationUnreadReq struct {
 	ChannelType uint8  `json:"channel_type"`
 	Unread      int    `json:"unread"` // 未读数量 0表示清空所有未读数量
 	MessageSeq  uint32 `json:"message_seq"`
+}
+
+type ChannelState struct {
+	ChannelID   string `json:"channel_id"`
+	ChannelType uint8  `json:"channel_type"`
+	Calling     int    `json:"calling"` // 是否正在通话
 }
 
 type conversationResp struct {
