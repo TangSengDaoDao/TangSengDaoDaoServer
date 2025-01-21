@@ -74,7 +74,6 @@ func (g *Group) Route(r *wkhttp.WKHttp) {
 	}
 	groups := r.Group("/v1/groups", g.ctx.AuthMiddleware(r))
 	{
-
 		groups.POST("/:group_no/members", g.memberAdd)                                     // 添加群成员
 		groups.DELETE("/:group_no/members", g.memberRemove)                                // 移除群成员
 		groups.GET("/:group_no/members", g.membersGet)                                     // 获取群成员
