@@ -352,9 +352,9 @@ func (m *Manager) addAdminUser(c *wkhttp.Context) {
 		c.ResponseError(errors.New("密码不能为空"))
 		return
 	}
-	user, err := m.db.queryUserWithNameAndRole(req.Name, string(wkhttp.Admin))
+	user, err := m.db.queryUserWithNameAndRole(req.LoginName, string(wkhttp.Admin))
 	if err != nil {
-		m.Error("查询用户是否存在错误", zap.String("username", req.Name))
+		m.Error("查询用户是否存在错误", zap.String("username", req.LoginName))
 		c.ResponseError(errors.New("查询用户是否存在错误"))
 		return
 	}
