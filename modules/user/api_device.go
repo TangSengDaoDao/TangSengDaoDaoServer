@@ -10,6 +10,28 @@ import (
 	"go.uber.org/zap"
 )
 
+// 获取某个设备信息
+func (u *User) getDevice(c *wkhttp.Context) {
+	deviceID := c.Param("device_id")
+	loginUID := c.GetLoginUID()
+	device, err := u.deviceDB.queryDeviceWithUIDAndDeviceID(deviceID, loginUID)
+	if err != nil {
+		u.Error("获取设备信息失败！", zap.Error(err))
+		c.ResponseError(errors.New("获取设备信息失败！"))
+		return
+	}
+	if device == nil {
+		c.ResponseError(errors.New("未查询到该设备"))
+		return
+	}
+	c.Response(&deviceResp{
+		ID:          device.Id,
+		DeviceID:    device.DeviceID,
+		DeviceName:  device.DeviceName,
+		DeviceModel: device.DeviceModel,
+		LastLogin:   util.ToyyyyMMddHHmm(time.Unix(device.LastLogin, 0)),
+	})
+}
 func (u *User) deviceDelete(c *wkhttp.Context) {
 	deviceID := c.Param("device_id")
 
@@ -43,6 +65,7 @@ func (u *User) deviceList(c *wkhttp.Context) {
 				deviceName = fmt.Sprintf("%s（本机）", device.DeviceName)
 			}
 			deviceResps = append(deviceResps, deviceResp{
+				ID:          device.Id,
 				DeviceID:    device.DeviceID,
 				DeviceName:  deviceName,
 				DeviceModel: device.DeviceModel,
@@ -55,6 +78,7 @@ func (u *User) deviceList(c *wkhttp.Context) {
 }
 
 type deviceResp struct {
+	ID          int64  `json:"id"`
 	DeviceID    string `json:"device_id"`    // 设备ID
 	DeviceName  string `json:"device_name"`  // 设备名称
 	DeviceModel string `json:"device_model"` // 设备型号

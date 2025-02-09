@@ -69,7 +69,7 @@ func (m *managerDB) queryUserCountWithKeyWord(keyword string) (int64, error) {
 // queryUserBlacklist 查询某个用户的黑名单
 func (m *managerDB) queryUserBlacklists(uid string) ([]*managerUserBlacklistModel, error) {
 	var users []*managerUserBlacklistModel
-	_, err := m.session.Select("`user`.*,IFNULL(user_setting.updated_at,'') ").From("`user`").LeftJoin(`user_setting`, "user.uid=user_setting.to_uid and user_setting.blacklist=1").Where("`user_setting`.uid=?", uid).Load(&users)
+	_, err := m.session.Select("user_setting.*,`user`.name,`user`.uid").From("user_setting").LeftJoin("user", "user_setting.to_uid=user.uid").Where("user_setting.uid=? and user_setting.blacklist=1", uid).Load(&users)
 	return users, err
 }
 

@@ -151,7 +151,7 @@ func (d *DB) UpdateUsersWithField(field string, value string, uid string) error 
 
 // AddOrRemoveBlacklist 添加黑名单
 func (d *DB) AddOrRemoveBlacklistTx(uid string, touid string, blacklist int, version int64, tx *dbr.Tx) error {
-	_, err := tx.Update("user_setting").Set("blacklist", blacklist).Set("version", version).Where("uid=? and to_uid=?", uid, touid).Exec()
+	_, err := tx.Update("user_setting").Set("blacklist", blacklist).Set("version", version).Set("updated_at", dbr.Expr("Now()")).Where("uid=? and to_uid=?", uid, touid).Exec()
 	return err
 }
 

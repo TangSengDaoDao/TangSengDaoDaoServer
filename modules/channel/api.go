@@ -188,6 +188,7 @@ func (ch *Channel) channelGet(c *wkhttp.Context) {
 }
 
 func (ch *Channel) state(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
 	channelID := c.Query("channel_id")
 	channelTypeI64, _ := strconv.ParseInt(c.Query("channel_type"), 10, 64)
 
@@ -223,10 +224,39 @@ func (ch *Channel) state(c *wkhttp.Context) {
 			}
 		}
 	}
-
+	// 查询该频道是否通话中
+	callChannelIDs := make([]string, 0)
+	fakeChannelId := channelID
+	if channelType == common.ChannelTypePerson.Uint8() {
+		fakeChannelId = common.GetFakeChannelIDWith(loginUID, channelID)
+	}
+	callChannelIDs = append(callChannelIDs, fakeChannelId)
+	var callingChannels []*model.CallingChannelResp
+	modules := register.GetModules(ch.ctx)
+	for _, m := range modules {
+		if m.BussDataSource.GetCallingChannel != nil {
+			callingChannels, _ = m.BussDataSource.GetCallingChannel(loginUID, callChannelIDs)
+			break
+		}
+	}
+	var callingParticipantResp []*CallingParticipantResp
+	roomName := ""
+	if len(callingChannels) > 0 && callingChannels[0] != nil && len(callingChannels[0].Participants) > 0 {
+		roomName = callingChannels[0].RoomName
+		for _, p := range callingChannels[0].Participants {
+			callingParticipantResp = append(callingParticipantResp, &CallingParticipantResp{
+				UID:  p.UID,
+				Name: p.Name,
+			})
+		}
+	}
 	c.Response(stateResp{
 		SignalOn:    signalOn,
 		OnlineCount: onlineCount,
+		CallInfo: &rtcResp{
+			RoomName:            roomName,
+			CallingParticipants: callingParticipantResp,
+		},
 	})
 
 }
@@ -329,6 +359,15 @@ func formatSecondToDisplayTime(second int64) string {
 }
 
 type stateResp struct {
-	SignalOn    uint8 `json:"signal_on"`    // 是否可以signal加密聊天
-	OnlineCount int   `json:"online_count"` // 成员在线数量
+	SignalOn    uint8    `json:"signal_on"`    // 是否可以signal加密聊天
+	OnlineCount int      `json:"online_count"` // 成员在线数量
+	CallInfo    *rtcResp `json:"call_info"`    // 通话信息
+}
+type rtcResp struct {
+	RoomName            string                    `json:"room_name"`
+	CallingParticipants []*CallingParticipantResp `json:"calling_participants"` // 通话中的成员
+}
+type CallingParticipantResp struct {
+	UID  string `json:"uid"`
+	Name string `json:"name"`
 }
