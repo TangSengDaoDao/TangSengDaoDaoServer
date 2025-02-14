@@ -144,6 +144,9 @@ func (u *User) getMainDeviceFlag() uint8 {
 		}
 
 	}
+	if mainDeviceFlagM == nil {
+		return config.Web.Uint8()
+	}
 	return mainDeviceFlagM.DeviceFlag
 
 }
