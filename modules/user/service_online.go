@@ -38,7 +38,11 @@ func (o *OnlineService) listenOnlineStatus(onlineStatusList []config.OnlineStatu
 		return
 	}
 
-	tx, _ := o.ctx.DB().Begin()
+	tx, err := o.ctx.DB().Begin()
+	if err != nil {
+		o.Error("开启数据库事物错误", zap.Error(err))
+		return
+	}
 	defer func() {
 		if err := recover(); err != nil {
 			tx.RollbackUnlessCommitted()
