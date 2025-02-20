@@ -34,10 +34,8 @@ func New(ctx *config.Context) *Search {
 func (s *Search) Route(r *wkhttp.WKHttp) {
 	searchs := r.Group("/v1/search", s.ctx.AuthMiddleware(r))
 	{
-		searchs.GET("/gobal", s.gobal)        // 全局搜索
-		searchs.POST("/message", s.search)    // 搜索消息
-		searchs.GET("/channel", s.getChannel) // 获取channel
-		searchs.GET("/sender", s.getFrom)     // 获取发送者
+		searchs.GET("/gobal", s.gobal)     // 全局搜索
+		searchs.POST("/message", s.search) // 搜索消息
 	}
 }
 
@@ -58,7 +56,7 @@ func (s *Search) gobal(c *wkhttp.Context) {
 	})
 	if err != nil {
 		s.Error("查询悟空IM消息错误", zap.Error(err))
-		c.ResponseError(err)
+		c.ResponseError(errors.New("查询悟空IM消息错误"))
 		return
 	}
 
@@ -151,7 +149,7 @@ func (s *Search) gobal(c *wkhttp.Context) {
 			})
 		}
 	}
-	chatResp := make([]*messageResp, 0)
+	messagesResp := make([]*messageResp, 0)
 	if len(msgResp.Messages) > 0 {
 		for _, msg := range msgResp.Messages {
 			var isDeleted int8 = 0
@@ -213,7 +211,7 @@ func (s *Search) gobal(c *wkhttp.Context) {
 					}
 				}
 			}
-			chatResp = append(chatResp, &messageResp{
+			messagesResp = append(messagesResp, &messageResp{
 				MessageIDStr: msg.MessageIDStr,
 				MessageID:    msg.MessageID,
 				MessageSeq:   msg.MessageSeq,
@@ -227,22 +225,155 @@ func (s *Search) gobal(c *wkhttp.Context) {
 		}
 	}
 	c.Response(map[string]interface{}{
-		"friends": friendResps,
-		"groups":  groupResps,
-		"chat":    chatResp,
+		"friends":  friendResps,
+		"groups":   groupResps,
+		"messages": messagesResp,
 	})
 }
 
 func (s *Search) search(c *wkhttp.Context) {
+	loginUID := c.GetLoginUID()
+	var req struct {
+		ContentType []int  `json:"content_type"` // 消息类型
+		Keyword     string `json:"keyword"`      // 搜索关键字
+		FromUID     string `json:"from_uid"`     // 发送者uid
+		ChannelID   string `json:"channel_id"`   // 频道ID
+		ChannelType uint8  `json:"channel_type"` // 频道类型
+		Topic       string `json:"topic"`        // 根据topic搜索
+		Limit       int    `json:"limit"`        // 查询限制数量
+		Page        int    `json:"page"`         // 页码，分页使用，默认为1
+		StartTime   int64  `json:"start_time"`   //  消息时间（开始）
+		EndTime     int64  `json:"end_time"`     // 消息时间（结束，结果不包含end_time）
+	}
+	if err := c.BindJSON(&req); err != nil {
+		s.Error("数据格式有误！", zap.Error(err))
+		c.ResponseError(errors.New("数据格式有误！"))
+		return
+	}
+	msgResp, err := s.ctx.IMSearchUserMessages(&config.SearchUserMessageReq{
+		UID:            loginUID,
+		PayloadContent: req.Keyword,
+		PayloadTypes:   req.ContentType,
+		Limit:          req.Limit,
+		Page:           req.Page,
+		FromUID:        req.FromUID,
+		ChannelID:      req.ChannelID,
+		ChannelType:    req.ChannelType,
+		Topic:          req.Topic,
+		StartTime:      req.StartTime,
+		EndTime:        req.EndTime,
+	})
+	if err != nil {
+		s.Error("查询悟空IM消息错误", zap.Error(err))
+		c.ResponseError(errors.New("查询悟空IM消息错误"))
+		return
+	}
+	messages := make([]*messageResp, 0)
+	if msgResp == nil || len(msgResp.Messages) == 0 {
+		c.Response(messages)
+		return
+	}
+	groupIds := make([]string, 0)
+	uids := make([]string, 0)
+	for _, m := range msgResp.Messages {
+		if m.ChannelType == common.ChannelTypeGroup.Uint8() {
+			groupIds = append(groupIds, m.ChannelID)
+		} else if m.ChannelType == common.ChannelTypePerson.Uint8() {
+			uids = append(uids, m.ChannelID)
+		}
+	}
+	var groups []*group.GroupResp
+	var users []*user.UserDetailResp
+	if len(groupIds) > 0 {
+		groups, err = s.groupService.GetGroupDetails(groupIds, loginUID)
+		if err != nil {
+			s.Error("查询群列表错误", zap.Error(err))
+			c.ResponseError(errors.New("查询群列表错误"))
+			return
+		}
+	}
+	if len(uids) > 0 {
+		users, err = s.userService.GetUserDetails(uids, loginUID)
+		if err != nil {
+			s.Error("查询用户列表错误", zap.Error(err))
+			c.ResponseError(errors.New("查询用户列表错误"))
+			return
+		}
+	}
 
-}
+	for _, msg := range msgResp.Messages {
+		var isDeleted int8 = 0
+		setting := config.SettingFromUint8(msg.Setting)
+		var payloadMap map[string]interface{}
+		if setting.Signal {
+			payloadMap = map[string]interface{}{
+				"type": common.SignalError.Int(),
+			}
+		} else {
+			err := util.ReadJsonByByte(msg.Payload, &payloadMap)
+			if err != nil {
+				log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(msg.Payload)))
+			}
+			if len(payloadMap) > 0 {
+				visibles := payloadMap["visibles"]
+				if visibles != nil {
+					visiblesArray := visibles.([]interface{})
+					if len(visiblesArray) > 0 {
+						isDeleted = 1
+						for _, limitUID := range visiblesArray {
+							if limitUID == loginUID {
+								isDeleted = 0
+							}
+						}
+					}
+				}
+			} else {
+				payloadMap = map[string]interface{}{
+					"type": common.ContentError.Int(),
+				}
+			}
+		}
 
-func (s *Search) getChannel(c *wkhttp.Context) {
-
-}
-
-func (s *Search) getFrom(c *wkhttp.Context) {
-
+		var tempChannel *channelResp
+		if msg.ChannelType == common.ChannelTypePerson.Uint8() {
+			for _, user := range users {
+				if user.UID == msg.ChannelID {
+					tempChannel = &channelResp{
+						ChannelID:     user.UID,
+						ChannelType:   common.ChannelTypePerson.Uint8(),
+						ChannelRemark: user.Remark,
+						ChannelName:   user.Name,
+					}
+					break
+				}
+			}
+		}
+		if msg.ChannelType == common.ChannelTypeGroup.Uint8() {
+			for _, group := range groups {
+				if group.GroupNo == msg.ChannelID {
+					tempChannel = &channelResp{
+						ChannelID:     group.GroupNo,
+						ChannelType:   common.ChannelTypeGroup.Uint8(),
+						ChannelName:   group.Name,
+						ChannelRemark: group.Remark,
+					}
+					break
+				}
+			}
+		}
+		messages = append(messages, &messageResp{
+			MessageIDStr: msg.MessageIDStr,
+			MessageID:    msg.MessageID,
+			MessageSeq:   msg.MessageSeq,
+			FromUID:      msg.FromUID,
+			Timestamp:    msg.Timestamp,
+			Payload:      payloadMap,
+			ClientMsgNo:  msg.ClientMsgNo,
+			Channel:      tempChannel,
+			IsDeleted:    isDeleted,
+		})
+	}
+	c.Response(messages)
 }
 
 type channelResp struct {
