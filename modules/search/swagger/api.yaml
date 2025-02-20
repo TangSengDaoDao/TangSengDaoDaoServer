@@ -13,55 +13,12 @@ basePath: "/v1"
 
 paths:
   /search/gobal:
-    get:
+    post:
       tags:
         - "search"
       summary: "全局搜索"
       description: "全局搜索"
       operationId: "gobal"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "query"
-          name: "keyword"
-          type: string
-          description: "搜索关键字 非空必传"
-          required: true
-      responses:
-        200:
-          description: "返回"
-          schema:
-            type: object
-            properties:
-              friends:
-                type: array
-                items:
-                  $ref: "#/definitions/channelResp"
-                description: "好友列表"
-              groups:
-                type: array
-                items:
-                  $ref: "#/definitions/channelResp"
-                description: "群列表"
-              messages:
-                type: array
-                items:
-                  $ref: "#/definitions/messageResp"
-        400:
-          description: "错误"
-          schema:
-            $ref: "#/definitions/response"
-      security:
-        - token: []
-  /search/message:
-    post:
-      tags:
-        - "search"
-      summary: "消息搜索"
-      description: "消息搜索"
-      operationId: "message"
       consumes:
         - "application/json"
       produces:
@@ -73,6 +30,9 @@ paths:
           schema:
             type: object
             properties:
+              only_message:
+                type: integer
+                description: "1.只返回消息记录 0.返回好友，群，消息记录"
               keyword:
                 type: string
                 description: "搜索关键字"
@@ -110,24 +70,35 @@ paths:
         200:
           description: "返回"
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/messageResp"
-              description: "消息列表"
-
+            type: object
+            properties:
+              friends:
+                type: array
+                items:
+                  $ref: "#/definitions/channelResp"
+                description: "好友列表"
+              groups:
+                type: array
+                items:
+                  $ref: "#/definitions/channelResp"
+                description: "群列表"
+              messages:
+                type: array
+                items:
+                  $ref: "#/definitions/messageResp"
         400:
           description: "错误"
           schema:
             $ref: "#/definitions/response"
       security:
         - token: []
+  
 securityDefinitions:
   token:
     type: "apiKey"
     in: "header"
     name: "token"
     description: "用户token"
-
 definitions:
   messageResp:
     type: object

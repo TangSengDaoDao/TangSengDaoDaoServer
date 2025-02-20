@@ -34,25 +34,44 @@ func New(ctx *config.Context) *Search {
 func (s *Search) Route(r *wkhttp.WKHttp) {
 	searchs := r.Group("/v1/search", s.ctx.AuthMiddleware(r))
 	{
-		searchs.GET("/gobal", s.gobal)     // 全局搜索
-		searchs.POST("/message", s.search) // 搜索消息
+		searchs.POST("/gobal", s.gobal) // 全局搜索
 	}
 }
 
 func (s *Search) gobal(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
-	keyword := c.Query("keyword")
-	if len(strings.TrimSpace(keyword)) == 0 {
-		c.ResponseError(errors.New("关键字不能为空"))
+	var req struct {
+		OnlyMessage int    `json:"only_message"` // 只加载消息
+		ContentType []int  `json:"content_type"` // 消息类型
+		Keyword     string `json:"keyword"`      // 搜索关键字
+		FromUID     string `json:"from_uid"`     // 发送者uid
+		ChannelID   string `json:"channel_id"`   // 频道ID
+		ChannelType uint8  `json:"channel_type"` // 频道类型
+		Topic       string `json:"topic"`        // 根据topic搜索
+		Limit       int    `json:"limit"`        // 查询限制数量
+		Page        int    `json:"page"`         // 页码，分页使用，默认为1
+		StartTime   int64  `json:"start_time"`   //  消息时间（开始）
+		EndTime     int64  `json:"end_time"`     // 消息时间（结束，结果不包含end_time）
+	}
+	if err := c.BindJSON(&req); err != nil {
+		s.Error("数据格式有误！", zap.Error(err))
+		c.ResponseError(errors.New("数据格式有误！"))
 		return
 	}
 
 	// 查询消息
 	msgResp, err := s.ctx.IMSearchUserMessages(&config.SearchUserMessageReq{
 		UID:            loginUID,
-		PayloadContent: keyword,
-		Limit:          10,
-		Page:           1,
+		PayloadContent: req.Keyword,
+		PayloadTypes:   req.ContentType,
+		Limit:          req.Limit,
+		Page:           req.Page,
+		FromUID:        req.FromUID,
+		ChannelID:      req.ChannelID,
+		ChannelType:    req.ChannelType,
+		Topic:          req.Topic,
+		StartTime:      req.StartTime,
+		EndTime:        req.EndTime,
 	})
 	if err != nil {
 		s.Error("查询悟空IM消息错误", zap.Error(err))
@@ -71,17 +90,21 @@ func (s *Search) gobal(c *wkhttp.Context) {
 			}
 		}
 	}
-	joinedGroups, err := s.groupService.GetGroupsWithMemberUID(loginUID)
-	if err != nil {
-		s.Error("查询加入的群列表错误", zap.Error(err))
-		c.ResponseError(errors.New("查询加入的群列表错误"))
-		return
-	}
-	if len(joinedGroups) > 0 {
-		for _, group := range joinedGroups {
-			groupIds = append(groupIds, group.GroupNo)
+	var joinedGroups []*group.InfoResp
+	if req.OnlyMessage == 0 {
+		joinedGroups, err = s.groupService.GetGroupsWithMemberUID(loginUID)
+		if err != nil {
+			s.Error("查询加入的群列表错误", zap.Error(err))
+			c.ResponseError(errors.New("查询加入的群列表错误"))
+			return
+		}
+		if len(joinedGroups) > 0 {
+			for _, group := range joinedGroups {
+				groupIds = append(groupIds, group.GroupNo)
+			}
 		}
 	}
+
 	var groups []*group.GroupResp
 	var users []*user.UserDetailResp
 	if len(groupIds) > 0 {
@@ -101,19 +124,20 @@ func (s *Search) gobal(c *wkhttp.Context) {
 		}
 	}
 
+	// 加入的群
 	groupResps := make([]*channelResp, 0)
-	if len(joinedGroups) > 0 {
+	if req.OnlyMessage == 0 && len(joinedGroups) > 0 {
 		for _, g := range joinedGroups {
 			isAdd := false
 			remark := ""
-			if strings.Contains(g.Name, keyword) {
+			if strings.Contains(g.Name, req.Keyword) {
 				isAdd = true
 			}
 			if len(groups) > 0 {
 				for _, group := range groups {
 					if group.GroupNo == g.GroupNo {
 						remark = group.Remark
-						if strings.Contains(group.Remark, keyword) {
+						if strings.Contains(group.Remark, req.Keyword) {
 							isAdd = true
 						}
 						break
@@ -132,23 +156,26 @@ func (s *Search) gobal(c *wkhttp.Context) {
 	}
 
 	// 查询好友
-	friends, err := s.userService.SearchFriendsWithKeyword(loginUID, keyword)
-	if err != nil {
-		s.Error("查询好友错误", zap.Error(err))
-		c.ResponseError(err)
-		return
-	}
 	friendResps := make([]*channelResp, 0)
-	if len(friends) > 0 {
-		for _, friend := range friends {
-			friendResps = append(friendResps, &channelResp{
-				ChannelID:     friend.UID,
-				ChannelName:   friend.Name,
-				ChannelType:   common.ChannelTypePerson.Uint8(),
-				ChannelRemark: friend.Remark,
-			})
+	if req.OnlyMessage == 0 {
+		friends, err := s.userService.SearchFriendsWithKeyword(loginUID, req.Keyword)
+		if err != nil {
+			s.Error("查询好友错误", zap.Error(err))
+			c.ResponseError(err)
+			return
+		}
+		if len(friends) > 0 {
+			for _, friend := range friends {
+				friendResps = append(friendResps, &channelResp{
+					ChannelID:     friend.UID,
+					ChannelName:   friend.Name,
+					ChannelType:   common.ChannelTypePerson.Uint8(),
+					ChannelRemark: friend.Remark,
+				})
+			}
 		}
 	}
+
 	messagesResp := make([]*messageResp, 0)
 	if len(msgResp.Messages) > 0 {
 		for _, msg := range msgResp.Messages {
@@ -229,151 +256,6 @@ func (s *Search) gobal(c *wkhttp.Context) {
 		"groups":   groupResps,
 		"messages": messagesResp,
 	})
-}
-
-func (s *Search) search(c *wkhttp.Context) {
-	loginUID := c.GetLoginUID()
-	var req struct {
-		ContentType []int  `json:"content_type"` // 消息类型
-		Keyword     string `json:"keyword"`      // 搜索关键字
-		FromUID     string `json:"from_uid"`     // 发送者uid
-		ChannelID   string `json:"channel_id"`   // 频道ID
-		ChannelType uint8  `json:"channel_type"` // 频道类型
-		Topic       string `json:"topic"`        // 根据topic搜索
-		Limit       int    `json:"limit"`        // 查询限制数量
-		Page        int    `json:"page"`         // 页码，分页使用，默认为1
-		StartTime   int64  `json:"start_time"`   //  消息时间（开始）
-		EndTime     int64  `json:"end_time"`     // 消息时间（结束，结果不包含end_time）
-	}
-	if err := c.BindJSON(&req); err != nil {
-		s.Error("数据格式有误！", zap.Error(err))
-		c.ResponseError(errors.New("数据格式有误！"))
-		return
-	}
-	msgResp, err := s.ctx.IMSearchUserMessages(&config.SearchUserMessageReq{
-		UID:            loginUID,
-		PayloadContent: req.Keyword,
-		PayloadTypes:   req.ContentType,
-		Limit:          req.Limit,
-		Page:           req.Page,
-		FromUID:        req.FromUID,
-		ChannelID:      req.ChannelID,
-		ChannelType:    req.ChannelType,
-		Topic:          req.Topic,
-		StartTime:      req.StartTime,
-		EndTime:        req.EndTime,
-	})
-	if err != nil {
-		s.Error("查询悟空IM消息错误", zap.Error(err))
-		c.ResponseError(errors.New("查询悟空IM消息错误"))
-		return
-	}
-	messages := make([]*messageResp, 0)
-	if msgResp == nil || len(msgResp.Messages) == 0 {
-		c.Response(messages)
-		return
-	}
-	groupIds := make([]string, 0)
-	uids := make([]string, 0)
-	for _, m := range msgResp.Messages {
-		if m.ChannelType == common.ChannelTypeGroup.Uint8() {
-			groupIds = append(groupIds, m.ChannelID)
-		} else if m.ChannelType == common.ChannelTypePerson.Uint8() {
-			uids = append(uids, m.ChannelID)
-		}
-	}
-	var groups []*group.GroupResp
-	var users []*user.UserDetailResp
-	if len(groupIds) > 0 {
-		groups, err = s.groupService.GetGroupDetails(groupIds, loginUID)
-		if err != nil {
-			s.Error("查询群列表错误", zap.Error(err))
-			c.ResponseError(errors.New("查询群列表错误"))
-			return
-		}
-	}
-	if len(uids) > 0 {
-		users, err = s.userService.GetUserDetails(uids, loginUID)
-		if err != nil {
-			s.Error("查询用户列表错误", zap.Error(err))
-			c.ResponseError(errors.New("查询用户列表错误"))
-			return
-		}
-	}
-
-	for _, msg := range msgResp.Messages {
-		var isDeleted int8 = 0
-		setting := config.SettingFromUint8(msg.Setting)
-		var payloadMap map[string]interface{}
-		if setting.Signal {
-			payloadMap = map[string]interface{}{
-				"type": common.SignalError.Int(),
-			}
-		} else {
-			err := util.ReadJsonByByte(msg.Payload, &payloadMap)
-			if err != nil {
-				log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(msg.Payload)))
-			}
-			if len(payloadMap) > 0 {
-				visibles := payloadMap["visibles"]
-				if visibles != nil {
-					visiblesArray := visibles.([]interface{})
-					if len(visiblesArray) > 0 {
-						isDeleted = 1
-						for _, limitUID := range visiblesArray {
-							if limitUID == loginUID {
-								isDeleted = 0
-							}
-						}
-					}
-				}
-			} else {
-				payloadMap = map[string]interface{}{
-					"type": common.ContentError.Int(),
-				}
-			}
-		}
-
-		var tempChannel *channelResp
-		if msg.ChannelType == common.ChannelTypePerson.Uint8() {
-			for _, user := range users {
-				if user.UID == msg.ChannelID {
-					tempChannel = &channelResp{
-						ChannelID:     user.UID,
-						ChannelType:   common.ChannelTypePerson.Uint8(),
-						ChannelRemark: user.Remark,
-						ChannelName:   user.Name,
-					}
-					break
-				}
-			}
-		}
-		if msg.ChannelType == common.ChannelTypeGroup.Uint8() {
-			for _, group := range groups {
-				if group.GroupNo == msg.ChannelID {
-					tempChannel = &channelResp{
-						ChannelID:     group.GroupNo,
-						ChannelType:   common.ChannelTypeGroup.Uint8(),
-						ChannelName:   group.Name,
-						ChannelRemark: group.Remark,
-					}
-					break
-				}
-			}
-		}
-		messages = append(messages, &messageResp{
-			MessageIDStr: msg.MessageIDStr,
-			MessageID:    msg.MessageID,
-			MessageSeq:   msg.MessageSeq,
-			FromUID:      msg.FromUID,
-			Timestamp:    msg.Timestamp,
-			Payload:      payloadMap,
-			ClientMsgNo:  msg.ClientMsgNo,
-			Channel:      tempChannel,
-			IsDeleted:    isDeleted,
-		})
-	}
-	c.Response(messages)
 }
 
 type channelResp struct {
