@@ -2,6 +2,7 @@ package search
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/group"
@@ -34,11 +35,11 @@ func New(ctx *config.Context) *Search {
 func (s *Search) Route(r *wkhttp.WKHttp) {
 	searchs := r.Group("/v1/search", s.ctx.AuthMiddleware(r))
 	{
-		searchs.POST("/gobal", s.gobal) // 全局搜索
+		searchs.POST("/global", s.global) // 全局搜索
 	}
 }
 
-func (s *Search) gobal(c *wkhttp.Context) {
+func (s *Search) global(c *wkhttp.Context) {
 	loginUID := c.GetLoginUID()
 	var req struct {
 		OnlyMessage int    `json:"only_message"` // 只加载消息
@@ -59,19 +60,27 @@ func (s *Search) gobal(c *wkhttp.Context) {
 		return
 	}
 
+	payload := map[string]interface{}{
+		"content": req.Keyword,
+		"name":    req.Keyword,
+	}
+	highlights := make([]string, 0)
+	highlights = append(append(highlights, "payload.content"), "payload.name")
+
 	// 查询消息
 	msgResp, err := s.ctx.IMSearchUserMessages(&config.SearchUserMessageReq{
-		UID:            loginUID,
-		PayloadContent: req.Keyword,
-		PayloadTypes:   req.ContentType,
-		Limit:          req.Limit,
-		Page:           req.Page,
-		FromUID:        req.FromUID,
-		ChannelID:      req.ChannelID,
-		ChannelType:    req.ChannelType,
-		Topic:          req.Topic,
-		StartTime:      req.StartTime,
-		EndTime:        req.EndTime,
+		UID:          loginUID,
+		Payload:      payload,
+		PayloadTypes: req.ContentType,
+		Limit:        req.Limit,
+		Page:         req.Page,
+		FromUID:      req.FromUID,
+		ChannelID:    req.ChannelID,
+		ChannelType:  req.ChannelType,
+		Topic:        req.Topic,
+		StartTime:    req.StartTime,
+		EndTime:      req.EndTime,
+		Highlights:   highlights,
 	})
 	if err != nil {
 		s.Error("查询悟空IM消息错误", zap.Error(err))
@@ -145,10 +154,11 @@ func (s *Search) gobal(c *wkhttp.Context) {
 				}
 			}
 			if isAdd {
+				name := strings.ReplaceAll(g.Name, req.Keyword, fmt.Sprintf("<mark>%s</mark>", req.Keyword))
 				groupResps = append(groupResps, &channelResp{
 					ChannelID:     g.GroupNo,
 					ChannelType:   common.ChannelTypeGroup.Uint8(),
-					ChannelName:   g.Name,
+					ChannelName:   name,
 					ChannelRemark: remark,
 				})
 			}
@@ -166,9 +176,10 @@ func (s *Search) gobal(c *wkhttp.Context) {
 		}
 		if len(friends) > 0 {
 			for _, friend := range friends {
+				name := strings.ReplaceAll(friend.Name, req.Keyword, fmt.Sprintf("<mark>%s</mark>", req.Keyword))
 				friendResps = append(friendResps, &channelResp{
 					ChannelID:     friend.UID,
-					ChannelName:   friend.Name,
+					ChannelName:   name,
 					ChannelType:   common.ChannelTypePerson.Uint8(),
 					ChannelRemark: friend.Remark,
 				})

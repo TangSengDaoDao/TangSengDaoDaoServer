@@ -12,13 +12,13 @@ schemes:
 basePath: "/v1"
 
 paths:
-  /search/gobal:
+  /search/global:
     post:
       tags:
         - "search"
       summary: "全局搜索"
       description: "全局搜索"
-      operationId: "gobal"
+      operationId: "global"
       consumes:
         - "application/json"
       produces:
