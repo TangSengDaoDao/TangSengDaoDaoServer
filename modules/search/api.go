@@ -64,8 +64,7 @@ func (s *Search) global(c *wkhttp.Context) {
 		"content": req.Keyword,
 		"name":    req.Keyword,
 	}
-	highlights := make([]string, 0)
-	highlights = append(append(highlights, "payload.content"), "payload.name")
+	highlights := []string{"payload.content", "payload.name"}
 
 	// 查询消息
 	msgResp, err := s.ctx.IMSearchUserMessages(&config.SearchUserMessageReq{
@@ -90,12 +89,16 @@ func (s *Search) global(c *wkhttp.Context) {
 
 	groupIds := make([]string, 0)
 	uids := make([]string, 0)
+	msgFromUids := make([]string, 0)
 	if msgResp != nil && len(msgResp.Messages) > 0 {
 		for _, m := range msgResp.Messages {
 			if m.ChannelType == common.ChannelTypeGroup.Uint8() {
 				groupIds = append(groupIds, m.ChannelID)
 			} else if m.ChannelType == common.ChannelTypePerson.Uint8() {
 				uids = append(uids, m.ChannelID)
+			}
+			if m.FromUID != "" {
+				msgFromUids = append(msgFromUids, m.FromUID)
 			}
 		}
 	}
@@ -124,8 +127,12 @@ func (s *Search) global(c *wkhttp.Context) {
 			return
 		}
 	}
+	if len(msgFromUids) > 0 {
+		uids = append(uids, msgFromUids...)
+	}
 	if len(uids) > 0 {
-		users, err = s.userService.GetUserDetails(uids, loginUID)
+		realUids := util.RemoveRepeatedElement(uids)
+		users, err = s.userService.GetUserDetails(realUids, loginUID)
 		if err != nil {
 			s.Error("查询用户列表错误", zap.Error(err))
 			c.ResponseError(errors.New("查询用户列表错误"))
@@ -236,6 +243,19 @@ func (s *Search) global(c *wkhttp.Context) {
 					}
 				}
 			}
+			var fromChannel *channelResp
+			if len(users) > 0 && msg.FromUID != "" {
+				for _, user := range users {
+					if msg.FromUID == user.UID {
+						fromChannel = &channelResp{
+							ChannelID:     user.UID,
+							ChannelType:   common.ChannelTypePerson.Uint8(),
+							ChannelRemark: user.Remark,
+							ChannelName:   user.Name,
+						}
+					}
+				}
+			}
 			if msg.ChannelType == common.ChannelTypeGroup.Uint8() {
 				for _, group := range groups {
 					if group.GroupNo == msg.ChannelID {
@@ -259,6 +279,7 @@ func (s *Search) global(c *wkhttp.Context) {
 				ClientMsgNo:  msg.ClientMsgNo,
 				Channel:      tempChannel,
 				IsDeleted:    isDeleted,
+				FromChannel:  fromChannel,
 			})
 		}
 	}
@@ -288,4 +309,5 @@ type messageResp struct {
 	Payload      map[string]interface{} `json:"payload"`          // 消息内容
 	IsDeleted    int8                   `json:"is_deleted"`       // 是否已删除
 	Channel      *channelResp           `json:"channel"`          // 消息所属channel
+	FromChannel  *channelResp           `json:"from_channel"`     // 消息发送者channel
 }

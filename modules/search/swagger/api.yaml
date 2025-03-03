@@ -128,6 +128,10 @@ definitions:
         type: object
         $ref: "#/definitions/channelResp"
         description: "消息所属频道"
+      from_channel:
+        type: object
+        $ref: "#/definitions/channelResp"
+        description: "消息发送者频道资料"
   channelResp:
     type: object
     properties:
