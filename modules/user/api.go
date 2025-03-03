@@ -708,9 +708,9 @@ func (u *User) userUpdateSetting(c *wkhttp.Context) {
 				c.ResponseError(errors.New("修改用户资料失败"))
 				return
 			}
-			c.ResponseOK()
 		}
 	}
+	c.ResponseOK()
 }
 
 // 获取用户详情
