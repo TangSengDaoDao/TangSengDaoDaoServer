@@ -25,17 +25,18 @@ const (
 )
 
 func (u *User) thirdAuthcode(c *wkhttp.Context) {
-	authcode := util.GenerUUID()
-	err := u.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", ThirdAuthcodePrefix, authcode), "1", time.Minute*5)
-	if err != nil {
-		u.Error("redis set error", zap.Error(err))
-		c.ResponseError(errors.New("redis set error"))
-		return
-	}
+	c.ResponseError(errors.New("不支持注册"))
+	// authcode := util.GenerUUID()
+	// err := u.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", ThirdAuthcodePrefix, authcode), "1", time.Minute*5)
+	// if err != nil {
+	// 	u.Error("redis set error", zap.Error(err))
+	// 	c.ResponseError(errors.New("redis set error"))
+	// 	return
+	// }
 
-	c.Response(gin.H{
-		"authcode": authcode,
-	})
+	// c.Response(gin.H{
+	// 	"authcode": authcode,
+	// })
 }
 
 func (u *User) thirdAuthStatus(c *wkhttp.Context) {
