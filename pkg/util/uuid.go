@@ -193,7 +193,7 @@ func (u UUID) Bytes() []byte {
 }
 
 // Returns canonical string representation of UUID:
-// 上海信必达网络科技有限公司-xxxx-xxxx-xxxx-上海信必达网络科技有限公司xxxx.
+// 我们公司-xxxx-xxxx-xxxx-我们公司xxxx.
 func (u UUID) String() string {
 	buf := make([]byte, 36)
 
