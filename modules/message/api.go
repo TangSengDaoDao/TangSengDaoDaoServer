@@ -1179,7 +1179,8 @@ func (m *Message) delete(c *wkhttp.Context) {
 }
 
 func (m *Message) genMessageExtraSeq(channelID string) int64 {
-	return m.ctx.GenSeq(fmt.Sprintf("%s:%s", common.MessageExtraSeqKey, channelID))
+	return time.Now().UnixNano() / 1e3
+	// return m.ctx.GenSeq(fmt.Sprintf("%s:%s", common.MessageExtraSeqKey, channelID))
 }
 func (m *Message) genMessageReactionSeq(channelID string) int64 {
 	return m.ctx.GenSeq(fmt.Sprintf("%s:%s", common.MessageReactionSeqKey, channelID))
@@ -1496,8 +1497,7 @@ func (m *Message) revoke(c *wkhttp.Context) {
 		}
 	}()
 	messageIDStr := strconv.FormatInt(message.MessageID, 10)
-	//version := m.genMessageExtraSeq(fakeChannelID)
-	version := time.Now().UnixNano() / 1e3
+	version := m.genMessageExtraSeq(fakeChannelID)
 	if messageExtra != nil {
 		messageExtra.Revoke = 1
 		messageExtra.Revoker = loginUID
