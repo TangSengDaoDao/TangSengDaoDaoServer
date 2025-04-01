@@ -1687,6 +1687,18 @@ func newSyncChannelMessageResp(resp *config.SyncChannelMessageResp, loginUID str
 	if len(resp.Messages) > 0 {
 		messageIDs := make([]string, 0, len(resp.Messages))
 		for _, message := range resp.Messages {
+			var payloadMap map[string]interface{}
+			err := util.ReadJsonByByte(message.Payload, &payloadMap)
+			if err != nil {
+				log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(message.Payload)))
+			}
+			if len(payloadMap) > 0 {
+				replyJson := payloadMap["reply"]
+				if replyJson != nil {
+					msgId := replyJson.(map[string]interface{})["message_id"]
+					messageIDs = append(messageIDs, msgId.(string))
+				}
+			}
 			messageIDs = append(messageIDs, fmt.Sprintf("%d", message.MessageID))
 		}
 
@@ -1694,6 +1706,39 @@ func newSyncChannelMessageResp(resp *config.SyncChannelMessageResp, loginUID str
 		messageExtras, err := messageExtraDB.queryWithMessageIDsAndUID(messageIDs, loginUID)
 		if err != nil {
 			log.Error("查询消息扩展字段失败！", zap.Error(err))
+		}
+		// 修改消息扩展字段
+		for _, message := range resp.Messages {
+			var payloadMap map[string]interface{}
+			err := util.ReadJsonByByte(message.Payload, &payloadMap)
+			if err != nil {
+				log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(message.Payload)))
+			}
+			if len(payloadMap) > 0 {
+				replyJson := payloadMap["reply"]
+				if replyJson == nil {
+					continue
+				}
+				msgId := replyJson.(map[string]interface{})["message_id"]
+				if msgId == nil {
+					continue
+				}
+				messageIDStr := msgId.(string)
+				for _, messageExtra := range messageExtras {
+					if messageExtra.MessageID == messageIDStr {
+						var contentEditMap map[string]interface{}
+						if messageExtra.ContentEdit.String != "" {
+							err := util.ReadJsonByByte([]byte(messageExtra.ContentEdit.String), &contentEditMap)
+							if err != nil {
+								log.Warn("负荷数据不是json格式！", zap.Error(err), zap.String("payload", string(messageExtra.ContentEdit.String)))
+								continue
+							}
+							replyJson.(map[string]interface{})["payload"] = contentEditMap
+						}
+						break
+					}
+				}
+			}
 		}
 		messageExtraMap := map[string]*messageExtraDetailModel{}
 		if len(messageExtras) > 0 {
