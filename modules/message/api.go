@@ -1727,8 +1727,8 @@ func newSyncChannelMessageResp(resp *config.SyncChannelMessageResp, loginUID str
 			if len(payloadMap) > 0 {
 				replyJson := payloadMap["reply"]
 				if replyJson != nil {
-					msgId := replyJson.(map[string]interface{})["message_id"]
-					messageIDs = append(messageIDs, msgId.(string))
+					msgId := replyJson.(map[string]interface{})["message_id"].(string)
+					messageIDs = append(messageIDs, msgId)
 				}
 			}
 			messageIDs = append(messageIDs, fmt.Sprintf("%d", message.MessageID))
@@ -1751,13 +1751,9 @@ func newSyncChannelMessageResp(resp *config.SyncChannelMessageResp, loginUID str
 				if replyJson == nil {
 					continue
 				}
-				msgId := replyJson.(map[string]interface{})["message_id"]
-				if msgId == nil {
-					continue
-				}
-				messageIDStr := msgId.(string)
+				msgId := replyJson.(map[string]interface{})["message_id"].(string)
 				for _, messageExtra := range messageExtras {
-					if messageExtra.MessageID == messageIDStr {
+					if messageExtra.MessageID == msgId {
 						var contentEditMap map[string]interface{}
 						if messageExtra.ContentEdit.String != "" {
 							err := util.ReadJsonByByte([]byte(messageExtra.ContentEdit.String), &contentEditMap)
@@ -1766,6 +1762,8 @@ func newSyncChannelMessageResp(resp *config.SyncChannelMessageResp, loginUID str
 								continue
 							}
 							replyJson.(map[string]interface{})["payload"] = contentEditMap
+							payloadMap["reply"] = replyJson
+							message.Payload = []byte(util.ToJson(payloadMap))
 						}
 						break
 					}
