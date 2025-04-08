@@ -929,6 +929,21 @@ func (m *Manager) updatePwd(c *wkhttp.Context) {
 		c.Response("修改用户密码错误")
 		return
 	}
+	// 清除token缓存
+	oldToken, err := m.ctx.Cache().Get(fmt.Sprintf("%s%d%s", m.ctx.GetConfig().Cache.UIDTokenCachePrefix, config.Web, user.UID))
+	if err != nil {
+		m.Error("获取旧token错误", zap.Error(err))
+		c.ResponseError(errors.New("获取旧token错误"))
+		return
+	}
+	if oldToken != "" {
+		err = m.ctx.Cache().Delete(m.ctx.GetConfig().Cache.TokenCachePrefix + oldToken)
+		if err != nil {
+			m.Error("清除旧token数据错误", zap.Error(err))
+			c.ResponseError(errors.New("清除旧token数据错误"))
+			return
+		}
+	}
 	c.ResponseOK()
 }
 func (r managerAddUserReq) checkAddUserReq() error {
