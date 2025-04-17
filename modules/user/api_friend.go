@@ -330,6 +330,7 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 		c.ResponseError(errors.New("接收好友请求的用户不存在！"))
 		return
 	}
+	verifyVercode := true
 	if req.Vercode == "" {
 		friend, err := f.db.queryWithUID(fromUID, req.ToUID)
 		if err != nil {
@@ -348,14 +349,18 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			return
 		}
 		req.Vercode = friend.SourceVercode
+		verifyVercode = false
 	}
 
-	//验证code是否有效
-	err = source.CheckRequestAddFriendCode(req.Vercode, fromUID)
-	if err != nil {
-		c.ResponseError(err)
-		return
+	if verifyVercode {
+		//验证code是否有效
+		err = source.CheckRequestAddFriendCode(req.Vercode, fromUID)
+		if err != nil {
+			c.ResponseError(err)
+			return
+		}
 	}
+
 	// 设置token
 	token := util.GenerUUID()
 
