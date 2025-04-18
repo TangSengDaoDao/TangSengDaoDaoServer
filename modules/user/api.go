@@ -1183,7 +1183,7 @@ func (u *User) register(c *wkhttp.Context) {
 	}
 
 	if u.ctx.GetConfig().Register.Off {
-		c.ResponseError(errors.New("注册通道暂不开放"))
+		c.ResponseError(errors.New("注册通道暂不开放，请使用官网上演示账号登录"))
 		return
 	}
 	appConfig, err := u.commonService.GetAppConfig()
