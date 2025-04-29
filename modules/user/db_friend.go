@@ -242,7 +242,7 @@ func (d *friendDB) insertApply(m *FriendApplyModel) error {
 
 func (d *friendDB) queryApplysWithPage(uid string, pageSize, page uint64) ([]*FriendApplyModel, error) {
 	var list []*FriendApplyModel
-	_, err := d.session.Select("*").From("friend_apply_record").Where("uid=?", uid).Offset((page-1)*pageSize).Limit(pageSize).OrderDir("updated_at", false).Load(&list)
+	_, err := d.session.Select("*").From("friend_apply_record").Where("uid=?", uid).Offset((page-1)*pageSize).Limit(pageSize).OrderDir("created_at", false).Load(&list)
 	return list, err
 }
 
@@ -259,7 +259,7 @@ func (d *friendDB) queryApplyWithUidAndToUid(uid, toUid string) (*FriendApplyMod
 func (d *friendDB) updateApply(apply *FriendApplyModel) error {
 	_, err := d.session.Update("friend_apply_record").SetMap(map[string]interface{}{
 		"status":     apply.Status,
-		"updated_at": dbr.Expr("Now()"),
+		"created_at": dbr.Expr("Now()"),
 	}).Where("id=?", apply.Id).Exec()
 	return err
 }
@@ -267,7 +267,7 @@ func (d *friendDB) updateApply(apply *FriendApplyModel) error {
 func (d *friendDB) updateApplyTx(apply *FriendApplyModel, tx *dbr.Tx) error {
 	_, err := tx.Update("friend_apply_record").SetMap(map[string]interface{}{
 		"status":     apply.Status,
-		"updated_at": dbr.Expr("Now()"),
+		"created_at": dbr.Expr("Now()"),
 	}).Where("id=?", apply.Id).Exec()
 	return err
 }
