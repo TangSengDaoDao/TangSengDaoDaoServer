@@ -266,7 +266,8 @@ func (d *friendDB) updateApply(apply *FriendApplyModel) error {
 
 func (d *friendDB) updateApplyTx(apply *FriendApplyModel, tx *dbr.Tx) error {
 	_, err := tx.Update("friend_apply_record").SetMap(map[string]interface{}{
-		"status": apply.Status,
+		"status":     apply.Status,
+		"updated_at": dbr.Expr("Now()"),
 	}).Where("id=?", apply.Id).Exec()
 	return err
 }
