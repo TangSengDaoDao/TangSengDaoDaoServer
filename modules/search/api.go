@@ -298,16 +298,16 @@ type channelResp struct {
 }
 
 type messageResp struct {
-	Setting      uint8                  `json:"setting"`          // 设置
-	MessageID    int64                  `json:"message_id"`       // 服务端的消息ID(全局唯一)
-	MessageIDStr string                 `json:"message_idstr"`    // 服务端的消息ID(全局唯一)字符串形式
-	MessageSeq   uint32                 `json:"message_seq"`      // 消息序列号 （用户唯一，有序递增）
-	ClientMsgNo  string                 `json:"client_msg_no"`    // 客户端消息唯一编号
-	FromUID      string                 `json:"from_uid"`         // 发送者UID
-	Expire       uint32                 `json:"expire,omitempty"` // expire
-	Timestamp    int32                  `json:"timestamp"`        // 服务器消息时间戳(10位，到秒)
-	Payload      map[string]interface{} `json:"payload"`          // 消息内容
-	IsDeleted    int8                   `json:"is_deleted"`       // 是否已删除
-	Channel      *channelResp           `json:"channel"`          // 消息所属channel
-	FromChannel  *channelResp           `json:"from_channel"`     // 消息发送者channel
+	Setting      uint8                  `json:"setting"`           // 设置
+	MessageID    int64                  `json:"message_id"`        // 服务端的消息ID(全局唯一)
+	MessageIDStr string                 `json:"message_idstr"`     // 服务端的消息ID(全局唯一)字符串形式
+	MessageSeq   uint32                 `json:"message_seq"`       // 消息序列号 （用户唯一，有序递增）
+	ClientMsgNo  string                 `json:"client_msg_no"`     // 客户端消息唯一编号
+	FromUID      string                 `json:"from_uid"`          // 发送者UID
+	Expire       uint32                 `json:"expire,omitempty"`  // expire
+	Timestamp    int32                  `json:"timestamp"`         // 服务器消息时间戳(10位，到秒)
+	Payload      map[string]interface{} `json:"payload"`           // 消息内容
+	IsDeleted    int8                   `json:"is_deleted"`        // 是否已删除
+	Channel      *channelResp           `json:"channel,omitempty"` // 消息所属channel
+	FromChannel  *channelResp           `json:"from_channel"`      // 消息发送者channel
 }
