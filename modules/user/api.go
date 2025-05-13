@@ -702,6 +702,13 @@ func (u *User) userUpdateSetting(c *wkhttp.Context) {
 			key == "voice_on" ||
 			key == "shock_on" ||
 			key == "mute_of_app" {
+			if key == "device_lock" && value == 1 {
+				if users.Phone == "15900000002" || users.Phone == "15900000003" || users.Phone == "15900000004" || users.Phone == "15900000005" || users.Phone == "15900000006" {
+					c.ResponseError(errors.New("演示账号不支持开启设备锁"))
+					return
+				}
+
+			}
 			err = u.db.UpdateUsersWithField(key, fmt.Sprintf("%v", value), loginUID)
 			if err != nil {
 				u.Error("修改用户资料失败", zap.Error(err))
@@ -1183,7 +1190,7 @@ func (u *User) register(c *wkhttp.Context) {
 	}
 
 	if u.ctx.GetConfig().Register.Off {
-		c.ResponseError(errors.New("注册通道暂不开放"))
+		c.ResponseError(errors.New("注册通道暂不开放，请使用官网上演示账号登录"))
 		return
 	}
 	appConfig, err := u.commonService.GetAppConfig()

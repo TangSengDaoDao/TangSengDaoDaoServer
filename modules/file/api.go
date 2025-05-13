@@ -40,7 +40,7 @@ func (f *File) Route(r *wkhttp.WKHttp) {
 	{ // 文件上传
 		// api.POST("/upload/*path", f.upload)
 		// 组合图片
-		api.POST("/compose/*path", f.makeImageCompose)
+		//	api.POST("/compose/*path", f.makeImageCompose)
 		// 获取文件
 		api.GET("/preview/*path", f.getFile)
 	}

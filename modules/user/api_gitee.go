@@ -25,7 +25,7 @@ const (
 )
 
 func (u *User) thirdAuthcode(c *wkhttp.Context) {
-	c.ResponseError(errors.New("不支持注册"))
+	c.ResponseError(errors.New("不支持注册，请使用官网上演示账号登录！"))
 	// authcode := util.GenerUUID()
 	// err := u.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", ThirdAuthcodePrefix, authcode), "1", time.Minute*5)
 	// if err != nil {

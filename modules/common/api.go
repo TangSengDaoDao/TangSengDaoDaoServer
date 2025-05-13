@@ -53,8 +53,8 @@ func (cn *Common) Route(r *wkhttp.WKHttp) {
 	{
 		commonNoAuth.GET("/countries", cn.countriesList)
 
-		commonNoAuth.GET("/appconfig", cn.appConfig)           // app配置
-		commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)   // 获取后台运行引导视频
+		commonNoAuth.GET("/appconfig", cn.appConfig) // app配置
+		// commonNoAuth.GET("/keepalive", cn.getKeepAliveVideo)   // 获取后台运行引导视频
 		commonNoAuth.GET("/updater/:os/:version", cn.updater)  // 版本更新检查（兼容tauri）
 		commonNoAuth.GET("/pcupdater/:os", cn.getPCNewVersion) // pc版本更新检查
 	}
