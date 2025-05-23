@@ -414,54 +414,65 @@ func (m *Message) messageReaded(c *wkhttp.Context) {
 		}
 	}()
 
-	//	fromUIDs := make([]string, 0, len(messages)) // 消息发送者
+	// 构建批量插入的数据
+	readedModels := make([]*memberReadedModel, 0, len(syncMsg.Messages))
 	for _, message := range syncMsg.Messages {
-		//	fromUIDs = append(fromUIDs, message.FromUID)
-		err := m.memberReadedDB.insertOrUpdateTx(&memberReadedModel{
+		readedModels = append(readedModels, &memberReadedModel{
 			MessageID:   message.MessageID,
 			ChannelID:   fakeChannelID,
 			ChannelType: req.ChannelType,
 			UID:         loginUID,
-		}, tx)
-		if err != nil {
-			tx.Rollback()
-			c.ResponseErrorf("添加已读数据失败！", err)
-			return
-		}
+		})
+	}
+	// 批量插入或更新已读记录
+	err = m.memberReadedDB.batchInsertOrUpdateTx(readedModels, tx)
+	if err != nil {
+		tx.Rollback()
+		c.ResponseErrorf("添加已读数据失败！", err)
+		return
 	}
 	if err := tx.Commit(); err != nil {
 		tx.Rollback()
 		c.ResponseErrorf("提交事务失败！", err)
 		return
 	}
-	for _, message := range syncMsg.Messages {
-		messageIDStr := strconv.FormatInt(message.MessageID, 10)
-		jsonStr, err := json.Marshal(&messageReadedCountModel{
-			MessageIDStr:   messageIDStr,
-			MessageID:      message.MessageID,
-			MessageSeq:     message.MessageSeq,
-			FromUID:        message.FromUID,
-			ChannelID:      fakeChannelID,
-			ChannelType:    req.ChannelType,
-			LoginUID:       loginUID,
-			ReqChannelID:   req.ChannelID,
-			ReqChannelType: req.ChannelType,
-		})
-		if err != nil {
-			m.Error("序列化消息错误", zap.Error(err))
-			c.ResponseError(errors.New("序列化消息错误"))
-			return
-		}
-		m.mutex.Lock()
-		err = m.ctx.GetRedisConn().SetAndExpire(fmt.Sprintf("%s%s", CacheReadedCountPrefix, messageIDStr), jsonStr, time.Hour*24*7)
-		if err != nil {
+	// 异步处理 Redis 缓存
+	go func() {
+		for _, message := range syncMsg.Messages {
+			messageIDStr := strconv.FormatInt(message.MessageID, 10)
+			jsonStr, err := json.Marshal(&messageReadedCountModel{
+				MessageIDStr:   messageIDStr,
+				MessageID:      message.MessageID,
+				MessageSeq:     message.MessageSeq,
+				FromUID:        message.FromUID,
+				ChannelID:      fakeChannelID,
+				ChannelType:    req.ChannelType,
+				LoginUID:       loginUID,
+				ReqChannelID:   req.ChannelID,
+				ReqChannelType: req.ChannelType,
+			})
+			if err != nil {
+				m.Error("序列化消息错误", zap.Error(err))
+				continue
+			}
+
+			m.mutex.Lock()
+			err = m.ctx.GetRedisConn().SetAndExpire(
+				fmt.Sprintf("%s%s", CacheReadedCountPrefix, messageIDStr),
+				jsonStr,
+				time.Hour*24*7,
+			)
 			m.mutex.Unlock()
-			m.Error("添加消息扩展数据到缓存失败！", zap.Error(err), zap.Int64("messageID", message.MessageID), zap.String("channelID", fakeChannelID))
-			c.ResponseError(errors.New("添加消息扩展数据到缓存失败！"))
-			return
+
+			if err != nil {
+				m.Error("添加消息扩展数据到缓存失败！",
+					zap.Error(err),
+					zap.Int64("messageID", message.MessageID),
+					zap.String("channelID", fakeChannelID),
+				)
+			}
 		}
-		m.mutex.Unlock()
-	}
+	}()
 	c.ResponseOK()
 
 }

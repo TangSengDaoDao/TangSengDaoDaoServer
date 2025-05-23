@@ -18,6 +18,22 @@ func newMemberReadedDB(ctx *config.Context) *memberReadedDB {
 	}
 }
 
+// 批量插入或更新已读记录
+func (m *memberReadedDB) batchInsertOrUpdateTx(models []*memberReadedModel, tx *dbr.Tx) error {
+	if len(models) == 0 {
+		return nil
+	}
+
+	// 使用 dbr 的批量插入语法
+	_, err := tx.InsertBySql(`
+        INSERT INTO member_readed (message_id, channel_id, channel_type, uid) 
+        VALUES ? 
+        ON DUPLICATE KEY UPDATE message_id=VALUES(message_id)
+    `, models).Exec()
+
+	return err
+}
+
 func (m *memberReadedDB) insertOrUpdateTx(model *memberReadedModel, tx *dbr.Tx) error {
 	_, err := tx.InsertBySql("INSERT INTO member_readed (message_id,clone_no,channel_id,channel_type,uid) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE `message_id`=VALUES(`message_id`),`clone_no`=VALUES(`clone_no`),uid=VALUES(uid)", model.MessageID, model.CloneNo, model.ChannelID, model.ChannelType, model.UID).Exec()
 	return err
