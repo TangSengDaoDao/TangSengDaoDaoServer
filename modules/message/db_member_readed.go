@@ -53,11 +53,6 @@ func (m *memberReadedDB) batchInsertOrUpdateTx(models []*memberReadedModel, tx *
 	return err
 }
 
-func (m *memberReadedDB) insertOrUpdateTx(model *memberReadedModel, tx *dbr.Tx) error {
-	_, err := tx.InsertBySql("INSERT INTO member_readed (message_id,clone_no,channel_id,channel_type,uid) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE `message_id`=VALUES(`message_id`),`clone_no`=VALUES(`clone_no`),uid=VALUES(uid)", model.MessageID, model.CloneNo, model.ChannelID, model.ChannelType, model.UID).Exec()
-	return err
-}
-
 // 查询消息已读数量
 func (m *memberReadedDB) queryCountWithMessageIDs(channelID string, channelType uint8, messageIDs []string) (map[int64]int, error) {
 	if len(messageIDs) <= 0 {
