@@ -3,6 +3,7 @@ package message
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/db"
@@ -93,11 +94,51 @@ func (r *remindersDB) sync(uid string, version int64, limit uint64, channelIDs [
 }
 
 func (r *remindersDB) insertDonesTx(ids []int64, uid string, tx *dbr.Tx) error {
-	for _, id := range ids {
-		_, err := tx.InsertBySql("insert  into reminder_done(reminder_id,uid) values(?,?)", id, uid).Exec()
-		if err != nil {
-			r.ctx.Warn("insertDonesTx failed", zap.Error(err))
-		}
+	if len(ids) == 0 {
+		return nil
+	}
+
+	// 对 reminder_id 进行排序，确保事务按相同顺序获取锁，避免死锁
+	sortedIds := make([]int64, len(ids))
+	copy(sortedIds, ids)
+	sort.Slice(sortedIds, func(i, j int) bool {
+		return sortedIds[i] < sortedIds[j]
+	})
+
+	// 使用批量插入来减少锁持有时间
+	if len(sortedIds) > 1 {
+		return r.batchInsertDonesTx(sortedIds, uid, tx)
+	}
+
+	// 单个插入
+	_, err := tx.InsertBySql("insert ignore into reminder_done(reminder_id,uid) values(?,?)", sortedIds[0], uid).Exec()
+	if err != nil {
+		r.ctx.Error("insertDonesTx failed", zap.Error(err), zap.Int64("reminder_id", sortedIds[0]), zap.String("uid", uid))
+		return err
+	}
+	return nil
+}
+
+// 批量插入方法，减少锁持有时间
+func (r *remindersDB) batchInsertDonesTx(sortedIds []int64, uid string, tx *dbr.Tx) error {
+	// 构建批量插入SQL
+	valueStrings := make([]string, 0, len(sortedIds))
+	valueArgs := make([]any, 0, len(sortedIds)*2)
+
+	for _, id := range sortedIds {
+		valueStrings = append(valueStrings, "(?,?)")
+		valueArgs = append(valueArgs, id, uid)
+	}
+
+	sql := fmt.Sprintf("insert ignore into reminder_done(reminder_id,uid) values %s", valueStrings[0])
+	for i := 1; i < len(valueStrings); i++ {
+		sql += "," + valueStrings[i]
+	}
+
+	_, err := tx.InsertBySql(sql, valueArgs...).Exec()
+	if err != nil {
+		r.ctx.Error("batchInsertDonesTx failed", zap.Error(err), zap.String("uid", uid), zap.Int("count", len(sortedIds)))
+		return err
 	}
 	return nil
 }
