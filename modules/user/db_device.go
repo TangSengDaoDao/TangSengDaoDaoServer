@@ -52,6 +52,14 @@ func (d *deviceDB) queryDeviceWithUID(uid string) ([]*deviceModel, error) {
 	return devices, err
 }
 
+// 获取用户设备列表（分页）
+func (d *deviceDB) queryDeviceWithUIDAndPage(uid string, pageIndex, pageSize int64) ([]*deviceModel, error) {
+	var devices []*deviceModel
+	offset := (pageIndex - 1) * pageSize
+	_, err := d.session.Select("*").From("device").Where("uid=?", uid).OrderDir("last_login", false).Limit(uint64(pageSize)).Offset(uint64(offset)).Load(&devices)
+	return devices, err
+}
+
 func (d *deviceDB) queryDeviceWithUIDAndDeviceID(deviceID, uid string) (*deviceModel, error) {
 	var device *deviceModel
 	_, err := d.session.Select("*").From("device").Where("uid=? and device_id=?", uid, deviceID).Load(&device)

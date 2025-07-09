@@ -46,13 +46,26 @@ func (u *User) deviceDelete(c *wkhttp.Context) {
 
 // 登录设备列表
 func (u *User) deviceList(c *wkhttp.Context) {
+	// 获取分页参数
+	pageIndex, pageSize := c.GetPage()
 
-	devices, err := u.deviceDB.queryDeviceWithUID(c.GetLoginUID())
+	// 如果没有传入分页参数，则查询全部
+	var devices []*deviceModel
+	var err error
+
+	if pageIndex == 1 && pageSize == 15 { // 默认值，表示没有传入分页参数
+		devices, err = u.deviceDB.queryDeviceWithUID(c.GetLoginUID())
+	} else {
+		// 分页查询
+		devices, err = u.deviceDB.queryDeviceWithUIDAndPage(c.GetLoginUID(), pageIndex, pageSize)
+	}
+
 	if err != nil {
 		u.Error("查询设备列表失败！", zap.Error(err))
 		c.ResponseError(errors.New("查询设备列表失败！"))
 		return
 	}
+
 	var deviceResps = make([]deviceResp, 0, len(devices))
 	if len(devices) > 0 {
 		for index, device := range devices {
