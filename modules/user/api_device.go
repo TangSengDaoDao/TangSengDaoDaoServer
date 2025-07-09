@@ -74,7 +74,7 @@ func (u *User) deviceList(c *wkhttp.Context) {
 				selft = 1
 			}
 			deviceName := device.DeviceName
-			if selft == 1 {
+			if selft == 1 && pageIndex == 1 {
 				deviceName = fmt.Sprintf("%s（本机）", device.DeviceName)
 			}
 			deviceResps = append(deviceResps, deviceResp{

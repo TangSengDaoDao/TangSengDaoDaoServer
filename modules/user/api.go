@@ -691,8 +691,9 @@ func (u *User) userUpdateSetting(c *wkhttp.Context) {
 		c.ResponseError(errors.New("用户信息不存在！"))
 		return
 	}
-
+	println("查询到的账号：", users.Phone)
 	for key, value := range reqMap {
+		println("修改的值：", key, value)
 		if key == "device_lock" ||
 			key == "search_by_phone" ||
 			key == "search_by_short" ||
