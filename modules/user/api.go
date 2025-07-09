@@ -691,9 +691,7 @@ func (u *User) userUpdateSetting(c *wkhttp.Context) {
 		c.ResponseError(errors.New("用户信息不存在！"))
 		return
 	}
-	println("查询到的账号：", users.Phone)
 	for key, value := range reqMap {
-		println("修改的值：", key, value)
 		if key == "device_lock" ||
 			key == "search_by_phone" ||
 			key == "search_by_short" ||
@@ -703,7 +701,7 @@ func (u *User) userUpdateSetting(c *wkhttp.Context) {
 			key == "voice_on" ||
 			key == "shock_on" ||
 			key == "mute_of_app" {
-			if key == "device_lock" && value == 1 {
+			if key == "device_lock" && fmt.Sprintf("%v", value) == "1" {
 				if users.Phone == "15900000002" || users.Phone == "15900000003" || users.Phone == "15900000004" || users.Phone == "15900000005" || users.Phone == "15900000006" {
 					c.ResponseError(errors.New("演示账号不支持开启设备锁"))
 					return
