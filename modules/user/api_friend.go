@@ -416,17 +416,18 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 			return
 		}
 	} else {
-		if apply.Status != 0 {
-			isAddCount = true
-			apply.Status = 0
-			err = f.db.updateApplyTx(apply, tx)
-			if err != nil {
-				tx.Rollback()
-				f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
-				c.ResponseError(errors.New("修改好友申请记录错误"))
-				return
-			}
+		// if apply.Status != 0 {
+		isAddCount = true
+		apply.Status = 0
+		apply.Token = token
+		err = f.db.updateApplyTx(apply, tx)
+		if err != nil {
+			tx.Rollback()
+			f.Error("修改好友申请记录错误", zap.String("to_uid", req.ToUID))
+			c.ResponseError(errors.New("修改好友申请记录错误"))
+			return
 		}
+		// }
 
 	}
 	// 新增红点

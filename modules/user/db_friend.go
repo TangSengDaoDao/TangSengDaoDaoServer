@@ -259,7 +259,8 @@ func (d *friendDB) queryApplyWithUidAndToUid(uid, toUid string) (*FriendApplyMod
 func (d *friendDB) updateApply(apply *FriendApplyModel) error {
 	_, err := d.session.Update("friend_apply_record").SetMap(map[string]interface{}{
 		"status":     apply.Status,
-		"created_at": dbr.Expr("Now()"),
+		"token":      apply.token,
+		"updated_at": dbr.Expr("Now()"),
 	}).Where("id=?", apply.Id).Exec()
 	return err
 }
@@ -267,7 +268,8 @@ func (d *friendDB) updateApply(apply *FriendApplyModel) error {
 func (d *friendDB) updateApplyTx(apply *FriendApplyModel, tx *dbr.Tx) error {
 	_, err := tx.Update("friend_apply_record").SetMap(map[string]interface{}{
 		"status":     apply.Status,
-		"created_at": dbr.Expr("Now()"),
+		"token":      apply.token,
+		"updated_at": dbr.Expr("Now()"),
 	}).Where("id=?", apply.Id).Exec()
 	return err
 }
