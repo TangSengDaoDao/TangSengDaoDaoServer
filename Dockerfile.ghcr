@@ -1,0 +1,13 @@
+FROM debian:bookworm-slim
+
+ARG TARGETARCH
+ENV WORKDIR /app
+WORKDIR $WORKDIR
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    update-ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --chmod=0755 linux_${TARGETARCH} main
+CMD /app/main
