@@ -13,11 +13,13 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
+      - uses: rlespinasse/github-slug-action@v5
+
       - name: 🔍 Cleanup GHCR
         uses: dataaxiom/ghcr-cleanup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          packages: ${{ github.event.repository.name }}
+          packages: ${{ env.GITHUB_REPOSITORY_NAME_PART_SLUG }}
           delete-untagged: true
           older-than: 30 days
           delete-ghost-images: true
