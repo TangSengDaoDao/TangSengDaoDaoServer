@@ -1,13 +1,17 @@
 FROM debian:bookworm-slim
 
 ARG TARGETARCH
-ENV WORKDIR /app
-WORKDIR $WORKDIR
+WORKDIR /app
+
+ENV TZ=Asia/Shanghai
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get install -y --no-install-recommends ca-certificates tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
+COPY assets ./assets
+COPY configs ./configs
 COPY --chmod=0755 linux_${TARGETARCH} main
 CMD /app/main
