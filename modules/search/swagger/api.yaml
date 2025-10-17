@@ -1,0 +1,158 @@
+swagger: "2.0"
+info:
+  description: "唐僧叨叨 API"
+  version: "1.0.0"
+  title: "唐僧叨叨 API"
+host: "api.botgate.cn"
+tags:
+  - name: "search"
+    description: "搜索"
+schemes:
+  - "https"
+basePath: "/v1"
+
+paths:
+  /search/global:
+    post:
+      tags:
+        - "search"
+      summary: "全局搜索"
+      description: "全局搜索"
+      operationId: "global"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "key"
+          required: true
+          schema:
+            type: object
+            properties:
+              only_message:
+                type: integer
+                description: "1.只返回消息记录 0.返回好友，群，消息记录"
+              keyword:
+                type: string
+                description: "搜索关键字"
+              channel_id:
+                type: string
+                description: "频道ID 搜索某个channel的消息时传递"
+              channel_type:
+                type: integer
+                format: int
+                description: "频道类型 搜索某个channel的消息时传递"
+              from_uid:
+                type: string
+                description: "发送者uid"
+              content_type:
+                type: array
+                items:
+                  type: integer
+                  format: int
+                  description: "指定查询的消息类型"
+              page:
+                type: integer
+                format: int
+                description: "页码"
+              limit:
+                type: integer
+                format: int
+                description: "每页数量"
+              start_time:
+                type: integer
+                description: "开始时间戳"
+              end_time:
+                type: integer
+                description: "消息时间（结束，结果不包含end_time）"
+      responses:
+        200:
+          description: "返回"
+          schema:
+            type: object
+            properties:
+              friends:
+                type: array
+                items:
+                  $ref: "#/definitions/channelResp"
+                description: "好友列表"
+              groups:
+                type: array
+                items:
+                  $ref: "#/definitions/channelResp"
+                description: "群列表"
+              messages:
+                type: array
+                items:
+                  $ref: "#/definitions/messageResp"
+        400:
+          description: "错误"
+          schema:
+            $ref: "#/definitions/response"
+      security:
+        - token: []
+  
+securityDefinitions:
+  token:
+    type: "apiKey"
+    in: "header"
+    name: "token"
+    description: "用户token"
+definitions:
+  messageResp:
+    type: object
+    properties:
+      message_id:
+        type: integer
+        description: "服务端的消息ID(全局唯一)"
+      message_idstr:
+        type: string
+        description: "服务端的消息ID(全局唯一)字符串形式"
+      message_seq:
+        type: integer
+        description: "消息序列号 （用户唯一，有序递增）"
+      client_msg_no:
+        type: string
+        description: "客户端消息唯一编号"
+      from_uid:
+        type: string
+        description: "发送者"
+      timestamp:
+        type: integer
+        description: "消息时间戳"
+      payload:
+        type: object
+        description: "内容体"
+      channel:
+        type: object
+        $ref: "#/definitions/channelResp"
+        description: "消息所属频道"
+      from_channel:
+        type: object
+        $ref: "#/definitions/channelResp"
+        description: "消息发送者频道资料"
+  channelResp:
+    type: object
+    properties:
+      channel_id:
+        type: string
+        description: "频道ID"
+      channel_type:
+        type: integer
+        format: int
+        description: "频道类型"
+      channel_name:
+        type: string
+        description: "频道名称"
+      channel_remark:
+        type: string
+        description: "频道备注"
+  response:
+    type: "object"
+    properties:
+      status:
+        type: integer
+        format: int
+      msg:
+        type: "string"

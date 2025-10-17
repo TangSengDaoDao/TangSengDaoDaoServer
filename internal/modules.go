@@ -12,6 +12,7 @@ import (
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/qrcode"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/report"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/robot"
+	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/search"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/statistics"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
 	_ "github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/webhook"
