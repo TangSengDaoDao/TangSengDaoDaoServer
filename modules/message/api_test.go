@@ -15,6 +15,7 @@ import (
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/config"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/module"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/util"
+	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/pkg/wkhttp"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/server"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServerLib/testutil"
 	"github.com/stretchr/testify/assert"
@@ -31,7 +32,7 @@ func newTestServer() (*server.Server, *config.Context) {
 	cfg.Test = true
 	ctx := config.NewContext(cfg)
 	ctx.Event = event.New(ctx)
-	err := ctx.Cache().Set(cfg.Cache.TokenCachePrefix+token, uid+"@test")
+	err := ctx.Cache().Set(cfg.Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(uid, "test", ""))
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +210,7 @@ func NewTestServer1(args ...string) (*server.Server, *config.Context) {
 	// }
 
 	// ctx.Event = event.New(ctx)
-	err := ctx.Cache().Set(cfg.Cache.TokenCachePrefix+Token, UID+"@test")
+	err := ctx.Cache().Set(cfg.Cache.TokenCachePrefix+Token, wkhttp.EncodeTokenCacheInfo(UID, "test", ""))
 	if err != nil {
 		panic(err)
 	}

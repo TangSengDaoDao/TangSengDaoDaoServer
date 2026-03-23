@@ -74,8 +74,12 @@ func (q *QRCode) handleQRCodeInfo(c *wkhttp.Context) {
 		c.String(http.StatusOK, fmt.Sprintf("请下载“%s”APP扫码！", q.ctx.GetConfig().AppName))
 		return
 	}
-	uidAndNames := strings.Split(uidAndName, "@")
-	loginUID := uidAndNames[0]
+	tokenInfo, err := wkhttp.ParseTokenCacheInfo(uidAndName)
+	if err != nil {
+		c.ResponseError(errors.New("token有误！"))
+		return
+	}
+	loginUID := tokenInfo.UID
 	code := c.Param("code")
 
 	if strings.HasPrefix(code, "user_") { // 用户资料二维码 格式： user_xxxx

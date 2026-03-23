@@ -634,7 +634,7 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 		}
 		if key == "name" {
 			// 将重新设置token设置到缓存（这里主要是更新登录者的name）
-			err = u.ctx.Cache().Set(u.ctx.GetConfig().Cache.TokenCachePrefix+c.GetHeader("token"), fmt.Sprintf("%s@%s@%s", loginUID, value, c.GetLoginRole()))
+			err = u.ctx.Cache().Set(u.ctx.GetConfig().Cache.TokenCachePrefix+c.GetHeader("token"), wkhttp.EncodeTokenCacheInfo(loginUID, fmt.Sprintf("%v", value), c.GetLoginRole()))
 			if err != nil {
 				u.Error("重新设置token缓存失败！", zap.Error(err))
 				c.ResponseError(errors.New("重新设置token缓存失败！"))
@@ -1094,7 +1094,7 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 		}
 	}
 
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, fmt.Sprintf("%s@%s@%s", userInfo.UID, userInfo.Name, userInfo.Role), u.ctx.GetConfig().Cache.TokenExpire)
+	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userInfo.UID, userInfo.Name, userInfo.Role), u.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		u.Error("设置token缓存失败！", zap.Error(err))
 		tokenSpan.Finish()
@@ -1579,7 +1579,7 @@ func (u *User) loginWithAuthCode(c *wkhttp.Context) {
 	}
 
 	// 将token设置到缓存
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, fmt.Sprintf("%s@%s", userModel.UID, userModel.Name), u.ctx.GetConfig().Cache.TokenExpire)
+	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userModel.UID, userModel.Name, ""), u.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		u.Error("设置token缓存失败！", zap.Error(err))
 		c.ResponseError(errors.New("设置token缓存失败！"))
@@ -2180,7 +2180,7 @@ func (u *User) loginCheckPhone(c *wkhttp.Context) {
 	}
 	token := util.GenerUUID()
 	// 将token设置到缓存
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, fmt.Sprintf("%s@%s", userInfo.UID, userInfo.Name), u.ctx.GetConfig().Cache.TokenExpire)
+	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userInfo.UID, userInfo.Name, ""), u.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		u.Error("设置token缓存失败！", zap.Error(err))
 		c.ResponseError(errors.New("设置token缓存失败！"))
@@ -2661,7 +2661,7 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 	u.ctx.EventCommit(eventID)
 	token := util.GenerUUID()
 	// 将token设置到缓存
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, fmt.Sprintf("%s@%s@%s", userModel.UID, userModel.Name, userModel.Role), u.ctx.GetConfig().Cache.TokenExpire)
+	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userModel.UID, userModel.Name, userModel.Role), u.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		u.Error("设置token缓存失败！", zap.Error(err))
 		return nil, err

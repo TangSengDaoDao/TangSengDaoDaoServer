@@ -1,6 +1,7 @@
 package wkhttp
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -23,6 +24,65 @@ const (
 	// SuperAdmin 超级管理员
 	SuperAdmin UserRole = "superAdmin"
 )
+
+const tokenCacheInfoVersion = 1
+
+// TokenCacheInfo token缓存中的登录信息
+type TokenCacheInfo struct {
+	UID  string `json:"uid"`
+	Name string `json:"name"`
+	Role string `json:"role,omitempty"`
+	Ver  int    `json:"ver,omitempty"`
+}
+
+// EncodeTokenCacheInfo 将登录信息编码为JSON，避免分隔符注入破坏字段语义
+func EncodeTokenCacheInfo(uid, name, role string) string {
+	payload, err := json.Marshal(TokenCacheInfo{
+		UID:  uid,
+		Name: name,
+		Role: role,
+		Ver:  tokenCacheInfoVersion,
+	})
+	if err != nil {
+		return ""
+	}
+	return string(payload)
+}
+
+// ParseTokenCacheInfo 解析token缓存信息，兼容历史分隔符格式
+func ParseTokenCacheInfo(raw string) (*TokenCacheInfo, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil, errors.New("token为空")
+	}
+	var info TokenCacheInfo
+	if err := json.Unmarshal([]byte(raw), &info); err == nil {
+		if strings.TrimSpace(info.UID) == "" || info.Name == "" {
+			return nil, errors.New("token有误")
+		}
+		return &info, nil
+	}
+	parts := strings.Split(raw, "@")
+	if len(parts) < 2 || strings.TrimSpace(parts[0]) == "" {
+		return nil, errors.New("token有误")
+	}
+	if len(parts) > 2 {
+		return nil, errors.New("旧版token已失效，请重新登录")
+	}
+	return &TokenCacheInfo{
+		UID:  parts[0],
+		Name: parts[1],
+	}, nil
+}
+
+// GetLoginTokenInfo 获取登录token信息
+func GetLoginTokenInfo(token string, tokenPrefix string, cache cache.Cache) (*TokenCacheInfo, error) {
+	raw, err := cache.Get(tokenPrefix + token)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTokenCacheInfo(raw)
+}
 
 // WKHttp WKHttp
 type WKHttp struct {
@@ -248,24 +308,17 @@ func (l *WKHttp) AuthMiddleware(cache cache.Cache, tokenPrefix string) HandlerFu
 			})
 			return
 		}
-		uidAndName := GetLoginUID(token, tokenPrefix, cache)
-		if strings.TrimSpace(uidAndName) == "" {
+		tokenInfo, err := GetLoginTokenInfo(token, tokenPrefix, cache)
+		if err != nil || tokenInfo == nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"msg": "请先登录！",
 			})
 			return
 		}
-		uidAndNames := strings.Split(uidAndName, "@")
-		if len(uidAndNames) < 2 {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"msg": "token有误！",
-			})
-			return
-		}
-		c.Set("uid", uidAndNames[0])
-		c.Set("name", uidAndNames[1])
-		if len(uidAndNames) > 2 {
-			c.Set("role", uidAndNames[2])
+		c.Set("uid", tokenInfo.UID)
+		c.Set("name", tokenInfo.Name)
+		if tokenInfo.Role != "" {
+			c.Set("role", tokenInfo.Role)
 		}
 		c.Next()
 	}

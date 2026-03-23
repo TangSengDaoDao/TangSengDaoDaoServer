@@ -167,12 +167,12 @@ func (m *Message) sendMsg(c *wkhttp.Context) {
 		c.ResponseError(errors.New("请先登录"))
 		return
 	}
-	uidAndNames := strings.Split(uidAndName, "@")
-	if len(uidAndNames) < 2 {
+	tokenInfo, err := wkhttp.ParseTokenCacheInfo(uidAndName)
+	if err != nil {
 		c.ResponseError(errors.New("token错误"))
 		return
 	}
-	uid := uidAndNames[0]
+	uid := tokenInfo.UID
 	if uid == "" {
 		c.ResponseError(errors.New("发送者不能为空"))
 		return

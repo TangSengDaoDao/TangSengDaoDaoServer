@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"Split.*tokenData\\\\|Split.*tokenStr\\\\|Split.*\\\\[2\\\\]\" /Users/songlun/Desktop/workspace/Go/TangSengDaoDaoUltimateServer/libs/TangSengDaoDaoServer --include=\"*.go\" 2>/dev/null | head -30)",
+      "Bash(grep -r \"fmt.Sprintf.*@\" /Users/songlun/Desktop/workspace/Go/TangSengDaoDaoUltimateServer/libs/TangSengDaoDaoServer --include=\"*.go\" -B 2 -A 2 2>/dev/null | head -100)",
+      "Bash(grep -rn \"fmt.Sprintf.*%s@%s\\\\\"\" /Users/songlun/Desktop/workspace/Go/TangSengDaoDaoUltimateServer/libs/TangSengDaoDaoServer --include=\"*.go\" 2>/dev/null | grep -v \"Vercode\\\\|phone\\\\|QRVercode\\\\|MailList\\\\|GroupMember\\\\|Friend\\\\|delete\")"
+    ]
+  }
+}
