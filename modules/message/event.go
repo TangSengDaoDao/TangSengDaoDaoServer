@@ -416,14 +416,25 @@ func (m *Message) updateMembersChannelOffset(groupNO string, members []*config.U
 	}()
 
 	for _, model := range list {
+		if groupInfo.AllowViewHistoryMsg == int(common.GroupAllowViewHistoryMsgEnabled) {
+			// 查询用户是否已有偏移记录，如果已有且 message_seq > 0 说明用户之前设置过（如退群前清空过聊天记录），不需要重置
+			existOffset, err := m.channelOffsetDB.queryWithUIDAndChannel(model.UID, model.ChannelID, model.ChannelType)
+			if err != nil {
+				m.Error("查询用户频道偏移量错误", zap.Error(err))
+				tx.Rollback()
+				return err
+			}
+			if existOffset != nil && existOffset.MessageSeq > 0 {
+				continue
+			}
+			model.MessageSeq = 0
+		}
+
 		err = m.channelOffsetDB.delete(model.UID, model.ChannelID, model.ChannelType, tx)
 		if err != nil {
 			m.Error("删除消息偏移量错误", zap.Error(err))
 			tx.Rollback()
 			return err
-		}
-		if groupInfo.AllowViewHistoryMsg == int(common.GroupAllowViewHistoryMsgEnabled) {
-			model.MessageSeq = 0
 		}
 		err = m.channelOffsetDB.insertOrUpdateTx(model, tx)
 		if err != nil {
