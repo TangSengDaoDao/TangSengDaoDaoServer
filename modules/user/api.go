@@ -109,6 +109,7 @@ func New(ctx *config.Context) *User {
 		appService:               app.NewService(ctx),
 	}
 	u.updateSystemUserToken()
+	u.AddSystemUids()
 	source.SetUserProvider(u)
 	return u
 }
