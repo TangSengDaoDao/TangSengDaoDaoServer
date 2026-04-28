@@ -96,6 +96,31 @@ func (f *Friend) handleDeleteFriend(data []byte, commit config.EventCommit) {
 	commit(nil)
 }
 
+// 添加系统账号未白名单
+func (f *Friend) AddIMWhitelistWithSystemAccounts(uid string) error {
+	systemUIDs := []string{}
+	if fileHelperUID := f.ctx.GetConfig().Account.FileHelperUID; fileHelperUID != "" {
+		systemUIDs = append(systemUIDs, fileHelperUID)
+	}
+	if systemUID := f.ctx.GetConfig().Account.SystemUID; systemUID != "" {
+		systemUIDs = append(systemUIDs, systemUID)
+	}
+	if len(systemUIDs) == 0 {
+		return nil // 没有系统账号需要添加
+	}
+	err := f.ctx.IMWhitelistAdd(config.ChannelWhitelistReq{
+		ChannelReq: config.ChannelReq{
+			ChannelID:   uid,
+			ChannelType: common.ChannelTypePerson.Uint8(),
+		},
+		UIDs: systemUIDs,
+	})
+	if err != nil {
+		return errors.New("添加IM白名单错误")
+	}
+	return nil
+}
+
 // 处理用户注册
 func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 	var req map[string]interface{}
@@ -105,22 +130,31 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 		commit(err)
 		return
 	}
-	if req == nil || req["invite_vercode"] == nil {
+	if req == nil {
 		commit(nil)
 		return
 	}
-
+	uid, ok := req["uid"].(string)
+	if !ok || uid == "" {
+		f.Error("好友处理用户注册uid不能为空")
+		commit(errors.New("好友处理用户注册uid不能为空"))
+		return
+	}
+	err = f.AddIMWhitelistWithSystemAccounts(uid)
+	if err != nil {
+		commit(err)
+		return
+	}
+	if req["invite_vercode"] == nil {
+		commit(nil)
+		return
+	}
 	inviteVercode := req["invite_vercode"].(string)
 	if inviteVercode == "" {
 		commit(nil)
 		return
 	}
-	uid := req["uid"].(string)
-	if uid == "" {
-		f.Error("好友处理用户注册uid不能为空")
-		commit(errors.New("好友处理用户注册uid不能为空"))
-		return
-	}
+
 	inviteUid := req["invite_uid"].(string)
 	if inviteUid == "" {
 		f.Error("好友处理用户注册邀请者uid不能为空")
@@ -156,7 +190,6 @@ func (f *Friend) handleUserRegister(data []byte, commit config.EventCommit) {
 			return
 		}
 
-		util.CheckErr(err)
 		err = f.db.InsertTx(&FriendModel{
 			UID:           uid,
 			ToUID:         inviteUid,
