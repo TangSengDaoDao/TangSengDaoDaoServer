@@ -64,10 +64,10 @@ func SetUserProvider(userProvider IGetUserProvider) {
 
 // GetSoruce 获取好友来源
 func GetSoruce(code string) string {
-	if code == "" {
+	strs := strings.Split(code, "@")
+	if len(strs) < 2 {
 		return ""
 	}
-	strs := strings.Split(code, "@")
 	codeTypeStr, _ := strconv.Atoi(strs[1])
 	codeType := common.VercodeType(codeTypeStr)
 	if codeType != common.Friend && codeType != common.QRCode && codeType != common.User && codeType != common.GroupMember && codeType != common.MailList && codeType != common.InvitationCode {
@@ -230,6 +230,9 @@ func CheckRequestAddFriendCode(code string, requestUID string) error {
 // CheckSource 验证加好友来源
 func CheckSource(code string) error {
 	strs := strings.Split(code, "@")
+	if len(strs) < 2 {
+		return errors.New("验证码格式错误")
+	}
 	codeTypeStr, _ := strconv.Atoi(strs[1])
 	codeType := common.VercodeType(codeTypeStr)
 	if codeType != common.Friend && codeType != common.QRCode && codeType != common.User && codeType != common.GroupMember && codeType != common.MailList && codeType != common.InvitationCode {
