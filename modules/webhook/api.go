@@ -11,6 +11,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/group"
 	"github.com/TangSengDaoDao/TangSengDaoDaoServer/modules/user"
@@ -33,6 +34,7 @@ type Webhook struct {
 	db           *DB
 	messageDB    *messageDB
 	pushMap      map[common.DeviceType]map[string]Push
+	pushMapMu    sync.RWMutex
 	groupService group.IService
 	userService  user.IService
 	wkhook.UnimplementedWebhookServiceServer
@@ -113,6 +115,9 @@ func (w *Webhook) Route(r *wkhttp.WKHttp) {
 }
 
 func (w *Webhook) Start() error {
+	if err := w.configureHarmonyOSPush(w.ctx.GetConfig().Push.HARMONYOS); err != nil {
+		return err
+	}
 	w.grpcServer = grpc.NewServer()
 
 	lis, err := net.Listen("tcp", w.ctx.GetConfig().GRPCAddr)
@@ -447,9 +452,9 @@ func (w *Webhook) pushTo(msgResp msgOfflineNotify, toUids []string) error {
 				msgResp := dataMap["msg"].(msgOfflineNotify)
 				result, err := w.push(toUser, msgResp)
 				if err != nil {
-					w.Debug("推送失败！", zap.String("uid", toUser.UID), zap.String("deviceType", result.deviceType), zap.String("deviceToken", result.deviceToken), zap.Error(err))
+					w.Debug("推送失败！", zap.String("uid", toUser.UID), zap.String("deviceType", result.deviceType), zap.Error(err))
 				} else {
-					w.Debug("推送成功！", zap.String("uid", toUser.UID), zap.String("deviceType", result.deviceType), zap.String("deviceToken", result.deviceToken))
+					w.Debug("推送成功！", zap.String("uid", toUser.UID), zap.String("deviceType", result.deviceType))
 				}
 			},
 		}
@@ -510,15 +515,18 @@ func (w *Webhook) push(toUser *user.Resp, msgResp msgOfflineNotify) (pushResp, e
 	deviceType := deviceMap["device_type"]
 	bundleID := deviceMap["bundle_id"]
 
-	w.Debug("开始推送", zap.String("uid", toUID), zap.String("deviceType", deviceType), zap.String("deviceToken", deviceToken))
+	w.Debug("开始推送", zap.String("uid", toUID), zap.String("deviceType", deviceType))
 
-	if w.pushMap[common.DeviceType(deviceType)] == nil {
+	w.pushMapMu.RLock()
+	pushers := w.pushMap[common.DeviceType(deviceType)]
+	pusher := pushers[bundleID]
+	w.pushMapMu.RUnlock()
+	if pushers == nil {
 		return pushResp{
 			deviceType:  deviceType,
 			deviceToken: deviceToken,
 		}, errors.New("不支持的推送设备！")
 	}
-	pusher := w.pushMap[common.DeviceType(deviceType)][bundleID]
 	if pusher == nil {
 		w.Warn("不支持的推送设备！", zap.String("deviceType", deviceType), zap.String("uid", toUID), zap.String("bundleID", bundleID))
 		return pushResp{

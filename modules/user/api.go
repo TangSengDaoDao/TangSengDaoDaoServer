@@ -1319,7 +1319,7 @@ func (u *User) registerUserDeviceToken(c *wkhttp.Context) {
 	loginUID := c.MustGet("uid").(string)
 	var req struct {
 		DeviceToken string `json:"device_token"` // 设备token
-		DeviceType  string `json:"device_type"`  // 设备类型 IOS，MI，HMS
+		DeviceType  string `json:"device_type"`  // 设备类型 IOS，MI，HMS，HARMONYOS 等
 		BundleID    string `json:"bundle_id"`    // app的唯一ID标示
 	}
 	if err := c.BindJSON(&req); err != nil {

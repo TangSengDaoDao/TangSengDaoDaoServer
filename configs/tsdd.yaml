@@ -81,7 +81,12 @@ smsCode: "123456" # 测试短信验证码， 如果不为空，则短信验证�
 #    topic: "" # topic 例如： com.xinbida.tangsengdaodao
 #    password: ""
 #    cert: "" # apns证书路径 例如：configs/push/push.p12
-#  hms: # 华为推送
+#  harmonyos: # 原生 HarmonyOS 推送，详见 modules/webhook/README.harmonyos.md
+#    bundleID: "" # 启用时填写客户端 bundle_id，例如 com.example.app
+#    serviceAccountFile: "" # 华为推送服务账号 JSON 文件路径（含 project_id / key_id / private_key / sub_account）
+#    category: "" # 已开通自分类权益后可填 IM，否则留空由华为分类并限频
+#    testMessage: false # 未上架应用调试时设为 true，受华为测试配额限制
+#  hms: # Android 华为 HMS 推送
 #    packageName: "" # 华为推送包名 例如：com.xinbida.tangsengdaodao
 #    appID: "" # 华为推送appID
 #    appSecret: "" # 华为推送appSecret
