@@ -330,8 +330,12 @@ func (f *Friend) friendApply(c *wkhttp.Context) {
 		c.ResponseError(errors.New("接收好友请求的用户不存在！"))
 		return
 	}
+	// 系统账号（文件助手/系统号/管理员）由 addSystemFriend 自动建立，无需验证码
+	acc := f.ctx.GetConfig().Account
 	verifyVercode := true
-	if req.Vercode == "" {
+	if toUser.UID == acc.SystemUID || toUser.UID == acc.FileHelperUID || toUser.UID == acc.AdminUID {
+		verifyVercode = false
+	} else if req.Vercode == "" {
 		friend, err := f.db.queryWithUID(fromUID, req.ToUID)
 		if err != nil {
 			f.Error("查询好友信息错误", zap.String("to_uid", req.ToUID))
