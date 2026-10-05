@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"net/http"
 	"strconv"
 	"time"
@@ -107,8 +108,10 @@ func (cn *Common) getKeepAliveVideo(c *wkhttp.Context) {
 		c.ResponseError(errors.New("视频名称不能为空"))
 		return
 	}
+	// Prevent path traversal by extracting only the base filename
+	videoName = filepath.Base(videoName)
 	c.Header("Content-Type", "video/mp4")
-	videoPath := fmt.Sprintf("assets/resources/keepalive/%s", videoName)
+	videoPath := filepath.Join("assets", "resources", "keepalive", videoName)
 	videoBytes, err := ioutil.ReadFile(videoPath)
 	if err != nil {
 		cn.Error("视频不存在", zap.Error(err))
