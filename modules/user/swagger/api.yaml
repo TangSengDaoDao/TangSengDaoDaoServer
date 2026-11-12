@@ -1022,7 +1022,7 @@ paths:
       tags:
         - "user"
       summary: "忘记密码"
-      description: "忘记密码"
+      description: "普通账号找回密码；管理员和超级管理员不可通过此公共接口重置密码。"
       operationId: "pwdforget"
       consumes:
         - "application/json"
@@ -1318,7 +1318,7 @@ paths:
       tags:
         - "user"
       summary: "通过web3验证重置密码"
-      description: "通过web3验证重置密码"
+      description: "普通账号通过web3验证重置密码；管理员和超级管理员不可使用此公共接口。"
       operationId: "reset password with web3"
       consumes:
         - "application/json"

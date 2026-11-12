@@ -635,7 +635,7 @@ func (u *User) userUpdateWithField(c *wkhttp.Context) {
 		}
 		if key == "name" {
 			// 将重新设置token设置到缓存（这里主要是更新登录者的name）
-			err = u.ctx.Cache().Set(u.ctx.GetConfig().Cache.TokenCachePrefix+c.GetHeader("token"), wkhttp.EncodeTokenCacheInfo(loginUID, fmt.Sprintf("%v", value), c.GetLoginRole()))
+			err = u.refreshTokenName(c.GetHeader("token"), fmt.Sprintf("%v", value))
 			if err != nil {
 				u.Error("重新设置token缓存失败！", zap.Error(err))
 				c.ResponseError(errors.New("重新设置token缓存失败！"))
@@ -1090,12 +1090,19 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 			}
 		}
 	} else { // PC暂时不执行删除操作，因为PC可以同时登陆
-		if strings.TrimSpace(oldToken) != "" { // 如果是web或pc类设备 因为支持多登所以这里依然使用老token
+		// Privileged logins must never reissue an old token identifier: after a
+		// password change that would revive the same credential held by an attacker.
+		if strings.TrimSpace(oldToken) != "" && userInfo.Role == "" {
 			token = oldToken
 		}
 	}
 
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userInfo.UID, userInfo.Name, userInfo.Role), u.ctx.GetConfig().Cache.TokenExpire)
+	tokenInfo, err := u.db.encodeLoginToken(userInfo.UID, userInfo.Name, userInfo.Role, userInfo.Password)
+	if err != nil {
+		tokenSpan.Finish()
+		return nil, err
+	}
+	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, tokenInfo, u.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		u.Error("设置token缓存失败！", zap.Error(err))
 		tokenSpan.Finish()
@@ -2424,6 +2431,10 @@ func (u *User) pwdforget(c *wkhttp.Context) {
 		c.ResponseError(errors.New("该账号不存在"))
 		return
 	}
+	if err := checkPublicPasswordRecovery(userInfo); err != nil {
+		c.ResponseError(err)
+		return
+	}
 	//测试模式
 	if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != "" {
 		if strings.TrimSpace(u.ctx.GetConfig().SMSCode) != req.Code {
@@ -2479,6 +2490,10 @@ func (u *User) getForgetPwdSMS(c *wkhttp.Context) {
 	}
 	if model == nil {
 		c.ResponseError(errors.New("该手机号未注册"))
+		return
+	}
+	if err := checkPublicPasswordRecovery(model); err != nil {
+		c.ResponseError(err)
 		return
 	}
 	err = u.smsServie.SendVerifyCode(spanCtx, req.Zone, req.Phone, commonapi.CodeTypeForgetLoginPWD)
@@ -2661,8 +2676,12 @@ func (u *User) createUserWithRespAndTx(registerSpanCtx context.Context, createUs
 	}
 	u.ctx.EventCommit(eventID)
 	token := util.GenerUUID()
+	tokenInfo, err := u.db.encodeLoginToken(userModel.UID, userModel.Name, userModel.Role, userModel.Password)
+	if err != nil {
+		return nil, err
+	}
 	// 将token设置到缓存
-	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userModel.UID, userModel.Name, userModel.Role), u.ctx.GetConfig().Cache.TokenExpire)
+	err = u.ctx.Cache().SetAndExpire(u.ctx.GetConfig().Cache.TokenCachePrefix+token, tokenInfo, u.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		u.Error("设置token缓存失败！", zap.Error(err))
 		return nil, err

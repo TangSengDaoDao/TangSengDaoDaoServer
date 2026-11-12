@@ -145,6 +145,9 @@ func (d *DB) QueryUserWithOnlyShortNo(shortNo string) (*Model, error) {
 
 // UpdateUsersWithField 修改用户基本资料
 func (d *DB) UpdateUsersWithField(field string, value string, uid string) error {
+	if field == "password" {
+		return d.updatePassword(value, uid)
+	}
 	_, err := d.session.Update("user").Set(field, value).Where("uid=?", uid).Exec()
 	return err
 }
@@ -204,12 +207,15 @@ func (d *DB) queryRegisterCountWithDateSpace(startDate, endDate string) ([]*Mode
 }
 
 func (d *DB) updateUser(userMap map[string]interface{}, uid string) error {
+	if _, changesPassword := userMap["password"]; changesPassword {
+		userMap["auth_version"] = util.GenerUUID()
+	}
 	_, err := d.session.Update("user").SetMap(userMap).Where("uid=?", uid).Exec()
 	return err
 }
 
 func (d *DB) updatePassword(password string, uid string) error {
-	_, err := d.session.Update("user").Set("password", password).Where("uid=?", uid).Exec()
+	_, err := d.session.Update("user").Set("password", password).Set("auth_version", util.GenerUUID()).Where("uid=?", uid).Exec()
 	return err
 }
 

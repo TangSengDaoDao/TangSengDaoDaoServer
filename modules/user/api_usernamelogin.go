@@ -204,6 +204,10 @@ func (u *User) resetPwdWithWeb3PublicKey(c *wkhttp.Context) {
 		c.ResponseError(errors.New("该用户不存在"))
 		return
 	}
+	if err := checkPublicPasswordRecovery(user); err != nil {
+		c.ResponseError(err)
+		return
+	}
 	if user.Web3PublicKey == "" {
 		c.ResponseError(errors.New("该用户未上传公钥"))
 		return

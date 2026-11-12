@@ -110,11 +110,13 @@ func (m *managerDB) deleteUserWithUIDAndRole(uid, role string) error {
 }
 
 type managerLoginModel struct {
-	Username string
-	UID      string
-	Name     string
-	Password string
-	Role     string
+	Status    int
+	IsDestroy int
+	Username  string
+	UID       string
+	Name      string
+	Password  string
+	Role      string
 }
 
 type managerUserModel struct {

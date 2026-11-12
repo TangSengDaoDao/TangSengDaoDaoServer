@@ -161,6 +161,10 @@ func (m *Manager) login(c *wkhttp.Context) {
 		c.ResponseError(errors.New("登录用户不存在"))
 		return
 	}
+	if userInfo.Status != 1 || userInfo.IsDestroy != 0 {
+		c.ResponseError(errors.New("该账号已被禁用或注销"))
+		return
+	}
 	if userInfo.Password != util.MD5(util.MD5(req.Password)) {
 		c.ResponseError(errors.New("用户名或密码错误"))
 		return
@@ -170,8 +174,13 @@ func (m *Manager) login(c *wkhttp.Context) {
 		return
 	}
 	token := util.GenerUUID()
+	tokenInfo, err := m.userDB.encodeLoginToken(userInfo.UID, userInfo.Name, userInfo.Role, userInfo.Password)
+	if err != nil {
+		c.ResponseError(errors.New("创建登录凭证失败"))
+		return
+	}
 	// 将token设置到缓存
-	err = m.ctx.Cache().SetAndExpire(m.ctx.GetConfig().Cache.TokenCachePrefix+token, wkhttp.EncodeTokenCacheInfo(userInfo.UID, userInfo.Name, userInfo.Role), m.ctx.GetConfig().Cache.TokenExpire)
+	err = m.ctx.Cache().SetAndExpire(m.ctx.GetConfig().Cache.TokenCachePrefix+token, tokenInfo, m.ctx.GetConfig().Cache.TokenExpire)
 	if err != nil {
 		m.Error("设置token缓存失败！", zap.Error(err))
 		c.ResponseError(errors.New("设置token缓存失败！"))
