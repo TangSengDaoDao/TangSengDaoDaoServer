@@ -94,3 +94,33 @@ func TestSecurityEveryPasswordWriteRotatesSessionVersion(t *testing.T) {
 	_, err = db.encodeLoginToken("u", "Admin", "admin", "original")
 	require.Error(t, err, "a stale login snapshot must not issue a valid token")
 }
+
+func TestSecurityOrdinaryBusinessRolesCanLoginWithoutManagementPrivileges(t *testing.T) {
+	for _, role := range []string{"", "user", "normal", "member", "custom-role", "0"} {
+		t.Run(role, func(t *testing.T) {
+			// Ordinary credentials must not require the privileged account DB path.
+			db := &DB{}
+			raw, err := db.encodeLoginToken("ordinary-user", "Name", role, "password-hash")
+			require.NoError(t, err)
+			info, err := wkhttp.ParseTokenCacheInfo(raw)
+			require.NoError(t, err)
+			require.Equal(t, "ordinary-user", info.UID)
+			require.Empty(t, info.Role)
+			require.Empty(t, info.AuthVersion)
+
+			r := wkhttp.New()
+			r.GET("/management", func(c *wkhttp.Context) {
+				c.Set("role", info.Role)
+				require.Error(t, c.CheckLoginRoleIsSuperAdmin())
+				if err := c.CheckLoginRole(); err != nil {
+					c.ResponseError(err)
+					return
+				}
+				c.ResponseOK()
+			})
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, httptest.NewRequest("GET", "/management", nil))
+			require.Equal(t, http.StatusBadRequest, w.Code)
+		})
+	}
+}

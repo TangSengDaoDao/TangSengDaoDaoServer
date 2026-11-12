@@ -50,11 +50,10 @@ func checkPublicPasswordRecovery(user *Model) error {
 // Initialize a version for existing privileged accounts without accepting a stale
 // password/role snapshot if the account changes concurrently with login.
 func (d *DB) encodeLoginToken(uid, name, role, password string) (string, error) {
-	if role == "" {
-		return wkhttp.EncodeTokenCacheInfo(uid, name, role), nil
-	}
 	if !isManagerRole(role) {
-		return "", errors.New("登录账号角色错误")
+		// Historical/business roles do not grant management privileges. Keep the
+		// database role unchanged, but issue a regular application credential.
+		return wkhttp.EncodeTokenCacheInfo(uid, name, ""), nil
 	}
 	_, err := d.session.Update("user").Set("auth_version", util.GenerUUID()).Where(
 		"uid=? AND password=? AND role=? AND status=1 AND is_destroy=0 AND auth_version=''", uid, password, role,

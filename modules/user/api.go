@@ -1092,7 +1092,7 @@ func (u *User) execLogin(userInfo *Model, flag config.DeviceFlag, device *device
 	} else { // PC暂时不执行删除操作，因为PC可以同时登陆
 		// Privileged logins must never reissue an old token identifier: after a
 		// password change that would revive the same credential held by an attacker.
-		if strings.TrimSpace(oldToken) != "" && userInfo.Role == "" {
+		if strings.TrimSpace(oldToken) != "" && !isManagerRole(userInfo.Role) {
 			token = oldToken
 		}
 	}
